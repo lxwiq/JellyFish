@@ -53,3 +53,9 @@ The project uses Kotlin's `expect`/`actual` mechanism for platform-specific code
 ### Package Structure
 
 All code uses the `com.lowiq.jellyfish` package namespace.
+
+## Git Commit Rules
+
+- Never mention Claude or AI in commit messages
+- No "Generated with Claude" or "Co-Authored-By: Claude" footers
+- Write commit messages as if written by a human developer
