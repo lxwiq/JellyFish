@@ -2,9 +2,11 @@ package com.lowiq.jellyfish.di
 
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.repository.AuthRepositoryImpl
+import com.lowiq.jellyfish.data.repository.MediaRepositoryImpl
 import com.lowiq.jellyfish.data.repository.ServerRepositoryImpl
 import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.domain.repository.AuthRepository
+import com.lowiq.jellyfish.domain.repository.MediaRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
 import com.lowiq.jellyfish.domain.usecase.AddServerUseCase
 import com.lowiq.jellyfish.domain.usecase.CheckSessionUseCase
@@ -28,6 +30,7 @@ val appModule = module {
 val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<ServerRepository> { ServerRepositoryImpl(get(), get(), get()) }
+    single<MediaRepository> { MediaRepositoryImpl(get(), get(), get()) }
 }
 
 val domainModule = module {
@@ -43,5 +46,5 @@ val presentationModule = module {
     factory { AddServerScreenModel(get()) }
     factory { (server: Server) -> LoginScreenModel(server, get()) }
     factory { (server: Server) -> QuickConnectScreenModel(server, get()) }
-    factory { HomeScreenModel(get(), get()) }
+    factory { HomeScreenModel(get(), get(), get()) }
 }

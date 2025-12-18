@@ -22,24 +22,24 @@ class AuthRepositoryImpl(
     ): Result<User> {
         return jellyfinDataSource.login(serverUrl, username, password)
             .mapCatching { authResult ->
-                // Save the token
-                secureStorage.saveToken(authResult.serverId, authResult.token)
-
                 // Update server with user info
                 val servers = serverStorage.getServers().first()
                 val server = servers.find { it.url == serverUrl }
-                if (server != null) {
-                    val updatedServer = server.copy(
-                        userId = authResult.userId,
-                        username = authResult.username
-                    )
-                    serverStorage.saveServer(updatedServer)
-                }
+                    ?: throw IllegalStateException("Server not found for URL: $serverUrl")
+
+                // Save the token with our local server ID (not Jellyfin's serverId)
+                secureStorage.saveToken(server.id, authResult.token)
+
+                val updatedServer = server.copy(
+                    userId = authResult.userId,
+                    username = authResult.username
+                )
+                serverStorage.saveServer(updatedServer)
 
                 User(
                     id = authResult.userId,
                     name = authResult.username,
-                    serverId = authResult.serverId
+                    serverId = server.id
                 )
             }
     }

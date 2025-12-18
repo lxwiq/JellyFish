@@ -9,6 +9,9 @@ interface JellyfinDataSource {
     suspend fun checkQuickConnect(serverUrl: String, secret: String): Result<QuickConnectStatus>
     suspend fun logout(serverUrl: String, token: String)
     suspend fun getCurrentUser(serverUrl: String, token: String): Result<User>
+    suspend fun getLatestItems(serverUrl: String, token: String, limit: Int = 20): Result<List<MediaItem>>
+    suspend fun getResumeItems(serverUrl: String, token: String, userId: String, limit: Int = 10): Result<List<MediaItem>>
+    suspend fun getFavoriteItems(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
 }
 
 data class ServerInfo(
@@ -34,3 +37,16 @@ sealed class QuickConnectStatus {
     data class Authenticated(val token: String, val userId: String) : QuickConnectStatus()
     object Expired : QuickConnectStatus()
 }
+
+data class MediaItem(
+    val id: String,
+    val name: String,
+    val type: String, // Movie, Episode, Series, etc.
+    val seriesName: String?, // For episodes
+    val seasonNumber: Int?,
+    val episodeNumber: Int?,
+    val imageUrl: String?,
+    val playbackPositionTicks: Long?,
+    val runTimeTicks: Long?,
+    val dateCreated: String?
+)

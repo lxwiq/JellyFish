@@ -9,12 +9,18 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.extensions.authenticateUserByName
 import org.jellyfin.sdk.api.client.extensions.authenticateWithQuickConnect
+import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.quickConnectApi
 import org.jellyfin.sdk.api.client.extensions.sessionApi
 import org.jellyfin.sdk.api.client.extensions.systemApi
 import org.jellyfin.sdk.api.client.extensions.userApi
+import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.createJellyfin
 import org.jellyfin.sdk.model.ClientInfo
+import org.jellyfin.sdk.model.UUID
+import org.jellyfin.sdk.model.api.BaseItemDto
+import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.ImageType
 
 class JellyfinDataSourceImpl(
     private val context: Context
@@ -122,4 +128,76 @@ class JellyfinDataSourceImpl(
                 )
             }
         }
+
+    override suspend fun getLatestItems(
+        serverUrl: String,
+        token: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val user by api.userApi.getCurrentUser()
+            val items by api.userLibraryApi.getLatestMedia(
+                userId = user.id,
+                limit = limit
+            )
+            items.map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    override suspend fun getResumeItems(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.itemsApi.getResumeItems(
+                userId = java.util.UUID.fromString(userId),
+                limit = limit,
+                enableUserData = true,
+                enableImages = true
+            )
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    override suspend fun getFavoriteItems(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
+                isFavorite = true,
+                limit = limit,
+                recursive = true,
+                enableUserData = true,
+                enableImages = true
+            )
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    private fun BaseItemDto.toMediaItem(serverUrl: String): MediaItem {
+        val imageUrl = imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+            "$serverUrl/Items/$id/Images/Primary?tag=$tag"
+        }
+        return MediaItem(
+            id = id.toString(),
+            name = name ?: "",
+            type = type?.toString() ?: "",
+            seriesName = seriesName,
+            seasonNumber = parentIndexNumber,
+            episodeNumber = indexNumber,
+            imageUrl = imageUrl,
+            playbackPositionTicks = userData?.playbackPositionTicks,
+            runTimeTicks = runTimeTicks,
+            dateCreated = premiereDate?.toString()
+        )
+    }
 }
