@@ -5,6 +5,7 @@ import com.lowiq.jellyfish.di.appModule
 import com.lowiq.jellyfish.di.dataModule
 import com.lowiq.jellyfish.di.domainModule
 import com.lowiq.jellyfish.di.platformModule
+import com.lowiq.jellyfish.di.presentationModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -17,7 +18,7 @@ class JellyFishApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@JellyFishApplication)
-            modules(platformModule, appModule, dataModule, domainModule)
+            modules(platformModule, appModule, dataModule, domainModule, presentationModule)
         }
     }
 }

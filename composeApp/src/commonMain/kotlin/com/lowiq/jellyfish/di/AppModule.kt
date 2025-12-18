@@ -3,6 +3,7 @@ package com.lowiq.jellyfish.di
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.repository.AuthRepositoryImpl
 import com.lowiq.jellyfish.data.repository.ServerRepositoryImpl
+import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.domain.repository.AuthRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
 import com.lowiq.jellyfish.domain.usecase.AddServerUseCase
@@ -10,6 +11,11 @@ import com.lowiq.jellyfish.domain.usecase.CheckSessionUseCase
 import com.lowiq.jellyfish.domain.usecase.GetServersUseCase
 import com.lowiq.jellyfish.domain.usecase.LoginUseCase
 import com.lowiq.jellyfish.domain.usecase.QuickConnectUseCase
+import com.lowiq.jellyfish.presentation.screens.addserver.AddServerScreenModel
+import com.lowiq.jellyfish.presentation.screens.home.HomeScreenModel
+import com.lowiq.jellyfish.presentation.screens.login.LoginScreenModel
+import com.lowiq.jellyfish.presentation.screens.quickconnect.QuickConnectScreenModel
+import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreenModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -30,4 +36,12 @@ val domainModule = module {
     factory { GetServersUseCase(get()) }
     factory { AddServerUseCase(get()) }
     factory { CheckSessionUseCase(get(), get()) }
+}
+
+val presentationModule = module {
+    factory { ServerListScreenModel(get(), get()) }
+    factory { AddServerScreenModel(get()) }
+    factory { (server: Server) -> LoginScreenModel(server, get()) }
+    factory { (server: Server) -> QuickConnectScreenModel(server, get()) }
+    factory { HomeScreenModel(get(), get()) }
 }

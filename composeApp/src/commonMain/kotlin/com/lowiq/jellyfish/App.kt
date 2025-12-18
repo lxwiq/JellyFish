@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
-import com.lowiq.jellyfish.presentation.screens.home.HomeScreen
+import com.lowiq.jellyfish.presentation.screens.splash.SplashScreen
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -15,7 +15,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun App() {
     JellyFishTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            Navigator(HomeScreen()) { navigator ->
+            Navigator(SplashScreen()) { navigator ->
                 SlideTransition(navigator)
             }
         }

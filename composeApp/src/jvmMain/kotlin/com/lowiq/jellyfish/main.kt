@@ -6,11 +6,12 @@ import com.lowiq.jellyfish.di.appModule
 import com.lowiq.jellyfish.di.dataModule
 import com.lowiq.jellyfish.di.domainModule
 import com.lowiq.jellyfish.di.platformModule
+import com.lowiq.jellyfish.di.presentationModule
 import org.koin.core.context.startKoin
 
 fun main() {
     startKoin {
-        modules(platformModule, appModule, dataModule, domainModule)
+        modules(platformModule, appModule, dataModule, domainModule, presentationModule)
     }
 
     application {
