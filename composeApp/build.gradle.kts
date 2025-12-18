@@ -34,6 +34,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.jellyfin.core)
             implementation(libs.androidx.security.crypto)
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -58,6 +59,7 @@ kotlin {
 
             // DataStore
             implementation(libs.datastore.preferences)
+            implementation(libs.okio)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
