@@ -26,7 +26,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lowiq.jellyfish.presentation.components.AppHeader
 import com.lowiq.jellyfish.presentation.components.AppScaffold
-import com.lowiq.jellyfish.presentation.components.LibraryChips
+import com.lowiq.jellyfish.presentation.components.LibraryCards
 import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
 import com.lowiq.jellyfish.presentation.components.SkeletonCarousel
@@ -70,11 +70,10 @@ class HomeScreen : Screen {
                 )
 
                 if (state.libraries.isNotEmpty()) {
-                    LibraryChips(
+                    LibraryCards(
                         libraries = state.libraries,
-                        selectedLibraryId = null,
                         onLibraryClick = { library ->
-                            library?.let { navigator.push(LibraryScreen(it)) }
+                            navigator.push(LibraryScreen(library))
                         },
                         modifier = Modifier.padding(vertical = 12.dp)
                     )
