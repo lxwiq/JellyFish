@@ -4,6 +4,7 @@ import com.lowiq.jellyfish.data.local.DownloadSettingsStorage
 import com.lowiq.jellyfish.data.local.DownloadStorage
 import com.lowiq.jellyfish.data.local.MediaCache
 import com.lowiq.jellyfish.data.local.PlaybackSyncStorage
+import com.lowiq.jellyfish.data.local.SearchHistoryStorage
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.local.UserPreferencesStorage
 import com.lowiq.jellyfish.data.remote.DownloadClient
@@ -34,6 +35,7 @@ import com.lowiq.jellyfish.presentation.screens.library.LibraryScreenModel
 import com.lowiq.jellyfish.presentation.screens.login.LoginScreenModel
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreenModel
 import com.lowiq.jellyfish.presentation.screens.quickconnect.QuickConnectScreenModel
+import com.lowiq.jellyfish.presentation.screens.search.SearchScreenModel
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreenModel
 import io.ktor.client.*
 import org.koin.core.module.Module
@@ -48,6 +50,7 @@ val appModule = module {
     single { DownloadStorage(get()) }
     single { DownloadSettingsStorage(get()) }
     single { PlaybackSyncStorage(get()) }
+    single { SearchHistoryStorage(get()) }
 }
 
 val dataModule = module {
@@ -94,4 +97,5 @@ val presentationModule = module {
         )
     }
     factory { DownloadsScreenModel(get(), get()) }
+    factory { SearchScreenModel(get(), get(), get()) }
 }
