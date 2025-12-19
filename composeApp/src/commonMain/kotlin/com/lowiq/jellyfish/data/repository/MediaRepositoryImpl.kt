@@ -96,6 +96,68 @@ class MediaRepositoryImpl(
             .map { items -> items.map { it.toDomainMediaItem() } }
     }
 
+    override suspend fun getLibraryItemsPaginated(
+        serverId: String,
+        libraryId: String,
+        limit: Int,
+        offset: Int,
+        sortBy: com.lowiq.jellyfish.domain.model.SortOption,
+        genres: List<String>?,
+        years: List<Int>?,
+        isWatched: Boolean?,
+        isFavorite: Boolean?
+    ): Result<com.lowiq.jellyfish.domain.model.PaginatedResult<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(
+            com.lowiq.jellyfish.domain.model.PaginatedResult(emptyList(), 0, false)
+        )
+        val userId = server.userId ?: return Result.success(
+            com.lowiq.jellyfish.domain.model.PaginatedResult(emptyList(), 0, false)
+        )
+
+        val sortOrder = if (sortBy == com.lowiq.jellyfish.domain.model.SortOption.NAME) "Ascending" else "Descending"
+
+        return jellyfinDataSource.getLibraryItemsFiltered(
+            serverUrl = server.url,
+            token = token,
+            userId = userId,
+            libraryId = libraryId,
+            limit = limit,
+            startIndex = offset,
+            sortBy = sortBy.apiValue,
+            sortOrder = sortOrder,
+            genres = genres,
+            years = years,
+            isPlayed = isWatched,
+            isFavorite = isFavorite
+        ).map { response ->
+            com.lowiq.jellyfish.domain.model.PaginatedResult(
+                items = response.items.map { it.toDomainMediaItem() },
+                totalCount = response.totalCount,
+                hasMore = offset + response.items.size < response.totalCount
+            )
+        }
+    }
+
+    override suspend fun getLibraryFilters(
+        serverId: String,
+        libraryId: String
+    ): Result<com.lowiq.jellyfish.domain.model.LibraryFilters> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(
+            com.lowiq.jellyfish.domain.model.LibraryFilters(emptyList(), emptyList())
+        )
+        val userId = server.userId ?: return Result.success(
+            com.lowiq.jellyfish.domain.model.LibraryFilters(emptyList(), emptyList())
+        )
+
+        return jellyfinDataSource.getLibraryFilters(server.url, token, userId, libraryId)
+            .map { filters ->
+                com.lowiq.jellyfish.domain.model.LibraryFilters(
+                    genres = filters.genres,
+                    years = filters.years
+                )
+            }
+    }
+
     private fun DataLibrary.toDomainLibrary() = Library(
         id = id,
         name = name,

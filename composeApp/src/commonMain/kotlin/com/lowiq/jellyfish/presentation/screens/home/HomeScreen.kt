@@ -30,6 +30,7 @@ import com.lowiq.jellyfish.presentation.components.LibraryChips
 import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
 import com.lowiq.jellyfish.presentation.components.SkeletonCarousel
+import com.lowiq.jellyfish.presentation.screens.library.LibraryScreen
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 
 class HomeScreen : Screen {
@@ -72,7 +73,9 @@ class HomeScreen : Screen {
                     LibraryChips(
                         libraries = state.libraries,
                         selectedLibraryId = null,
-                        onLibraryClick = { /* TODO: Filter by library */ },
+                        onLibraryClick = { library ->
+                            library?.let { navigator.push(LibraryScreen(it)) }
+                        },
                         modifier = Modifier.padding(vertical = 12.dp)
                     )
                 }

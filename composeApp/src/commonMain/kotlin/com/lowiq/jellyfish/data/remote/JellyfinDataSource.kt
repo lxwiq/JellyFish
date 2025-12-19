@@ -18,6 +18,26 @@ interface JellyfinDataSource {
     suspend fun getLatestSeries(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
     suspend fun getLatestMusic(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
     suspend fun getNextUpEpisodes(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
+    suspend fun getLibraryItemsFiltered(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        libraryId: String,
+        limit: Int = 20,
+        startIndex: Int = 0,
+        sortBy: String = "DateCreated",
+        sortOrder: String = "Descending",
+        genres: List<String>? = null,
+        years: List<Int>? = null,
+        isPlayed: Boolean? = null,
+        isFavorite: Boolean? = null
+    ): Result<LibraryItemsResponse>
+    suspend fun getLibraryFilters(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        libraryId: String
+    ): Result<LibraryFilters>
 }
 
 data class ServerInfo(
@@ -62,4 +82,14 @@ data class Library(
     val name: String,
     val type: String, // movies, tvshows, music, etc.
     val imageUrl: String?
+)
+
+data class LibraryItemsResponse(
+    val items: List<MediaItem>,
+    val totalCount: Int
+)
+
+data class LibraryFilters(
+    val genres: List<String>,
+    val years: List<Int>
 )

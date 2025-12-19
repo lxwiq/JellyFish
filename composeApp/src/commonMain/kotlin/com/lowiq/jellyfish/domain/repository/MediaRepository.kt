@@ -2,7 +2,10 @@ package com.lowiq.jellyfish.domain.repository
 
 import com.lowiq.jellyfish.domain.model.ActivityItem
 import com.lowiq.jellyfish.domain.model.Library
+import com.lowiq.jellyfish.domain.model.LibraryFilters
 import com.lowiq.jellyfish.domain.model.MediaItem
+import com.lowiq.jellyfish.domain.model.PaginatedResult
+import com.lowiq.jellyfish.domain.model.SortOption
 import kotlinx.coroutines.flow.Flow
 
 data class HomeMediaData(
@@ -23,6 +26,21 @@ interface MediaRepository {
     // Libraries
     suspend fun getLibraries(serverId: String): Result<List<Library>>
     suspend fun getLibraryItems(serverId: String, libraryId: String, limit: Int = 20): Result<List<MediaItem>>
+
+    // Library browsing with filters and pagination
+    suspend fun getLibraryItemsPaginated(
+        serverId: String,
+        libraryId: String,
+        limit: Int = 20,
+        offset: Int = 0,
+        sortBy: SortOption = SortOption.DATE_ADDED,
+        genres: List<String>? = null,
+        years: List<Int>? = null,
+        isWatched: Boolean? = null,
+        isFavorite: Boolean? = null
+    ): Result<PaginatedResult<MediaItem>>
+
+    suspend fun getLibraryFilters(serverId: String, libraryId: String): Result<LibraryFilters>
 
     // New methods using MediaItem domain model
     suspend fun getContinueWatching(serverId: String): Result<List<MediaItem>>

@@ -312,6 +312,97 @@ class JellyfinDataSourceImpl(
         }
     }
 
+    override suspend fun getLibraryItemsFiltered(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        libraryId: String,
+        limit: Int,
+        startIndex: Int,
+        sortBy: String,
+        sortOrder: String,
+        genres: List<String>?,
+        years: List<Int>?,
+        isPlayed: Boolean?,
+        isFavorite: Boolean?
+    ): Result<LibraryItemsResponse> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+
+            // Map sortBy string to ItemSortBy enum
+            val sortByEnum = when (sortBy) {
+                "SortName" -> org.jellyfin.sdk.model.api.ItemSortBy.SORT_NAME
+                "DateCreated" -> org.jellyfin.sdk.model.api.ItemSortBy.DATE_CREATED
+                "ProductionYear" -> org.jellyfin.sdk.model.api.ItemSortBy.PRODUCTION_YEAR
+                "CommunityRating" -> org.jellyfin.sdk.model.api.ItemSortBy.COMMUNITY_RATING
+                else -> org.jellyfin.sdk.model.api.ItemSortBy.DATE_CREATED
+            }
+
+            // Map sortOrder string to SortOrder enum
+            val sortOrderEnum = when (sortOrder) {
+                "Ascending" -> org.jellyfin.sdk.model.api.SortOrder.ASCENDING
+                "Descending" -> org.jellyfin.sdk.model.api.SortOrder.DESCENDING
+                else -> org.jellyfin.sdk.model.api.SortOrder.DESCENDING
+            }
+
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
+                parentId = java.util.UUID.fromString(libraryId),
+                limit = limit,
+                startIndex = startIndex,
+                sortBy = listOf(sortByEnum),
+                sortOrder = listOf(sortOrderEnum),
+                genres = genres,
+                years = years?.map { it },
+                isPlayed = isPlayed,
+                isFavorite = isFavorite,
+                recursive = true,
+                enableImages = true,
+                enableUserData = true
+            )
+
+            LibraryItemsResponse(
+                items = response.items.orEmpty().map { it.toMediaItem(serverUrl) },
+                totalCount = response.totalRecordCount ?: 0
+            )
+        }
+    }
+
+    override suspend fun getLibraryFilters(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        libraryId: String
+    ): Result<LibraryFilters> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+
+            // Get all items from the library to extract unique genres and years
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
+                parentId = java.util.UUID.fromString(libraryId),
+                recursive = true
+            )
+
+            // Extract unique genres
+            val genres = response.items.orEmpty()
+                .flatMap { it.genres.orEmpty() }
+                .distinct()
+                .sorted()
+
+            // Extract unique years
+            val years = response.items.orEmpty()
+                .mapNotNull { it.productionYear }
+                .distinct()
+                .sorted()
+
+            LibraryFilters(
+                genres = genres,
+                years = years
+            )
+        }
+    }
+
     private fun BaseItemDto.toMediaItem(serverUrl: String, forceBackdrop: Boolean = false): MediaItem {
         // Episodes: use Backdrop (horizontal), Movies/Series: use Primary (poster)
         // forceBackdrop=true always uses horizontal images (e.g., Continue Watching)
