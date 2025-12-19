@@ -247,12 +247,15 @@ class MediaRepositoryImpl(
     }
 
     private fun DataMediaItem.toDomainMediaItem(forceBackdrop: Boolean = false): MediaItem {
+        // Extract year from dateCreated (format: "2024-12-18T10:30:00.000Z")
+        val year = dateCreated?.take(4)
+
         val subtitle = when {
             this.type == "Episode" && seriesName != null -> {
                 val episodeInfo = "S${seasonNumber ?: 1} E${episodeNumber ?: 1}"
                 "$seriesName • $episodeInfo"
             }
-            else -> this.type
+            else -> year
         }
 
         val progress = if (playbackPositionTicks != null && runTimeTicks != null && runTimeTicks > 0) {
