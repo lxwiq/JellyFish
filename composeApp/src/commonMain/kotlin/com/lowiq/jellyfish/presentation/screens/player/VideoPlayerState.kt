@@ -21,7 +21,8 @@ data class VideoPlayerState(
     val showResumeDialog: Boolean = false,
     val resumePositionMs: Long = 0,
     val nextEpisode: NextEpisodeInfo? = null,
-    val showNextEpisodeCard: Boolean = false
+    val showNextEpisodeCard: Boolean = false,
+    val isOfflineMode: Boolean = false
 )
 
 data class NextEpisodeInfo(
