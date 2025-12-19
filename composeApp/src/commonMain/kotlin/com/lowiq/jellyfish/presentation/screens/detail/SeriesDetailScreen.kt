@@ -277,8 +277,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                                         EpisodeCard(
                                             episode = episode,
                                             onClick = {
-                                                // TODO: Navigate to EpisodeDetailScreen when implemented
-                                                // navigator.push(EpisodeDetailScreen(episode.id))
+                                                navigator.push(EpisodeDetailScreen(episode.id))
                                             }
                                         )
                                     }
