@@ -45,6 +45,35 @@ interface JellyfinDataSource {
     suspend fun getSeasonEpisodes(serverUrl: String, token: String, userId: String, seriesId: String, seasonNumber: Int): Result<List<EpisodeInfo>>
     suspend fun toggleFavorite(serverUrl: String, token: String, userId: String, itemId: String, isFavorite: Boolean): Result<Unit>
     suspend fun toggleWatched(serverUrl: String, token: String, userId: String, itemId: String, isWatched: Boolean): Result<Unit>
+    suspend fun getStreamInfo(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String
+    ): Result<StreamInfo>
+
+    suspend fun reportPlaybackStart(
+        serverUrl: String,
+        token: String,
+        itemId: String,
+        mediaSourceId: String,
+        playSessionId: String
+    ): Result<Unit>
+
+    suspend fun reportPlaybackProgress(
+        serverUrl: String,
+        token: String,
+        progress: PlaybackProgressInfo
+    ): Result<Unit>
+
+    suspend fun reportPlaybackStopped(
+        serverUrl: String,
+        token: String,
+        itemId: String,
+        mediaSourceId: String,
+        positionTicks: Long,
+        playSessionId: String
+    ): Result<Unit>
 }
 
 data class ServerInfo(
@@ -149,4 +178,20 @@ data class EpisodeInfo(
     val isPlayed: Boolean,
     val playbackPositionTicks: Long?,
     val runTimeTicks: Long?
+)
+
+data class StreamInfo(
+    val directPlayUrl: String,
+    val transcodingUrl: String?,
+    val mediaSourceId: String,
+    val playSessionId: String,
+    val supportsDirectPlay: Boolean
+)
+
+data class PlaybackProgressInfo(
+    val itemId: String,
+    val mediaSourceId: String,
+    val positionTicks: Long,
+    val isPaused: Boolean,
+    val playSessionId: String
 )
