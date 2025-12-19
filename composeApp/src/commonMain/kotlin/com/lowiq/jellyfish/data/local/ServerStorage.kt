@@ -6,9 +6,13 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.lowiq.jellyfish.domain.model.Server
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-class ServerStorage(private val dataStore: DataStore<Preferences>) {
+class ServerStorage(
+    private val dataStore: DataStore<Preferences>,
+    private val secureStorage: SecureStorage
+) {
 
     private val serversKey = stringPreferencesKey("servers")
     private val activeServerKey = stringPreferencesKey("active_server_id")
@@ -74,5 +78,13 @@ class ServerStorage(private val dataStore: DataStore<Preferences>) {
                 )
             } else null
         }
+    }
+
+    suspend fun getServer(serverId: String): Server? {
+        return getServers().first().find { it.id == serverId }
+    }
+
+    suspend fun getToken(serverId: String): String? {
+        return secureStorage.getToken(serverId)
     }
 }
