@@ -5,8 +5,10 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.lowiq.jellyfish.data.remote.PlaybackProgressInfo
 import com.lowiq.jellyfish.domain.player.PlaybackState
 import com.lowiq.jellyfish.domain.player.VideoPlayer
+import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
+import com.lowiq.jellyfish.domain.sync.PlaybackSyncService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,9 +31,13 @@ class VideoPlayerScreenModel(
     private val itemTitle: String,
     private val itemSubtitle: String?,
     private val startPositionMs: Long,
+    private val offlineFilePath: String?,
+    private val downloadId: String?,
     val videoPlayer: VideoPlayer,
     private val serverRepository: ServerRepository,
-    private val mediaRepository: MediaRepository
+    private val mediaRepository: MediaRepository,
+    private val downloadRepository: DownloadRepository,
+    private val playbackSyncService: PlaybackSyncService
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(VideoPlayerState(
@@ -51,12 +57,18 @@ class VideoPlayerScreenModel(
     private var controlsHideJob: Job? = null
     private var streamUrl: String? = null
     private var streamHeaders: Map<String, String> = emptyMap()
+    private var offlineProgressJob: Job? = null
 
     init {
         videoPlayer.initialize()
         observePlaybackState()
         observeTracks()
-        loadStreamInfo()
+
+        if (offlineFilePath != null) {
+            setupOfflinePlayback()
+        } else {
+            loadStreamInfo()
+        }
     }
 
     private fun observePlaybackState() {
@@ -89,6 +101,47 @@ class VideoPlayerScreenModel(
         screenModelScope.launch {
             videoPlayer.qualityOptions.collect { options ->
                 _state.update { it.copy(qualityOptions = options) }
+            }
+        }
+    }
+
+    private fun setupOfflinePlayback() {
+        _state.update { it.copy(isLoading = false, isOfflineMode = true) }
+
+        if (startPositionMs > 0) {
+            _state.update { it.copy(showResumeDialog = true) }
+        } else {
+            startOfflinePlayback(0)
+        }
+    }
+
+    private fun startOfflinePlayback(positionMs: Long) {
+        val fileUrl = "file://$offlineFilePath"
+        videoPlayer.play(fileUrl, emptyMap(), positionMs)
+        startOfflineProgressTracking()
+    }
+
+    private fun startOfflineProgressTracking() {
+        offlineProgressJob?.cancel()
+        offlineProgressJob = screenModelScope.launch {
+            while (isActive) {
+                delay(10_000)
+                saveOfflineProgress()
+            }
+        }
+    }
+
+    private fun saveOfflineProgress() {
+        val state = _state.value.playbackState
+        val positionMs = when (state) {
+            is PlaybackState.Playing -> state.positionMs
+            is PlaybackState.Paused -> state.positionMs
+            else -> return
+        }
+
+        downloadId?.let { id ->
+            screenModelScope.launch {
+                downloadRepository.updatePlaybackPosition(id, positionMs)
             }
         }
     }
@@ -135,15 +188,23 @@ class VideoPlayerScreenModel(
 
     fun onResumeFromPosition() {
         _state.update { it.copy(showResumeDialog = false) }
-        streamUrl?.let { url ->
-            startPlayback(url, streamHeaders, startPositionMs)
+        if (_state.value.isOfflineMode) {
+            startOfflinePlayback(startPositionMs)
+        } else {
+            streamUrl?.let { url ->
+                startPlayback(url, streamHeaders, startPositionMs)
+            }
         }
     }
 
     fun onStartFromBeginning() {
         _state.update { it.copy(showResumeDialog = false) }
-        streamUrl?.let { url ->
-            startPlayback(url, streamHeaders, 0)
+        if (_state.value.isOfflineMode) {
+            startOfflinePlayback(0)
+        } else {
+            streamUrl?.let { url ->
+                startPlayback(url, streamHeaders, 0)
+            }
         }
     }
 
@@ -296,26 +357,56 @@ class VideoPlayerScreenModel(
 
     private fun stopPlayback() {
         progressReportJob?.cancel()
+        offlineProgressJob?.cancel()
 
-        val serverId = currentServerId ?: return
-        val sourceId = mediaSourceId ?: return
-        val sessionId = playSessionId ?: return
         val state = _state.value.playbackState
-
         val positionMs = when (state) {
             is PlaybackState.Playing -> state.positionMs
             is PlaybackState.Paused -> state.positionMs
             else -> 0
         }
 
-        screenModelScope.launch {
-            mediaRepository.reportPlaybackStopped(
-                serverId,
-                itemId,
-                sourceId,
-                positionMs * 10_000,
-                sessionId
-            )
+        val durationMs = when (state) {
+            is PlaybackState.Playing -> state.durationMs
+            is PlaybackState.Paused -> state.durationMs
+            else -> 0
+        }
+
+        if (_state.value.isOfflineMode) {
+            // Save final position for offline playback
+            downloadId?.let { id ->
+                screenModelScope.launch {
+                    downloadRepository.updatePlaybackPosition(id, positionMs)
+                }
+            }
+
+            // Queue sync for when online
+            if (durationMs > 0) {
+                val playedPercentage = (positionMs.toFloat() / durationMs) * 100
+                screenModelScope.launch {
+                    val server = serverRepository.getActiveServer().filterNotNull().first()
+                    playbackSyncService.savePlaybackProgress(
+                        itemId = itemId,
+                        serverId = server.id,
+                        positionTicks = positionMs * 10_000,
+                        playedPercentage = playedPercentage
+                    )
+                }
+            }
+        } else {
+            val serverId = currentServerId ?: return
+            val sourceId = mediaSourceId ?: return
+            val sessionId = playSessionId ?: return
+
+            screenModelScope.launch {
+                mediaRepository.reportPlaybackStopped(
+                    serverId,
+                    itemId,
+                    sourceId,
+                    positionMs * 10_000,
+                    sessionId
+                )
+            }
         }
 
         videoPlayer.stop()
