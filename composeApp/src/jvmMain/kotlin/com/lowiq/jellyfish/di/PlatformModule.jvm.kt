@@ -5,6 +5,7 @@ import com.lowiq.jellyfish.data.local.SecureStorage
 import com.lowiq.jellyfish.data.local.createDataStore
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
 import com.lowiq.jellyfish.data.remote.JellyfinDataSourceImpl
+import com.lowiq.jellyfish.domain.player.VideoPlayer
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.io.File
@@ -17,4 +18,5 @@ actual val platformModule: Module = module {
         createDataStore(File(appDir, DATA_STORE_FILE_NAME).absolutePath)
     }
     single<JellyfinDataSource> { JellyfinDataSourceImpl() }
+    factory { VideoPlayer() }
 }

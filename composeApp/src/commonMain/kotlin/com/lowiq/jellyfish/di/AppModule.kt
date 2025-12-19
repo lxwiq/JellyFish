@@ -23,6 +23,7 @@ import com.lowiq.jellyfish.presentation.screens.detail.SeriesDetailScreenModel
 import com.lowiq.jellyfish.presentation.screens.home.HomeScreenModel
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreenModel
 import com.lowiq.jellyfish.presentation.screens.login.LoginScreenModel
+import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreenModel
 import com.lowiq.jellyfish.presentation.screens.quickconnect.QuickConnectScreenModel
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreenModel
 import org.koin.core.module.Module
@@ -60,4 +61,7 @@ val presentationModule = module {
     factory { (itemId: String) -> MovieDetailScreenModel(itemId, get(), get()) }
     factory { (itemId: String) -> SeriesDetailScreenModel(itemId, get(), get()) }
     factory { (itemId: String) -> EpisodeDetailScreenModel(itemId, get(), get()) }
+    factory { (itemId: String, title: String, subtitle: String?, startPositionMs: Long) ->
+        VideoPlayerScreenModel(itemId, title, subtitle, startPositionMs, get(), get(), get())
+    }
 }
