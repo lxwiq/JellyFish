@@ -1,14 +1,20 @@
 package com.lowiq.jellyfish.di
 
+import com.lowiq.jellyfish.data.local.DownloadSettingsStorage
+import com.lowiq.jellyfish.data.local.DownloadStorage
 import com.lowiq.jellyfish.data.local.MediaCache
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.local.UserPreferencesStorage
+import com.lowiq.jellyfish.data.remote.DownloadClient
 import com.lowiq.jellyfish.data.repository.AuthRepositoryImpl
+import com.lowiq.jellyfish.data.repository.DownloadRepositoryImpl
 import com.lowiq.jellyfish.data.repository.MediaRepositoryImpl
 import com.lowiq.jellyfish.data.repository.ServerRepositoryImpl
+import com.lowiq.jellyfish.domain.download.DownloadManager
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.domain.repository.AuthRepository
+import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
 import com.lowiq.jellyfish.domain.usecase.AddServerUseCase
@@ -26,21 +32,27 @@ import com.lowiq.jellyfish.presentation.screens.login.LoginScreenModel
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreenModel
 import com.lowiq.jellyfish.presentation.screens.quickconnect.QuickConnectScreenModel
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreenModel
+import io.ktor.client.*
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 expect val platformModule: Module
 
 val appModule = module {
-    single { ServerStorage(get()) }
+    single { ServerStorage(get(), get()) }
     single { MediaCache(get()) }
     single { UserPreferencesStorage(get()) }
+    single { DownloadStorage(get()) }
+    single { DownloadSettingsStorage(get()) }
 }
 
 val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<ServerRepository> { ServerRepositoryImpl(get(), get(), get()) }
     single<MediaRepository> { MediaRepositoryImpl(get(), get(), get(), get()) }
+    single { DownloadClient(get()) }
+    single<DownloadRepository> { DownloadRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
+    single { DownloadManager(get(), get(), get(), get(), get(), get(), get()) }
 }
 
 val domainModule = module {
