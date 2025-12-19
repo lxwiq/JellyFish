@@ -128,7 +128,8 @@ class JellyfinDataSourceImpl(
                 User(
                     id = user.id.toString(),
                     name = user.name ?: "",
-                    serverId = user.serverId ?: ""
+                    serverId = user.serverId ?: "",
+                    isAdmin = user.policy?.isAdministrator == true
                 )
             }
         }

@@ -3,5 +3,6 @@ package com.lowiq.jellyfish.domain.model
 data class User(
     val id: String,
     val name: String,
-    val serverId: String
+    val serverId: String,
+    val isAdmin: Boolean = false
 )
