@@ -2,8 +2,11 @@ package com.lowiq.jellyfish.presentation.screens.detail
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.lowiq.jellyfish.data.local.DownloadSettingsStorage
 import com.lowiq.jellyfish.domain.model.CastMember
 import com.lowiq.jellyfish.domain.model.MediaItem
+import com.lowiq.jellyfish.domain.model.QualityOption
+import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +33,11 @@ data class MovieDetailState(
     val similarItems: List<MediaItem> = emptyList(),
     val trailerUrl: String? = null,
     val isFavorite: Boolean = false,
-    val isWatched: Boolean = false
+    val isWatched: Boolean = false,
+    val showQualityDialog: Boolean = false,
+    val availableQualities: List<QualityOption> = emptyList(),
+    val isLoadingQualities: Boolean = false,
+    val posterUrl: String? = null
 )
 
 sealed class MovieDetailEvent {
@@ -39,12 +46,15 @@ sealed class MovieDetailEvent {
         val title: String,
         val startPositionMs: Long
     ) : MovieDetailEvent()
+    object NavigateToDownloads : MovieDetailEvent()
 }
 
 class MovieDetailScreenModel(
     private val itemId: String,
     private val serverRepository: ServerRepository,
-    private val mediaRepository: MediaRepository
+    private val mediaRepository: MediaRepository,
+    private val downloadRepository: DownloadRepository,
+    private val downloadSettings: DownloadSettingsStorage
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(MovieDetailState())
@@ -74,6 +84,7 @@ class MovieDetailScreenModel(
                             title = details.title,
                             overview = details.overview,
                             backdropUrl = details.backdropUrl,
+                            posterUrl = details.posterUrl,
                             year = details.year,
                             runtime = details.runtime,
                             rating = details.rating,
@@ -135,7 +146,63 @@ class MovieDetailScreenModel(
     }
 
     fun onDownload() {
-        // TODO: Implement download
+        screenModelScope.launch {
+            val alwaysAsk = downloadSettings.alwaysAskQuality.first()
+
+            _state.update { it.copy(isLoadingQualities = true) }
+
+            val serverId = currentServerId ?: return@launch
+            downloadRepository.getAvailableQualities(serverId, itemId)
+                .onSuccess { qualities ->
+                    if (alwaysAsk || qualities.isEmpty()) {
+                        _state.update {
+                            it.copy(
+                                showQualityDialog = true,
+                                availableQualities = qualities,
+                                isLoadingQualities = false
+                            )
+                        }
+                    } else {
+                        val defaultQuality = downloadSettings.defaultQuality.first()
+                        val quality = qualities.find { it.label == defaultQuality } ?: qualities.first()
+                        startDownload(quality)
+                    }
+                }
+                .onFailure {
+                    _state.update { it.copy(isLoadingQualities = false) }
+                }
+        }
+    }
+
+    fun onQualitySelected(quality: QualityOption, dontAskAgain: Boolean) {
+        screenModelScope.launch {
+            if (dontAskAgain) {
+                downloadSettings.setDefaultQuality(quality.label)
+                downloadSettings.setAlwaysAskQuality(false)
+            }
+            startDownload(quality)
+            _state.update { it.copy(showQualityDialog = false) }
+        }
+    }
+
+    fun dismissQualityDialog() {
+        _state.update { it.copy(showQualityDialog = false) }
+    }
+
+    private suspend fun startDownload(quality: QualityOption) {
+        val serverId = currentServerId ?: return
+        val state = _state.value
+
+        downloadRepository.startDownload(
+            serverId = serverId,
+            itemId = itemId,
+            title = state.title,
+            subtitle = null,
+            imageUrl = state.posterUrl,
+            quality = quality
+        )
+
+        _events.emit(MovieDetailEvent.NavigateToDownloads)
     }
 
     fun onShare() {
