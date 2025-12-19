@@ -26,6 +26,7 @@ import com.lowiq.jellyfish.presentation.screens.addserver.AddServerScreenModel
 import com.lowiq.jellyfish.presentation.screens.detail.EpisodeDetailScreenModel
 import com.lowiq.jellyfish.presentation.screens.detail.MovieDetailScreenModel
 import com.lowiq.jellyfish.presentation.screens.detail.SeriesDetailScreenModel
+import com.lowiq.jellyfish.presentation.screens.downloads.DownloadsScreenModel
 import com.lowiq.jellyfish.presentation.screens.home.HomeScreenModel
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreenModel
 import com.lowiq.jellyfish.presentation.screens.login.LoginScreenModel
@@ -76,4 +77,5 @@ val presentationModule = module {
     factory { (itemId: String, title: String, subtitle: String?, startPositionMs: Long) ->
         VideoPlayerScreenModel(itemId, title, subtitle, startPositionMs, get(), get(), get())
     }
+    // factory { DownloadsScreenModel(get(), get()) } // TODO: Uncomment when DownloadsScreenModel is created
 }
