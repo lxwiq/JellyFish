@@ -57,16 +57,16 @@ suspend fun search(
 
 ## Priorité 3 : Écran des paramètres (SettingsScreen)
 
-**Statut:** Non implémenté
+**Statut:** ✅ Implémenté
 **Navigation:** Index 4 dans NavigationRail (icône Settings)
 
-### Sections requises
+### Sections implémentées
 
-- **Compte:** Utilisateur connecté, changer de serveur, déconnexion
-- **Lecture:** Qualité par défaut (streaming/téléchargement), langue audio/sous-titres préférée
+- **Compte:** Utilisateur connecté, déconnexion
+- **Lecture:** Qualité streaming/téléchargement, langue audio/sous-titres préférée
 - **Stockage:** Espace utilisé par les téléchargements, limite de stockage, vider le cache
-- **Apparence:** Thème (sombre/clair/système)
 - **À propos:** Version de l'app, licences
+- **Administration (si admin):** Gestion users, refresh bibliothèques, logs serveur, tâches planifiées
 
 ---
 
@@ -93,4 +93,4 @@ suspend fun search(
 | 1 | Search | SearchScreen | ✅ Implémenté |
 | 2 | Star | FavoritesScreen | ❌ À faire |
 | 3 | Download | DownloadsScreen | ✅ Implémenté |
-| 4 | Settings | SettingsScreen | ❌ À faire |
+| 4 | Settings | SettingsScreen | ✅ Implémenté |
