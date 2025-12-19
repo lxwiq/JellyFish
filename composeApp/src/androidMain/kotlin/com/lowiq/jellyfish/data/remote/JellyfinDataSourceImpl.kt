@@ -10,6 +10,7 @@ import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.extensions.authenticateUserByName
 import org.jellyfin.sdk.api.client.extensions.authenticateWithQuickConnect
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.mediaInfoApi
 import org.jellyfin.sdk.api.client.extensions.playStateApi
 import org.jellyfin.sdk.api.client.extensions.quickConnectApi
 import org.jellyfin.sdk.api.client.extensions.sessionApi
@@ -625,6 +626,105 @@ class JellyfinDataSourceImpl(
                     userId = java.util.UUID.fromString(userId)
                 )
             }
+            Unit
+        }
+    }
+
+    override suspend fun getStreamInfo(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String
+    ): Result<StreamInfo> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.mediaInfoApi.getPostedPlaybackInfo(
+                itemId = java.util.UUID.fromString(itemId),
+                userId = java.util.UUID.fromString(userId),
+                maxStreamingBitrate = 100_000_000,
+                startTimeTicks = 0,
+                autoOpenLiveStream = true
+            )
+
+            val mediaSource = response.mediaSources?.firstOrNull()
+                ?: throw Exception("No media source found")
+
+            val playSessionId = response.playSessionId ?: java.util.UUID.randomUUID().toString()
+            val mediaSourceId = mediaSource.id ?: itemId
+
+            val directPlayUrl = "$serverUrl/Videos/$itemId/stream?static=true&mediaSourceId=$mediaSourceId"
+            val transcodingUrl = mediaSource.transcodingUrl?.let { "$serverUrl$it" }
+
+            StreamInfo(
+                directPlayUrl = directPlayUrl,
+                transcodingUrl = transcodingUrl,
+                mediaSourceId = mediaSourceId,
+                playSessionId = playSessionId,
+                supportsDirectPlay = mediaSource.supportsDirectPlay == true
+            )
+        }
+    }
+
+    override suspend fun reportPlaybackStart(
+        serverUrl: String,
+        token: String,
+        itemId: String,
+        mediaSourceId: String,
+        playSessionId: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            api.playStateApi.reportPlaybackStart(
+                org.jellyfin.sdk.model.api.PlaybackStartInfo(
+                    itemId = java.util.UUID.fromString(itemId),
+                    mediaSourceId = mediaSourceId,
+                    playSessionId = playSessionId,
+                    canSeek = true
+                )
+            )
+            Unit
+        }
+    }
+
+    override suspend fun reportPlaybackProgress(
+        serverUrl: String,
+        token: String,
+        progress: PlaybackProgressInfo
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            api.playStateApi.reportPlaybackProgress(
+                org.jellyfin.sdk.model.api.PlaybackProgressInfo(
+                    itemId = java.util.UUID.fromString(progress.itemId),
+                    mediaSourceId = progress.mediaSourceId,
+                    positionTicks = progress.positionTicks,
+                    isPaused = progress.isPaused,
+                    playSessionId = progress.playSessionId,
+                    canSeek = true
+                )
+            )
+            Unit
+        }
+    }
+
+    override suspend fun reportPlaybackStopped(
+        serverUrl: String,
+        token: String,
+        itemId: String,
+        mediaSourceId: String,
+        positionTicks: Long,
+        playSessionId: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            api.playStateApi.reportPlaybackStopped(
+                org.jellyfin.sdk.model.api.PlaybackStopInfo(
+                    itemId = java.util.UUID.fromString(itemId),
+                    mediaSourceId = mediaSourceId,
+                    positionTicks = positionTicks,
+                    playSessionId = playSessionId
+                )
+            )
             Unit
         }
     }
