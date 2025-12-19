@@ -1,10 +1,14 @@
 package com.lowiq.jellyfish.domain.repository
 
 import com.lowiq.jellyfish.domain.model.ActivityItem
+import com.lowiq.jellyfish.domain.model.Episode
+import com.lowiq.jellyfish.domain.model.EpisodeDetails
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.LibraryFilters
 import com.lowiq.jellyfish.domain.model.MediaItem
+import com.lowiq.jellyfish.domain.model.MovieDetails
 import com.lowiq.jellyfish.domain.model.PaginatedResult
+import com.lowiq.jellyfish.domain.model.SeriesDetails
 import com.lowiq.jellyfish.domain.model.SortOption
 import kotlinx.coroutines.flow.Flow
 
@@ -53,4 +57,12 @@ interface MediaRepository {
     // Cached data methods
     fun getCachedHomeData(serverId: String): Flow<HomeMediaData>
     suspend fun refreshHomeData(serverId: String): Result<HomeMediaData>
+
+    // Detail methods
+    suspend fun getMovieDetails(serverId: String, itemId: String): Result<MovieDetails>
+    suspend fun getSeriesDetails(serverId: String, itemId: String): Result<SeriesDetails>
+    suspend fun getEpisodeDetails(serverId: String, itemId: String): Result<EpisodeDetails>
+    suspend fun getSeasonEpisodes(serverId: String, seriesId: String, seasonNumber: Int): Result<List<Episode>>
+    suspend fun toggleFavorite(serverId: String, itemId: String, isFavorite: Boolean): Result<Boolean>
+    suspend fun toggleWatched(serverId: String, itemId: String, isWatched: Boolean): Result<Boolean>
 }

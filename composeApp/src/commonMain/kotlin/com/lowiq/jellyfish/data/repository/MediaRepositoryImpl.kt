@@ -8,9 +8,15 @@ import com.lowiq.jellyfish.data.remote.Library as DataLibrary
 import com.lowiq.jellyfish.data.remote.MediaItem as DataMediaItem
 import com.lowiq.jellyfish.domain.model.ActivityItem
 import com.lowiq.jellyfish.domain.model.ActivityType
+import com.lowiq.jellyfish.domain.model.CastMember
+import com.lowiq.jellyfish.domain.model.Episode
+import com.lowiq.jellyfish.domain.model.EpisodeDetails
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.domain.model.MediaType
+import com.lowiq.jellyfish.domain.model.MovieDetails
+import com.lowiq.jellyfish.domain.model.Season
+import com.lowiq.jellyfish.domain.model.SeriesDetails
 import com.lowiq.jellyfish.domain.repository.HomeMediaData
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import kotlinx.coroutines.async
@@ -25,6 +31,21 @@ class MediaRepositoryImpl(
     private val secureStorage: SecureStorage,
     private val mediaCache: MediaCache
 ) : MediaRepository {
+
+    companion object {
+        // Jellyfin uses ticks as its time unit, where 1 tick = 100 nanoseconds
+        // This constant converts ticks to seconds (10,000,000 ticks = 1 second)
+        private const val TICKS_PER_SECOND = 10_000_000L
+    }
+
+    /**
+     * Calculates playback progress as a percentage (0.0 to 1.0) from Jellyfin tick values.
+     * Returns null if either value is null or if runtime is invalid.
+     */
+    private fun calculateProgress(playbackTicks: Long?, runtimeTicks: Long?): Float? {
+        if (playbackTicks == null || runtimeTicks == null || runtimeTicks <= 0) return null
+        return (playbackTicks.toFloat() / runtimeTicks.toFloat()).coerceIn(0f, 1f)
+    }
 
     override suspend fun getActivityFeed(serverId: String): Result<List<ActivityItem>> {
         return runCatching {
@@ -374,5 +395,189 @@ class MediaRepositoryImpl(
                 nextUp = nextUp
             )
         }
+    }
+
+    private fun formatRuntime(ticks: Long?): String? {
+        if (ticks == null) return null
+        val totalMinutes = ticks / TICKS_PER_SECOND / 60
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return when {
+            hours > 0 -> "${hours}h ${minutes}min"
+            else -> "${minutes}min"
+        }
+    }
+
+    override suspend fun getMovieDetails(serverId: String, itemId: String): Result<MovieDetails> {
+        val (server, token) = getServerAndToken(serverId)
+            ?: return Result.failure(Exception("Server not found"))
+        val userId = server.userId
+            ?: return Result.failure(Exception("User not found"))
+
+        return runCatching {
+            val details = jellyfinDataSource.getItemDetails(server.url, token, userId, itemId).getOrThrow()
+            val cast = jellyfinDataSource.getItemCast(server.url, token, userId, itemId).getOrElse { emptyList() }
+            val similar = jellyfinDataSource.getSimilarItems(server.url, token, userId, itemId).getOrElse { emptyList() }
+
+            MovieDetails(
+                id = details.id,
+                title = details.name,
+                overview = details.overview,
+                backdropUrl = details.backdropUrl,
+                posterUrl = details.posterUrl,
+                year = details.year,
+                runtime = formatRuntime(details.runtime),
+                rating = details.communityRating,
+                genres = details.genres,
+                studio = details.studios.firstOrNull(),
+                cast = cast.map { CastMember(it.id, it.name, it.role, it.imageUrl) },
+                similarItems = similar.map { it.toDomainMediaItem() },
+                trailerUrl = details.trailerUrl,
+                isFavorite = details.isFavorite,
+                isWatched = details.isPlayed
+            )
+        }
+    }
+
+    override suspend fun getSeriesDetails(serverId: String, itemId: String): Result<SeriesDetails> {
+        val (server, token) = getServerAndToken(serverId)
+            ?: return Result.failure(Exception("Server not found"))
+        val userId = server.userId
+            ?: return Result.failure(Exception("User not found"))
+
+        return runCatching {
+            val details = jellyfinDataSource.getItemDetails(server.url, token, userId, itemId).getOrThrow()
+            val cast = jellyfinDataSource.getItemCast(server.url, token, userId, itemId).getOrElse { emptyList() }
+            val seasons = jellyfinDataSource.getSeriesSeasons(server.url, token, userId, itemId).getOrElse { emptyList() }
+            val similar = jellyfinDataSource.getSimilarItems(server.url, token, userId, itemId).getOrElse { emptyList() }
+
+            SeriesDetails(
+                id = details.id,
+                title = details.name,
+                overview = details.overview,
+                backdropUrl = details.backdropUrl,
+                posterUrl = details.posterUrl,
+                year = details.year,
+                seasonCount = seasons.size,
+                rating = details.communityRating,
+                genres = details.genres,
+                studio = details.studios.firstOrNull(),
+                cast = cast.map { CastMember(it.id, it.name, it.role, it.imageUrl) },
+                seasons = seasons.map { Season(it.id, it.name, it.number, it.episodeCount, it.imageUrl) },
+                similarItems = similar.map { it.toDomainMediaItem() },
+                isFavorite = details.isFavorite,
+                isWatched = details.isPlayed
+            )
+        }
+    }
+
+    override suspend fun getEpisodeDetails(serverId: String, itemId: String): Result<EpisodeDetails> {
+        val (server, token) = getServerAndToken(serverId)
+            ?: return Result.failure(Exception("Server not found"))
+        val userId = server.userId
+            ?: return Result.failure(Exception("User not found"))
+
+        return runCatching {
+            val details = jellyfinDataSource.getItemDetails(server.url, token, userId, itemId).getOrThrow()
+            val guestStars = jellyfinDataSource.getItemCast(server.url, token, userId, itemId).getOrElse { emptyList() }
+
+            val seriesId = details.seriesId ?: throw Exception("Series ID not found")
+            val seasonNumber = details.seasonNumber ?: 1
+            val episodeNumber = details.episodeNumber ?: 1
+
+            val episodes = jellyfinDataSource.getSeasonEpisodes(server.url, token, userId, seriesId, seasonNumber)
+                .getOrElse { emptyList() }
+
+            val sortedEpisodes = episodes.sortedBy { it.episodeNumber }
+            val currentIndex = sortedEpisodes.indexOfFirst { it.id == itemId }
+            val previousId = if (currentIndex > 0) sortedEpisodes[currentIndex - 1].id else null
+            val nextId = if (currentIndex < sortedEpisodes.size - 1) sortedEpisodes[currentIndex + 1].id else null
+
+            val progress = calculateProgress(details.playbackPositionTicks, details.runtime)
+
+            EpisodeDetails(
+                id = details.id,
+                title = details.name,
+                overview = details.overview,
+                thumbnailUrl = details.backdropUrl ?: details.posterUrl,
+                seasonNumber = seasonNumber,
+                episodeNumber = episodeNumber,
+                runtime = formatRuntime(details.runtime),
+                rating = details.communityRating,
+                seriesId = seriesId,
+                seriesName = details.seriesName ?: "Series",
+                guestStars = guestStars.map { CastMember(it.id, it.name, it.role, it.imageUrl) },
+                seasonEpisodes = sortedEpisodes.map { ep ->
+                    val epProgress = calculateProgress(ep.playbackPositionTicks, ep.runTimeTicks)
+                    Episode(
+                        id = ep.id,
+                        title = ep.name,
+                        overview = ep.overview,
+                        seasonNumber = ep.seasonNumber,
+                        episodeNumber = ep.episodeNumber,
+                        runtime = formatRuntime(ep.runTimeTicks),
+                        rating = ep.communityRating,
+                        thumbnailUrl = ep.imageUrl,
+                        progress = epProgress,
+                        isWatched = ep.isPlayed
+                    )
+                },
+                previousEpisodeId = previousId,
+                nextEpisodeId = nextId,
+                isFavorite = details.isFavorite,
+                isWatched = details.isPlayed,
+                progress = progress
+            )
+        }
+    }
+
+    override suspend fun getSeasonEpisodes(
+        serverId: String,
+        seriesId: String,
+        seasonNumber: Int
+    ): Result<List<Episode>> {
+        val (server, token) = getServerAndToken(serverId)
+            ?: return Result.failure(Exception("Server not found"))
+        val userId = server.userId
+            ?: return Result.failure(Exception("User not found"))
+
+        return jellyfinDataSource.getSeasonEpisodes(server.url, token, userId, seriesId, seasonNumber)
+            .map { episodes ->
+                episodes.map { ep ->
+                    val progress = calculateProgress(ep.playbackPositionTicks, ep.runTimeTicks)
+                    Episode(
+                        id = ep.id,
+                        title = ep.name,
+                        overview = ep.overview,
+                        seasonNumber = ep.seasonNumber,
+                        episodeNumber = ep.episodeNumber,
+                        runtime = formatRuntime(ep.runTimeTicks),
+                        rating = ep.communityRating,
+                        thumbnailUrl = ep.imageUrl,
+                        progress = progress,
+                        isWatched = ep.isPlayed
+                    )
+                }
+            }
+    }
+
+    override suspend fun toggleFavorite(serverId: String, itemId: String, isFavorite: Boolean): Result<Boolean> {
+        val (server, token) = getServerAndToken(serverId)
+            ?: return Result.failure(Exception("Server not found"))
+        val userId = server.userId
+            ?: return Result.failure(Exception("User not found"))
+
+        return jellyfinDataSource.toggleFavorite(server.url, token, userId, itemId, isFavorite)
+            .map { isFavorite }
+    }
+
+    override suspend fun toggleWatched(serverId: String, itemId: String, isWatched: Boolean): Result<Boolean> {
+        val (server, token) = getServerAndToken(serverId)
+            ?: return Result.failure(Exception("Server not found"))
+        val userId = server.userId
+            ?: return Result.failure(Exception("User not found"))
+
+        return jellyfinDataSource.toggleWatched(server.url, token, userId, itemId, isWatched)
+            .map { isWatched }
     }
 }
