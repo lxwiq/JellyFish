@@ -223,8 +223,15 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                                 .padding(horizontal = 16.dp)
                         ) {
                             // Episode title: "S{season} E{episode} • {title}"
+                            // Skip redundant title if it's just "Episode X"
+                            val displayTitle = if (state.title.equals("Episode ${state.episodeNumber}", ignoreCase = true) ||
+                                state.title.equals("Episode", ignoreCase = true)) {
+                                "S${state.seasonNumber} E${state.episodeNumber}"
+                            } else {
+                                "S${state.seasonNumber} E${state.episodeNumber} • ${state.title}"
+                            }
                             Text(
-                                text = "S${state.seasonNumber} E${state.episodeNumber} • ${state.title}",
+                                text = displayTitle,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colors.foreground

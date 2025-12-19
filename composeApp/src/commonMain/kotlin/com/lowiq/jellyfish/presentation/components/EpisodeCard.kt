@@ -105,8 +105,15 @@ fun EpisodeCard(
             verticalArrangement = Arrangement.Center
         ) {
             // Episode number and title
+            // Skip redundant "Episode X" pattern - just show number if title is generic
+            val displayTitle = if (episode.title.equals("Episode ${episode.episodeNumber}", ignoreCase = true) ||
+                episode.title.equals("Episode", ignoreCase = true)) {
+                "Episode ${episode.episodeNumber}"
+            } else {
+                "${episode.episodeNumber}. ${episode.title}"
+            }
             Text(
-                text = "${episode.episodeNumber}. ${episode.title}",
+                text = displayTitle,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = colors.foreground,
