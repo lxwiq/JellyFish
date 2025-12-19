@@ -17,6 +17,7 @@ import com.lowiq.jellyfish.domain.usecase.GetServersUseCase
 import com.lowiq.jellyfish.domain.usecase.LoginUseCase
 import com.lowiq.jellyfish.domain.usecase.QuickConnectUseCase
 import com.lowiq.jellyfish.presentation.screens.addserver.AddServerScreenModel
+import com.lowiq.jellyfish.presentation.screens.detail.MovieDetailScreenModel
 import com.lowiq.jellyfish.presentation.screens.home.HomeScreenModel
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreenModel
 import com.lowiq.jellyfish.presentation.screens.login.LoginScreenModel
@@ -54,4 +55,5 @@ val presentationModule = module {
     factory { (server: Server) -> QuickConnectScreenModel(server, get()) }
     factory { HomeScreenModel(get(), get(), get()) }
     factory { (library: Library) -> LibraryScreenModel(library, get(), get(), get()) }
+    factory { (itemId: String) -> MovieDetailScreenModel(itemId, get(), get()) }
 }
