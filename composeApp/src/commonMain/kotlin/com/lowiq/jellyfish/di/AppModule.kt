@@ -78,8 +78,20 @@ val presentationModule = module {
     factory { (itemId: String) -> MovieDetailScreenModel(itemId, get(), get(), get(), get()) }
     factory { (itemId: String) -> SeriesDetailScreenModel(itemId, get(), get()) }
     factory { (itemId: String) -> EpisodeDetailScreenModel(itemId, get(), get()) }
-    factory { (itemId: String, title: String, subtitle: String?, startPositionMs: Long) ->
-        VideoPlayerScreenModel(itemId, title, subtitle, startPositionMs, get(), get(), get())
+    factory { params ->
+        VideoPlayerScreenModel(
+            itemId = params[0],
+            itemTitle = params[1],
+            itemSubtitle = params[2],
+            startPositionMs = params[3],
+            offlineFilePath = params[4],
+            downloadId = params[5],
+            videoPlayer = get(),
+            serverRepository = get(),
+            mediaRepository = get(),
+            downloadRepository = get(),
+            playbackSyncService = get()
+        )
     }
     factory { DownloadsScreenModel(get(), get()) }
 }
