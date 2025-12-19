@@ -36,6 +36,7 @@ import com.lowiq.jellyfish.presentation.screens.downloads.DownloadsScreen
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreen
 import com.lowiq.jellyfish.presentation.screens.search.SearchScreen
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
+import com.lowiq.jellyfish.presentation.screens.settings.SettingsScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 class HomeScreen : Screen {
@@ -62,6 +63,9 @@ class HomeScreen : Screen {
                     }
                     is HomeEvent.NavigateToSearch -> {
                         navigator.push(SearchScreen())
+                    }
+                    is HomeEvent.NavigateToSettings -> {
+                        navigator.push(SettingsScreen())
                     }
                 }
             }

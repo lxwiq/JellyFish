@@ -8,6 +8,7 @@ import com.lowiq.jellyfish.data.local.SearchHistoryStorage
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.local.UserPreferencesStorage
 import com.lowiq.jellyfish.data.remote.DownloadClient
+import com.lowiq.jellyfish.data.repository.AdminRepositoryImpl
 import com.lowiq.jellyfish.data.repository.AuthRepositoryImpl
 import com.lowiq.jellyfish.data.repository.DownloadRepositoryImpl
 import com.lowiq.jellyfish.data.repository.MediaRepositoryImpl
@@ -16,6 +17,7 @@ import com.lowiq.jellyfish.domain.download.DownloadManager
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.domain.sync.PlaybackSyncService
+import com.lowiq.jellyfish.domain.repository.AdminRepository
 import com.lowiq.jellyfish.domain.repository.AuthRepository
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
@@ -37,6 +39,7 @@ import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreenModel
 import com.lowiq.jellyfish.presentation.screens.quickconnect.QuickConnectScreenModel
 import com.lowiq.jellyfish.presentation.screens.search.SearchScreenModel
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreenModel
+import com.lowiq.jellyfish.presentation.screens.settings.SettingsScreenModel
 import io.ktor.client.*
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -57,6 +60,7 @@ val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<ServerRepository> { ServerRepositoryImpl(get(), get(), get()) }
     single<MediaRepository> { MediaRepositoryImpl(get(), get(), get(), get()) }
+    single<AdminRepository> { AdminRepositoryImpl(get(), get(), get()) }
     single { DownloadClient(get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
     single { DownloadManager(get(), get(), get(), get(), get(), get(), get()) }
@@ -98,4 +102,14 @@ val presentationModule = module {
     }
     factory { DownloadsScreenModel(get(), get()) }
     factory { SearchScreenModel(get(), get(), get()) }
+    factory {
+        SettingsScreenModel(
+            authRepository = get(),
+            serverRepository = get(),
+            downloadRepository = get(),
+            adminRepository = get(),
+            userPreferencesStorage = get(),
+            downloadSettingsStorage = get()
+        )
+    }
 }

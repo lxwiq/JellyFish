@@ -39,6 +39,7 @@ sealed class HomeEvent {
     object NavigateToServerList : HomeEvent()
     object NavigateToDownloads : HomeEvent()
     object NavigateToSearch : HomeEvent()
+    object NavigateToSettings : HomeEvent()
 }
 
 class HomeScreenModel(
@@ -173,6 +174,7 @@ class HomeScreenModel(
             when (index) {
                 1 -> _events.emit(HomeEvent.NavigateToSearch)
                 3 -> _events.emit(HomeEvent.NavigateToDownloads)
+                4 -> _events.emit(HomeEvent.NavigateToSettings)
             }
         }
     }
