@@ -65,6 +65,7 @@ fun JellyFishTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val typography = JellyFishTypography.typography()
 
     CompositionLocalProvider(
         LocalJellyFishColors provides jellyFishColors,
@@ -73,6 +74,7 @@ fun JellyFishTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
+            typography = typography,
             content = content
         )
     }
