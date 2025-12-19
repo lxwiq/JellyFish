@@ -71,4 +71,7 @@ interface MediaRepository {
     suspend fun reportPlaybackStart(serverId: String, itemId: String, mediaSourceId: String, playSessionId: String): Result<Unit>
     suspend fun reportPlaybackProgress(serverId: String, progress: com.lowiq.jellyfish.data.remote.PlaybackProgressInfo): Result<Unit>
     suspend fun reportPlaybackStopped(serverId: String, itemId: String, mediaSourceId: String, positionTicks: Long, playSessionId: String): Result<Unit>
+
+    // Search
+    suspend fun search(serverId: String, query: String): Result<List<MediaItem>>
 }

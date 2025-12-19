@@ -18,6 +18,13 @@ interface JellyfinDataSource {
     suspend fun getLatestSeries(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
     suspend fun getLatestMusic(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
     suspend fun getNextUpEpisodes(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
+    suspend fun searchItems(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        query: String,
+        limit: Int = 30
+    ): Result<List<MediaItem>>
     suspend fun getLibraryItemsFiltered(
         serverUrl: String,
         token: String,

@@ -622,4 +622,15 @@ class MediaRepositoryImpl(
 
         return jellyfinDataSource.reportPlaybackStopped(server.url, token, itemId, mediaSourceId, positionTicks, playSessionId)
     }
+
+    override suspend fun search(serverId: String, query: String): Result<List<MediaItem>> {
+        val server = serverStorage.getServers().first().find { it.id == serverId }
+            ?: return Result.failure(Exception("Server not found"))
+        val token = secureStorage.getToken(serverId)
+            ?: return Result.failure(Exception("Not authenticated"))
+        val userId = server.userId ?: return Result.failure(Exception("No user ID"))
+
+        return jellyfinDataSource.searchItems(server.url, token, userId, query)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
 }

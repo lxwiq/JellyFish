@@ -309,6 +309,33 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
         }
     }
 
+    override suspend fun searchItems(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        query: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
+                searchTerm = query,
+                limit = limit,
+                recursive = true,
+                enableImages = true,
+                includeItemTypes = listOf(
+                    BaseItemKind.MOVIE,
+                    BaseItemKind.SERIES,
+                    BaseItemKind.EPISODE,
+                    BaseItemKind.MUSIC_ALBUM,
+                    BaseItemKind.AUDIO
+                )
+            )
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
+        }
+    }
+
     override suspend fun getLibraryItemsFiltered(
         serverUrl: String,
         token: String,
