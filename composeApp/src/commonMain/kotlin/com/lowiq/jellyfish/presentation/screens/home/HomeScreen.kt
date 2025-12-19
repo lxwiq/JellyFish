@@ -24,6 +24,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lowiq.jellyfish.domain.model.MediaType
 import com.lowiq.jellyfish.presentation.components.AppHeader
 import com.lowiq.jellyfish.presentation.components.AppScaffold
 import com.lowiq.jellyfish.presentation.components.LibraryCards
@@ -213,5 +214,6 @@ private fun com.lowiq.jellyfish.domain.model.MediaItem.toCarouselItem() = MediaC
     subtitle = subtitle,
     imageUrl = imageUrl,
     progress = progress,
-    isPoster = isPoster
+    isPoster = isPoster,
+    type = type
 )

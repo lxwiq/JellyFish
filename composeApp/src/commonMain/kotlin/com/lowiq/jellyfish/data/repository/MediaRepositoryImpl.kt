@@ -10,6 +10,7 @@ import com.lowiq.jellyfish.domain.model.ActivityItem
 import com.lowiq.jellyfish.domain.model.ActivityType
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.MediaItem
+import com.lowiq.jellyfish.domain.model.MediaType
 import com.lowiq.jellyfish.domain.repository.HomeMediaData
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import kotlinx.coroutines.async
@@ -266,13 +267,22 @@ class MediaRepositoryImpl(
         // forceBackdrop=true means always use horizontal (e.g., Continue Watching)
         val isPoster = if (forceBackdrop) false else this.type != "Episode"
 
+        val mediaType = when (this.type) {
+            "Movie" -> MediaType.MOVIE
+            "Series" -> MediaType.SERIES
+            "Episode" -> MediaType.EPISODE
+            "Audio", "MusicAlbum" -> MediaType.MUSIC
+            else -> MediaType.OTHER
+        }
+
         return MediaItem(
             id = id,
             title = name,
             subtitle = subtitle,
             imageUrl = imageUrl,
             progress = progress,
-            isPoster = isPoster
+            isPoster = isPoster,
+            type = mediaType
         )
     }
 
