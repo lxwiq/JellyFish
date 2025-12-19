@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 data class MovieDetailState(
     val isLoading: Boolean = true,
@@ -31,6 +33,14 @@ data class MovieDetailState(
     val isWatched: Boolean = false
 )
 
+sealed class MovieDetailEvent {
+    data class PlayVideo(
+        val itemId: String,
+        val title: String,
+        val startPositionMs: Long
+    ) : MovieDetailEvent()
+}
+
 class MovieDetailScreenModel(
     private val itemId: String,
     private val serverRepository: ServerRepository,
@@ -39,6 +49,9 @@ class MovieDetailScreenModel(
 
     private val _state = MutableStateFlow(MovieDetailState())
     val state = _state.asStateFlow()
+
+    private val _events = MutableSharedFlow<MovieDetailEvent>()
+    val events = _events.asSharedFlow()
 
     private var currentServerId: String? = null
 
@@ -110,7 +123,15 @@ class MovieDetailScreenModel(
     }
 
     fun onPlay() {
-        // TODO: Implement playback
+        screenModelScope.launch {
+            _events.emit(
+                MovieDetailEvent.PlayVideo(
+                    itemId = itemId,
+                    title = _state.value.title,
+                    startPositionMs = 0 // Start from beginning for now
+                )
+            )
+        }
     }
 
     fun onDownload() {
