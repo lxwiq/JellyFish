@@ -10,18 +10,49 @@ import kotlinx.coroutines.flow.map
 
 class UserPreferencesStorage(private val dataStore: DataStore<Preferences>) {
 
-    private val displayModeKey = stringPreferencesKey("display_mode")
+    private companion object {
+        val KEY_DISPLAY_MODE = stringPreferencesKey("display_mode")
+        val KEY_STREAMING_QUALITY = stringPreferencesKey("streaming_quality")
+        val KEY_PREFERRED_AUDIO_LANG = stringPreferencesKey("preferred_audio_language")
+        val KEY_PREFERRED_SUBTITLE_LANG = stringPreferencesKey("preferred_subtitle_language")
+    }
 
+    // Existing: Display mode
     fun getDisplayMode(): Flow<DisplayMode> = dataStore.data.map { prefs ->
-        val value = prefs[displayModeKey]
+        val value = prefs[KEY_DISPLAY_MODE]
         value?.let {
             try { DisplayMode.valueOf(it) } catch (_: Exception) { DisplayMode.POSTER }
         } ?: DisplayMode.POSTER
     }
 
     suspend fun setDisplayMode(mode: DisplayMode) {
-        dataStore.edit { prefs ->
-            prefs[displayModeKey] = mode.name
-        }
+        dataStore.edit { it[KEY_DISPLAY_MODE] = mode.name }
+    }
+
+    // New: Streaming quality
+    fun getStreamingQuality(): Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_STREAMING_QUALITY] ?: "Auto"
+    }
+
+    suspend fun setStreamingQuality(quality: String) {
+        dataStore.edit { it[KEY_STREAMING_QUALITY] = quality }
+    }
+
+    // New: Audio language
+    fun getPreferredAudioLanguage(): Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_PREFERRED_AUDIO_LANG] ?: ""
+    }
+
+    suspend fun setPreferredAudioLanguage(language: String) {
+        dataStore.edit { it[KEY_PREFERRED_AUDIO_LANG] = language }
+    }
+
+    // New: Subtitle language
+    fun getPreferredSubtitleLanguage(): Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_PREFERRED_SUBTITLE_LANG] ?: ""
+    }
+
+    suspend fun setPreferredSubtitleLanguage(language: String) {
+        dataStore.edit { it[KEY_PREFERRED_SUBTITLE_LANG] = language }
     }
 }
