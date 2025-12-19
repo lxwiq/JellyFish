@@ -28,7 +28,10 @@ data class VideoPlayerScreen(
     val itemId: String,
     val title: String,
     val subtitle: String? = null,
-    val startPositionMs: Long = 0
+    val startPositionMs: Long = 0,
+    // Offline playback support
+    val offlineFilePath: String? = null,
+    val downloadId: String? = null
 ) : Screen {
 
     @Composable
@@ -36,7 +39,7 @@ data class VideoPlayerScreen(
         val colors = LocalJellyFishColors.current
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<VideoPlayerScreenModel> {
-            parametersOf(itemId, title, subtitle, startPositionMs)
+            parametersOf(itemId, title, subtitle, startPositionMs, offlineFilePath, downloadId)
         }
         val state by screenModel.state.collectAsState()
 
