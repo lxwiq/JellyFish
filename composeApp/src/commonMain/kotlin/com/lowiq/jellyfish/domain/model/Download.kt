@@ -24,7 +24,9 @@ data class Download(
     val filePath: String? = null,
     val createdAt: Long,
     val completedAt: Long? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val lastPlayedPositionMs: Long = 0,
+    val lastPlayedAt: Long? = null
 )
 
 data class QualityOption(
