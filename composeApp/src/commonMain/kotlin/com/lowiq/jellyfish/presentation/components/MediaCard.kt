@@ -43,6 +43,8 @@ fun MediaCard(
     // Poster: vertical (2:3 ratio), Episode: horizontal (16:9 ratio)
     val cardWidth = if (isPoster) 120.dp else 160.dp
     val imageHeight = if (isPoster) 180.dp else 90.dp
+    // Fixed height for text area to ensure consistent card heights
+    val textAreaHeight = if (isPoster) 56.dp else 56.dp
 
     Column(
         modifier = modifier
@@ -92,30 +94,36 @@ fun MediaCard(
             }
         }
 
-        // Title
-        Text(
-            text = title,
-            fontSize = 14.sp,
-            color = Color(0xFFFAFAFA),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+        // Text area with fixed height for consistent card sizes
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(textAreaHeight)
                 .padding(top = 8.dp)
-        )
-
-        // Subtitle (if provided)
-        subtitle?.let {
+        ) {
+            // Title
             Text(
-                text = it,
-                fontSize = 12.sp,
-                color = Color(0xFFA1A1AA),
-                maxLines = 1,
+                text = title,
+                fontSize = 14.sp,
+                color = Color(0xFFFAFAFA),
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
+                modifier = Modifier.fillMaxWidth()
             )
+
+            // Subtitle (if provided)
+            subtitle?.let {
+                Text(
+                    text = it,
+                    fontSize = 12.sp,
+                    color = Color(0xFFA1A1AA),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp)
+                )
+            }
         }
     }
 }
