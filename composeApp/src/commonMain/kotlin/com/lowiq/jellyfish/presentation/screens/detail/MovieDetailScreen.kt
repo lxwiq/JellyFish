@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,6 +51,7 @@ import com.lowiq.jellyfish.presentation.components.CastCarousel
 import com.lowiq.jellyfish.presentation.components.GenreBadges
 import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
+import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 import org.koin.core.parameter.parametersOf
 
@@ -62,6 +64,22 @@ class MovieDetailScreen(private val itemId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<MovieDetailScreenModel> { parametersOf(itemId) }
         val state by screenModel.state.collectAsState()
+
+        LaunchedEffect(Unit) {
+            screenModel.events.collect { event ->
+                when (event) {
+                    is MovieDetailEvent.PlayVideo -> {
+                        navigator.push(
+                            VideoPlayerScreen(
+                                itemId = event.itemId,
+                                title = event.title,
+                                startPositionMs = event.startPositionMs
+                            )
+                        )
+                    }
+                }
+            }
+        }
 
         Scaffold(
             topBar = {
