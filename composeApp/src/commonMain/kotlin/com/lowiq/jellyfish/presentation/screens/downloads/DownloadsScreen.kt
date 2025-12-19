@@ -22,6 +22,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import com.lowiq.jellyfish.domain.model.Download
 import com.lowiq.jellyfish.domain.model.DownloadStatus
+import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 class DownloadsScreen : Screen {
@@ -104,7 +105,20 @@ class DownloadsScreen : Screen {
                         items(state.completedDownloads, key = { it.id }) { download ->
                             CompletedDownloadItem(
                                 download = download,
-                                onPlay = { /* TODO: Navigate to player with local file */ },
+                                onPlay = {
+                                    download.filePath?.let { path ->
+                                        navigator.push(
+                                            VideoPlayerScreen(
+                                                itemId = download.itemId,
+                                                title = download.title,
+                                                subtitle = download.subtitle,
+                                                startPositionMs = download.lastPlayedPositionMs,
+                                                offlineFilePath = path,
+                                                downloadId = download.id
+                                            )
+                                        )
+                                    }
+                                },
                                 onDelete = { screenModel.deleteDownload(download.id) }
                             )
                         }
