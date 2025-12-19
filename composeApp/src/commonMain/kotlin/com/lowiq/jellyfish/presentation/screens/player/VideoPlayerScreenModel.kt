@@ -111,9 +111,7 @@ class VideoPlayerScreenModel(
                         streamInfo.transcodingUrl ?: streamInfo.directPlayUrl
                     }
 
-                    streamHeaders = mapOf(
-                        "X-Emby-Token" to (server.token ?: "")
-                    )
+                    streamHeaders = emptyMap()  // Token is passed in URL
 
                     _state.update { it.copy(isLoading = false) }
 
