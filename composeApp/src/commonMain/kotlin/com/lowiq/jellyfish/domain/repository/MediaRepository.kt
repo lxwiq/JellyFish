@@ -65,4 +65,10 @@ interface MediaRepository {
     suspend fun getSeasonEpisodes(serverId: String, seriesId: String, seasonNumber: Int): Result<List<Episode>>
     suspend fun toggleFavorite(serverId: String, itemId: String, isFavorite: Boolean): Result<Boolean>
     suspend fun toggleWatched(serverId: String, itemId: String, isWatched: Boolean): Result<Boolean>
+
+    // Streaming methods
+    suspend fun getStreamInfo(serverId: String, itemId: String): Result<com.lowiq.jellyfish.data.remote.StreamInfo>
+    suspend fun reportPlaybackStart(serverId: String, itemId: String, mediaSourceId: String, playSessionId: String): Result<Unit>
+    suspend fun reportPlaybackProgress(serverId: String, progress: com.lowiq.jellyfish.data.remote.PlaybackProgressInfo): Result<Unit>
+    suspend fun reportPlaybackStopped(serverId: String, itemId: String, mediaSourceId: String, positionTicks: Long, playSessionId: String): Result<Unit>
 }

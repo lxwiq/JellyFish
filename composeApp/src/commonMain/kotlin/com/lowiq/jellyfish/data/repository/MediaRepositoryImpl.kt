@@ -4,6 +4,8 @@ import com.lowiq.jellyfish.data.local.MediaCache
 import com.lowiq.jellyfish.data.local.SecureStorage
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
+import com.lowiq.jellyfish.data.remote.PlaybackProgressInfo
+import com.lowiq.jellyfish.data.remote.StreamInfo
 import com.lowiq.jellyfish.data.remote.Library as DataLibrary
 import com.lowiq.jellyfish.data.remote.MediaItem as DataMediaItem
 import com.lowiq.jellyfish.domain.model.ActivityItem
@@ -579,5 +581,44 @@ class MediaRepositoryImpl(
 
         return jellyfinDataSource.toggleWatched(server.url, token, userId, itemId, isWatched)
             .map { isWatched }
+    }
+
+    override suspend fun getStreamInfo(serverId: String, itemId: String): Result<StreamInfo> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.failure(Exception("Server not found"))
+        val userId = server.userId ?: return Result.failure(Exception("User not found"))
+
+        return jellyfinDataSource.getStreamInfo(server.url, token, userId, itemId)
+    }
+
+    override suspend fun reportPlaybackStart(
+        serverId: String,
+        itemId: String,
+        mediaSourceId: String,
+        playSessionId: String
+    ): Result<Unit> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.failure(Exception("Server not found"))
+
+        return jellyfinDataSource.reportPlaybackStart(server.url, token, itemId, mediaSourceId, playSessionId)
+    }
+
+    override suspend fun reportPlaybackProgress(
+        serverId: String,
+        progress: PlaybackProgressInfo
+    ): Result<Unit> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.failure(Exception("Server not found"))
+
+        return jellyfinDataSource.reportPlaybackProgress(server.url, token, progress)
+    }
+
+    override suspend fun reportPlaybackStopped(
+        serverId: String,
+        itemId: String,
+        mediaSourceId: String,
+        positionTicks: Long,
+        playSessionId: String
+    ): Result<Unit> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.failure(Exception("Server not found"))
+
+        return jellyfinDataSource.reportPlaybackStopped(server.url, token, itemId, mediaSourceId, positionTicks, playSessionId)
     }
 }
