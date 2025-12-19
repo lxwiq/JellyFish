@@ -6,23 +6,34 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,7 +46,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +65,7 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.lowiq.jellyfish.domain.model.DisplayMode
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.presentation.components.FilterBar
@@ -89,6 +103,8 @@ class LibraryScreen(private val library: Library) : Screen {
             }
         }
 
+        var showDisplayModeMenu by remember { mutableStateOf(false) }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -105,6 +121,69 @@ class LibraryScreen(private val library: Library) : Screen {
                                 contentDescription = "Back",
                                 tint = TextColor
                             )
+                        }
+                    },
+                    actions = {
+                        Box {
+                            IconButton(onClick = { showDisplayModeMenu = true }) {
+                                Icon(
+                                    imageVector = when (state.displayMode) {
+                                        DisplayMode.POSTER -> Icons.Default.ViewModule
+                                        DisplayMode.GRID -> Icons.Default.GridView
+                                        DisplayMode.LIST -> Icons.AutoMirrored.Filled.ViewList
+                                    },
+                                    contentDescription = "Display mode",
+                                    tint = TextColor
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showDisplayModeMenu,
+                                onDismissRequest = { showDisplayModeMenu = false },
+                                containerColor = SurfaceColor
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Posters", color = TextColor) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.ViewModule,
+                                            contentDescription = null,
+                                            tint = TextColor
+                                        )
+                                    },
+                                    onClick = {
+                                        screenModel.updateDisplayMode(DisplayMode.POSTER)
+                                        showDisplayModeMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Grille", color = TextColor) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.GridView,
+                                            contentDescription = null,
+                                            tint = TextColor
+                                        )
+                                    },
+                                    onClick = {
+                                        screenModel.updateDisplayMode(DisplayMode.GRID)
+                                        showDisplayModeMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Liste", color = TextColor) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ViewList,
+                                            contentDescription = null,
+                                            tint = TextColor
+                                        )
+                                    },
+                                    onClick = {
+                                        screenModel.updateDisplayMode(DisplayMode.LIST)
+                                        showDisplayModeMenu = false
+                                    }
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -157,37 +236,104 @@ class LibraryScreen(private val library: Library) : Screen {
                         }
                     }
                     else -> {
-                        LazyVerticalGrid(
-                            state = gridState,
-                            columns = GridCells.Adaptive(minSize = 120.dp),
-                            contentPadding = PaddingValues(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            items(
-                                items = state.items,
-                                key = { it.id }
-                            ) { item ->
-                                LibraryGridItem(
-                                    item = item,
-                                    onClick = { /* TODO: Navigate to detail */ }
-                                )
+                        when (state.displayMode) {
+                            DisplayMode.LIST -> {
+                                val listState = rememberLazyListState()
+
+                                // Infinite scroll for list
+                                val shouldLoadMoreList by remember {
+                                    derivedStateOf {
+                                        val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+                                            ?: return@derivedStateOf false
+                                        val totalItems = listState.layoutInfo.totalItemsCount
+                                        lastVisibleItem.index >= totalItems - 6
+                                    }
+                                }
+
+                                LaunchedEffect(shouldLoadMoreList) {
+                                    if (shouldLoadMoreList && !state.isLoading && !state.isLoadingMore && state.hasMoreItems) {
+                                        screenModel.loadMore()
+                                    }
+                                }
+
+                                LazyColumn(
+                                    state = listState,
+                                    contentPadding = PaddingValues(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(
+                                        items = state.items,
+                                        key = { it.id }
+                                    ) { item ->
+                                        LibraryListItem(
+                                            item = item,
+                                            onClick = { /* TODO: Navigate to detail */ }
+                                        )
+                                    }
+
+                                    if (state.isLoadingMore) {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(16.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    color = TextColor,
+                                                    modifier = Modifier.size(32.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
-                            // Loading indicator at bottom
-                            if (state.isLoadingMore) {
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = TextColor,
-                                            modifier = Modifier.size(32.dp)
-                                        )
+                            DisplayMode.POSTER, DisplayMode.GRID -> {
+                                val columns = when (state.displayMode) {
+                                    DisplayMode.POSTER -> GridCells.Adaptive(minSize = 110.dp)
+                                    else -> GridCells.Adaptive(minSize = 150.dp)
+                                }
+
+                                LazyVerticalGrid(
+                                    state = gridState,
+                                    columns = columns,
+                                    contentPadding = PaddingValues(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(
+                                        items = state.items,
+                                        key = { it.id }
+                                    ) { item ->
+                                        when (state.displayMode) {
+                                            DisplayMode.POSTER -> LibraryPosterItem(
+                                                item = item,
+                                                onClick = { /* TODO: Navigate to detail */ }
+                                            )
+                                            else -> LibraryGridItem(
+                                                item = item,
+                                                onClick = { /* TODO: Navigate to detail */ }
+                                            )
+                                        }
+                                    }
+
+                                    if (state.isLoadingMore) {
+                                        item(span = { GridItemSpan(maxLineSpan) }) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(16.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    color = TextColor,
+                                                    modifier = Modifier.size(32.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -258,6 +404,129 @@ private fun LibraryGridItem(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 2.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun LibraryPosterItem(
+    item: MediaItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.clickable(onClick = onClick)
+    ) {
+        // Poster image (2:3 aspect ratio)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(2f / 3f)
+                .clip(RoundedCornerShape(8.dp))
+                .background(SurfaceColor),
+            contentAlignment = Alignment.Center
+        ) {
+            if (item.imageUrl != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalPlatformContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = SubtleTextColor,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Title only for poster mode
+        Text(
+            text = item.title,
+            fontSize = 12.sp,
+            color = TextColor,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun LibraryListItem(
+    item: MediaItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(SurfaceColor)
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Poster thumbnail
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .aspectRatio(2f / 3f)
+                .clip(RoundedCornerShape(4.dp))
+                .background(BackgroundColor),
+            contentAlignment = Alignment.Center
+        ) {
+            if (item.imageUrl != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalPlatformContext.current)
+                        .data(item.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = SubtleTextColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // Text content
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = item.title,
+                fontSize = 14.sp,
+                color = TextColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            item.subtitle?.let { subtitle ->
+                Text(
+                    text = subtitle,
+                    fontSize = 12.sp,
+                    color = SubtleTextColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }

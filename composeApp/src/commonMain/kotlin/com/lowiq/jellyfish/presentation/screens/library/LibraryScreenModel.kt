@@ -2,6 +2,8 @@ package com.lowiq.jellyfish.presentation.screens.library
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.lowiq.jellyfish.data.local.UserPreferencesStorage
+import com.lowiq.jellyfish.domain.model.DisplayMode
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.LibraryFilters
 import com.lowiq.jellyfish.domain.model.MediaItem
@@ -23,6 +25,9 @@ data class LibraryState(
     val hasMoreItems: Boolean = true,
     val error: String? = null,
 
+    // Display mode
+    val displayMode: DisplayMode = DisplayMode.POSTER,
+
     // Filters
     val sortBy: SortOption = SortOption.DATE_ADDED,
     val selectedGenre: String? = null,
@@ -38,7 +43,8 @@ data class LibraryState(
 class LibraryScreenModel(
     private val library: Library,
     private val mediaRepository: MediaRepository,
-    private val serverRepository: ServerRepository
+    private val serverRepository: ServerRepository,
+    private val userPreferencesStorage: UserPreferencesStorage
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(LibraryState(library = library))
@@ -48,7 +54,16 @@ class LibraryScreenModel(
     private val pageSize = 20
 
     init {
+        loadDisplayMode()
         loadInitialData()
+    }
+
+    private fun loadDisplayMode() {
+        screenModelScope.launch {
+            userPreferencesStorage.getDisplayMode().collect { mode ->
+                _state.update { it.copy(displayMode = mode) }
+            }
+        }
     }
 
     private fun loadInitialData() {
@@ -154,6 +169,13 @@ class LibraryScreenModel(
         if (_state.value.showFavoritesOnly == favoritesOnly) return
         _state.update { it.copy(showFavoritesOnly = favoritesOnly) }
         reloadWithFilters()
+    }
+
+    fun updateDisplayMode(mode: DisplayMode) {
+        if (_state.value.displayMode == mode) return
+        screenModelScope.launch {
+            userPreferencesStorage.setDisplayMode(mode)
+        }
     }
 
     private fun reloadWithFilters() {
