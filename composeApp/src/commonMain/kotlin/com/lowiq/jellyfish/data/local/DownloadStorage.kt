@@ -66,6 +66,21 @@ class DownloadStorage(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    suspend fun updatePlaybackPosition(downloadId: String, positionMs: Long) {
+        dataStore.edit { prefs ->
+            val existing = prefs[downloadsKey]?.let { parseDownloads(it) } ?: emptyList()
+            val now = currentTimeMillis()
+            val updated = existing.map {
+                if (it.id == downloadId) it.copy(
+                    lastPlayedPositionMs = positionMs,
+                    lastPlayedAt = now
+                )
+                else it
+            }
+            prefs[downloadsKey] = serializeDownloads(updated)
+        }
+    }
+
     private fun serializeDownloads(downloads: List<Download>): String {
         return downloads.joinToString("\n\n") { d ->
             listOf(
@@ -73,7 +88,8 @@ class DownloadStorage(private val dataStore: DataStore<Preferences>) {
                 d.imageUrl.orEmpty(), d.quality, d.bitrate.toString(), d.status.name,
                 d.progress.toString(), d.totalBytes.toString(), d.downloadedBytes.toString(),
                 d.filePath.orEmpty(), d.createdAt.toString(), d.completedAt?.toString().orEmpty(),
-                d.errorMessage.orEmpty()
+                d.errorMessage.orEmpty(),
+                d.lastPlayedPositionMs.toString(), d.lastPlayedAt?.toString().orEmpty()
             ).joinToString("||")
         }
     }
@@ -99,7 +115,9 @@ class DownloadStorage(private val dataStore: DataStore<Preferences>) {
                     filePath = parts[12].takeIf { it.isNotEmpty() },
                     createdAt = parts[13].toLongOrNull() ?: 0,
                     completedAt = parts.getOrNull(14)?.toLongOrNull(),
-                    errorMessage = parts.getOrNull(15)?.takeIf { it.isNotEmpty() }
+                    errorMessage = parts.getOrNull(15)?.takeIf { it.isNotEmpty() },
+                    lastPlayedPositionMs = parts.getOrNull(16)?.toLongOrNull() ?: 0,
+                    lastPlayedAt = parts.getOrNull(17)?.toLongOrNull()
                 )
             } else null
         }
