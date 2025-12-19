@@ -21,7 +21,8 @@ data class MediaCarouselItem(
     val title: String,
     val subtitle: String? = null,
     val imageUrl: String? = null,
-    val progress: Float? = null
+    val progress: Float? = null,
+    val isPoster: Boolean = false
 )
 
 @Composable
@@ -55,6 +56,7 @@ fun MediaCarousel(
                     subtitle = item.subtitle,
                     imageUrl = item.imageUrl,
                     progress = item.progress,
+                    isPoster = item.isPoster,
                     onClick = { onItemClick(item.id) }
                 )
             }

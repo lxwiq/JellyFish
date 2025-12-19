@@ -36,19 +36,24 @@ fun MediaCard(
     subtitle: String? = null,
     imageUrl: String? = null,
     progress: Float? = null,
+    isPoster: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Poster: vertical (2:3 ratio), Episode: horizontal (16:9 ratio)
+    val cardWidth = if (isPoster) 120.dp else 160.dp
+    val imageHeight = if (isPoster) 180.dp else 90.dp
+
     Column(
         modifier = modifier
-            .width(160.dp)
+            .width(cardWidth)
             .clickable(onClick = onClick)
     ) {
         // Image container
         Box(
             modifier = Modifier
-                .width(160.dp)
-                .height(90.dp)
+                .width(cardWidth)
+                .height(imageHeight)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color(0xFF27272A)),
             contentAlignment = Alignment.Center

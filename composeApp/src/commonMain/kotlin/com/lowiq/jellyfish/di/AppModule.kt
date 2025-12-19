@@ -1,5 +1,6 @@
 package com.lowiq.jellyfish.di
 
+import com.lowiq.jellyfish.data.local.MediaCache
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.repository.AuthRepositoryImpl
 import com.lowiq.jellyfish.data.repository.MediaRepositoryImpl
@@ -25,12 +26,13 @@ expect val platformModule: Module
 
 val appModule = module {
     single { ServerStorage(get()) }
+    single { MediaCache(get()) }
 }
 
 val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<ServerRepository> { ServerRepositoryImpl(get(), get(), get()) }
-    single<MediaRepository> { MediaRepositoryImpl(get(), get(), get()) }
+    single<MediaRepository> { MediaRepositoryImpl(get(), get(), get(), get()) }
 }
 
 val domainModule = module {

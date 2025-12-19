@@ -2,17 +2,25 @@ package com.lowiq.jellyfish.presentation.screens.home
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.domain.repository.AuthRepository
+import com.lowiq.jellyfish.domain.repository.HomeMediaData
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.async
+
+data class LibrarySection(
+    val library: Library,
+    val items: List<MediaItem>
+)
 
 data class HomeState(
     val username: String = "",
     val serverName: String = "",
+    val libraries: List<Library> = emptyList(),
+    val librarySections: List<LibrarySection> = emptyList(),
     val continueWatching: List<MediaItem> = emptyList(),
     val latestMovies: List<MediaItem> = emptyList(),
     val latestSeries: List<MediaItem> = emptyList(),
@@ -21,6 +29,7 @@ data class HomeState(
     val nextUp: List<MediaItem> = emptyList(),
     val selectedNavIndex: Int = 0,
     val isLoading: Boolean = true,
+    val isCategoriesLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null
 )
@@ -55,66 +64,104 @@ class HomeScreenModel(
                 .first()
                 .let { server ->
                     currentServerId = server.id
-                    val user = authRepository.getCurrentUser(server.id)
                     _state.update {
                         it.copy(
-                            username = user?.name ?: server.username ?: "User",
+                            username = server.username ?: "User",
                             serverName = server.name,
                             isLoading = false
                         )
                     }
-                    loadAllCategories()
+                    // Load cached data first, then refresh from network
+                    loadCachedData(server.id)
+                    refreshFromNetwork(server.id)
                 }
         }
     }
 
-    private fun loadAllCategories() {
-        val serverId = currentServerId ?: return
+    private fun loadCachedData(serverId: String) {
+        screenModelScope.launch {
+            mediaRepository.getCachedHomeData(serverId)
+                .first()
+                .let { cached ->
+                    // Only update if we have cached data
+                    if (cached.hasData()) {
+                        _state.update {
+                            it.copy(
+                                continueWatching = cached.continueWatching,
+                                latestMovies = cached.latestMovies,
+                                latestSeries = cached.latestSeries,
+                                latestMusic = cached.latestMusic,
+                                favorites = cached.favorites,
+                                nextUp = cached.nextUp,
+                                isCategoriesLoading = false
+                            )
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun refreshFromNetwork(serverId: String) {
         screenModelScope.launch {
             _state.update { it.copy(error = null) }
 
-            try {
-                // Load all categories in parallel
-                val continueWatchingDeferred = async { mediaRepository.getContinueWatching(serverId) }
-                val latestMoviesDeferred = async { mediaRepository.getLatestMovies(serverId) }
-                val latestSeriesDeferred = async { mediaRepository.getLatestSeries(serverId) }
-                val latestMusicDeferred = async { mediaRepository.getLatestMusic(serverId) }
-                val favoritesDeferred = async { mediaRepository.getFavorites(serverId) }
-                val nextUpDeferred = async { mediaRepository.getNextUp(serverId) }
+            // Load libraries
+            val librariesResult = mediaRepository.getLibraries(serverId)
+            val libraries = librariesResult.getOrElse { emptyList() }
+            _state.update { it.copy(libraries = libraries) }
 
-                // Wait for all results
-                val continueWatchingResult = continueWatchingDeferred.await()
-                val latestMoviesResult = latestMoviesDeferred.await()
-                val latestSeriesResult = latestSeriesDeferred.await()
-                val latestMusicResult = latestMusicDeferred.await()
-                val favoritesResult = favoritesDeferred.await()
-                val nextUpResult = nextUpDeferred.await()
-
-                // Update state with successful results, using empty list for failures
-                _state.update {
-                    it.copy(
-                        continueWatching = continueWatchingResult.getOrElse { emptyList() },
-                        latestMovies = latestMoviesResult.getOrElse { emptyList() },
-                        latestSeries = latestSeriesResult.getOrElse { emptyList() },
-                        latestMusic = latestMusicResult.getOrElse { emptyList() },
-                        favorites = favoritesResult.getOrElse { emptyList() },
-                        nextUp = nextUpResult.getOrElse { emptyList() },
-                        isRefreshing = false
-                    )
-                }
-
-                println("DEBUG: Loaded all categories successfully")
-            } catch (e: Exception) {
-                println("DEBUG: Failed to load categories: ${e.message}")
-                e.printStackTrace()
-                _state.update { it.copy(isRefreshing = false, error = e.message) }
+            // Load items for "other" libraries (not movies, tvshows, music)
+            val defaultTypes = setOf("movies", "tvshows", "music")
+            val otherLibraries = libraries.filter { it.type.lowercase() !in defaultTypes }
+            val sections = otherLibraries.mapNotNull { library ->
+                mediaRepository.getLibraryItems(serverId, library.id, limit = 10)
+                    .getOrNull()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { items -> LibrarySection(library, items) }
             }
+            _state.update { it.copy(librarySections = sections) }
+
+            // Load standard media data
+            mediaRepository.refreshHomeData(serverId)
+                .onSuccess { data ->
+                    _state.update {
+                        it.copy(
+                            continueWatching = data.continueWatching,
+                            latestMovies = data.latestMovies,
+                            latestSeries = data.latestSeries,
+                            latestMusic = data.latestMusic,
+                            favorites = data.favorites,
+                            nextUp = data.nextUp,
+                            isCategoriesLoading = false,
+                            isRefreshing = false
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _state.update {
+                        it.copy(
+                            isCategoriesLoading = false,
+                            isRefreshing = false,
+                            error = e.message
+                        )
+                    }
+                }
         }
     }
 
+    private fun HomeMediaData.hasData(): Boolean {
+        return continueWatching.isNotEmpty() ||
+                latestMovies.isNotEmpty() ||
+                latestSeries.isNotEmpty() ||
+                latestMusic.isNotEmpty() ||
+                favorites.isNotEmpty() ||
+                nextUp.isNotEmpty()
+    }
+
     fun refresh() {
+        val serverId = currentServerId ?: return
         _state.update { it.copy(isRefreshing = true) }
-        loadAllCategories()
+        refreshFromNetwork(serverId)
     }
 
     fun onNavigationItemSelected(index: Int) {

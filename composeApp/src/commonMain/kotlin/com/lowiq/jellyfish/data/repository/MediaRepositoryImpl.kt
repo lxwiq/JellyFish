@@ -1,19 +1,28 @@
 package com.lowiq.jellyfish.data.repository
 
+import com.lowiq.jellyfish.data.local.MediaCache
 import com.lowiq.jellyfish.data.local.SecureStorage
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
+import com.lowiq.jellyfish.data.remote.Library as DataLibrary
 import com.lowiq.jellyfish.data.remote.MediaItem as DataMediaItem
 import com.lowiq.jellyfish.domain.model.ActivityItem
 import com.lowiq.jellyfish.domain.model.ActivityType
+import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.MediaItem
+import com.lowiq.jellyfish.domain.repository.HomeMediaData
 import com.lowiq.jellyfish.domain.repository.MediaRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 
 class MediaRepositoryImpl(
     private val jellyfinDataSource: JellyfinDataSource,
     private val serverStorage: ServerStorage,
-    private val secureStorage: SecureStorage
+    private val secureStorage: SecureStorage,
+    private val mediaCache: MediaCache
 ) : MediaRepository {
 
     override suspend fun getActivityFeed(serverId: String): Result<List<ActivityItem>> {
@@ -36,8 +45,9 @@ class MediaRepositoryImpl(
             return Result.success(emptyList())
         }
         val (server, token) = serverAndToken
+        val userId = server.userId ?: return Result.success(emptyList())
 
-        return jellyfinDataSource.getLatestItems(server.url, token)
+        return jellyfinDataSource.getLatestItems(server.url, token, userId)
             .map { items ->
                 println("DEBUG: getLatestItems - got ${items.size} items")
                 items.map { it.toActivityItem(ActivityType.ADDED) }
@@ -64,6 +74,35 @@ class MediaRepositoryImpl(
             }
     }
 
+    override suspend fun getLibraries(serverId: String): Result<List<Library>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getUserLibraries(server.url, token, userId)
+            .map { libraries ->
+                libraries.map { it.toDomainLibrary() }
+            }
+    }
+
+    override suspend fun getLibraryItems(
+        serverId: String,
+        libraryId: String,
+        limit: Int
+    ): Result<List<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getLibraryItems(server.url, token, userId, libraryId, limit)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
+
+    private fun DataLibrary.toDomainLibrary() = Library(
+        id = id,
+        name = name,
+        type = type,
+        imageUrl = imageUrl
+    )
+
     private suspend fun getServerAndToken(serverId: String): Pair<com.lowiq.jellyfish.domain.model.Server, String>? {
         val servers = serverStorage.getServers().first()
         val server = servers.find { it.id == serverId } ?: return null
@@ -76,27 +115,30 @@ class MediaRepositoryImpl(
         val userId = server.userId ?: return Result.success(emptyList())
 
         return jellyfinDataSource.getResumeItems(server.url, token, userId)
-            .map { items -> items.map { it.toDomainMediaItem() } }
+            .map { items -> items.map { it.toDomainMediaItem(forceBackdrop = true) } }
     }
 
     override suspend fun getLatestMovies(serverId: String): Result<List<MediaItem>> {
         val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
 
-        return jellyfinDataSource.getLatestMovies(server.url, token, limit = 10)
+        return jellyfinDataSource.getLatestMovies(server.url, token, userId, limit = 10)
             .map { items -> items.map { it.toDomainMediaItem() } }
     }
 
     override suspend fun getLatestSeries(serverId: String): Result<List<MediaItem>> {
         val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
 
-        return jellyfinDataSource.getLatestSeries(server.url, token, limit = 10)
+        return jellyfinDataSource.getLatestSeries(server.url, token, userId, limit = 10)
             .map { items -> items.map { it.toDomainMediaItem() } }
     }
 
     override suspend fun getLatestMusic(serverId: String): Result<List<MediaItem>> {
         val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
 
-        return jellyfinDataSource.getLatestMusic(server.url, token, limit = 10)
+        return jellyfinDataSource.getLatestMusic(server.url, token, userId, limit = 10)
             .map { items -> items.map { it.toDomainMediaItem() } }
     }
 
@@ -142,7 +184,7 @@ class MediaRepositoryImpl(
         )
     }
 
-    private fun DataMediaItem.toDomainMediaItem(): MediaItem {
+    private fun DataMediaItem.toDomainMediaItem(forceBackdrop: Boolean = false): MediaItem {
         val subtitle = when {
             this.type == "Episode" && seriesName != null -> {
                 val episodeInfo = "S${seasonNumber ?: 1} E${episodeNumber ?: 1}"
@@ -155,12 +197,17 @@ class MediaRepositoryImpl(
             (playbackPositionTicks.toFloat() / runTimeTicks.toFloat()).coerceIn(0f, 1f)
         } else null
 
+        // Movies and Series use poster (vertical), Episodes use backdrop (horizontal)
+        // forceBackdrop=true means always use horizontal (e.g., Continue Watching)
+        val isPoster = if (forceBackdrop) false else this.type != "Episode"
+
         return MediaItem(
             id = id,
             title = name,
             subtitle = subtitle,
             imageUrl = imageUrl,
-            progress = progress
+            progress = progress,
+            isPoster = isPoster
         )
     }
 
@@ -194,6 +241,63 @@ class MediaRepositoryImpl(
             days < 30 -> "${days / 7} ${if (days / 7 == 1L) "week" else "weeks"} ago"
             days < 365 -> "${days / 30} ${if (days / 30 == 1L) "month" else "months"} ago"
             else -> "${days / 365} ${if (days / 365 == 1L) "year" else "years"} ago"
+        }
+    }
+
+    override fun getCachedHomeData(serverId: String): Flow<HomeMediaData> {
+        val flows = listOf(
+            mediaCache.getCachedItems(serverId, MediaCache.CATEGORY_CONTINUE_WATCHING),
+            mediaCache.getCachedItems(serverId, MediaCache.CATEGORY_LATEST_MOVIES),
+            mediaCache.getCachedItems(serverId, MediaCache.CATEGORY_LATEST_SERIES),
+            mediaCache.getCachedItems(serverId, MediaCache.CATEGORY_LATEST_MUSIC),
+            mediaCache.getCachedItems(serverId, MediaCache.CATEGORY_FAVORITES),
+            mediaCache.getCachedItems(serverId, MediaCache.CATEGORY_NEXT_UP)
+        )
+        return combine(flows) { results ->
+            HomeMediaData(
+                continueWatching = results[0],
+                latestMovies = results[1],
+                latestSeries = results[2],
+                latestMusic = results[3],
+                favorites = results[4],
+                nextUp = results[5]
+            )
+        }
+    }
+
+    override suspend fun refreshHomeData(serverId: String): Result<HomeMediaData> = coroutineScope {
+        runCatching {
+            // Fetch all categories in parallel
+            val continueWatchingDeferred = async { getContinueWatching(serverId) }
+            val latestMoviesDeferred = async { getLatestMovies(serverId) }
+            val latestSeriesDeferred = async { getLatestSeries(serverId) }
+            val latestMusicDeferred = async { getLatestMusic(serverId) }
+            val favoritesDeferred = async { getFavorites(serverId) }
+            val nextUpDeferred = async { getNextUp(serverId) }
+
+            val continueWatching = continueWatchingDeferred.await().getOrElse { emptyList() }
+            val latestMovies = latestMoviesDeferred.await().getOrElse { emptyList() }
+            val latestSeries = latestSeriesDeferred.await().getOrElse { emptyList() }
+            val latestMusic = latestMusicDeferred.await().getOrElse { emptyList() }
+            val favorites = favoritesDeferred.await().getOrElse { emptyList() }
+            val nextUp = nextUpDeferred.await().getOrElse { emptyList() }
+
+            // Cache all results
+            mediaCache.cacheItems(serverId, MediaCache.CATEGORY_CONTINUE_WATCHING, continueWatching)
+            mediaCache.cacheItems(serverId, MediaCache.CATEGORY_LATEST_MOVIES, latestMovies)
+            mediaCache.cacheItems(serverId, MediaCache.CATEGORY_LATEST_SERIES, latestSeries)
+            mediaCache.cacheItems(serverId, MediaCache.CATEGORY_LATEST_MUSIC, latestMusic)
+            mediaCache.cacheItems(serverId, MediaCache.CATEGORY_FAVORITES, favorites)
+            mediaCache.cacheItems(serverId, MediaCache.CATEGORY_NEXT_UP, nextUp)
+
+            HomeMediaData(
+                continueWatching = continueWatching,
+                latestMovies = latestMovies,
+                latestSeries = latestSeries,
+                latestMusic = latestMusic,
+                favorites = favorites,
+                nextUp = nextUp
+            )
         }
     }
 }

@@ -16,6 +16,7 @@ import org.jellyfin.sdk.api.client.extensions.systemApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
+import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.createJellyfin
 import org.jellyfin.sdk.model.ClientInfo
 import org.jellyfin.sdk.model.UUID
@@ -130,16 +131,62 @@ class JellyfinDataSourceImpl(
             }
         }
 
-    override suspend fun getLatestItems(
+    override suspend fun getUserLibraries(
         serverUrl: String,
         token: String,
+        userId: String
+    ): Result<List<Library>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.userViewsApi.getUserViews(
+                userId = java.util.UUID.fromString(userId)
+            )
+            response.items.orEmpty().map { item ->
+                val imageUrl = item.imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+                    "$serverUrl/Items/${item.id}/Images/Primary?tag=$tag"
+                }
+                Library(
+                    id = item.id.toString(),
+                    name = item.name ?: "",
+                    type = item.collectionType?.toString() ?: "",
+                    imageUrl = imageUrl
+                )
+            }
+        }
+    }
+
+    override suspend fun getLibraryItems(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        libraryId: String,
         limit: Int
     ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
         runCatching {
             val api = createApi(serverUrl, token)
-            val user by api.userApi.getCurrentUser()
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
+                parentId = java.util.UUID.fromString(libraryId),
+                limit = limit,
+                sortBy = listOf(org.jellyfin.sdk.model.api.ItemSortBy.DATE_CREATED),
+                sortOrder = listOf(org.jellyfin.sdk.model.api.SortOrder.DESCENDING),
+                recursive = true,
+                enableImages = true
+            )
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    override suspend fun getLatestItems(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
             val items by api.userLibraryApi.getLatestMedia(
-                userId = user.id,
+                userId = java.util.UUID.fromString(userId),
                 limit = limit
             )
             items.map { it.toMediaItem(serverUrl) }
@@ -160,7 +207,7 @@ class JellyfinDataSourceImpl(
                 enableUserData = true,
                 enableImages = true
             )
-            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
+            response.items.orEmpty().map { it.toMediaItem(serverUrl, forceBackdrop = true) }
         }
     }
 
@@ -187,51 +234,63 @@ class JellyfinDataSourceImpl(
     override suspend fun getLatestMovies(
         serverUrl: String,
         token: String,
+        userId: String,
         limit: Int
     ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
         runCatching {
             val api = createApi(serverUrl, token)
-            val user by api.userApi.getCurrentUser()
-            val items by api.userLibraryApi.getLatestMedia(
-                userId = user.id,
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
                 limit = limit,
-                includeItemTypes = listOf(BaseItemKind.MOVIE)
+                includeItemTypes = listOf(BaseItemKind.MOVIE),
+                sortBy = listOf(org.jellyfin.sdk.model.api.ItemSortBy.DATE_CREATED),
+                sortOrder = listOf(org.jellyfin.sdk.model.api.SortOrder.DESCENDING),
+                recursive = true,
+                enableImages = true
             )
-            items.map { it.toMediaItem(serverUrl) }
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
         }
     }
 
     override suspend fun getLatestSeries(
         serverUrl: String,
         token: String,
+        userId: String,
         limit: Int
     ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
         runCatching {
             val api = createApi(serverUrl, token)
-            val user by api.userApi.getCurrentUser()
-            val items by api.userLibraryApi.getLatestMedia(
-                userId = user.id,
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
                 limit = limit,
-                includeItemTypes = listOf(BaseItemKind.SERIES)
+                includeItemTypes = listOf(BaseItemKind.SERIES),
+                sortBy = listOf(org.jellyfin.sdk.model.api.ItemSortBy.DATE_CREATED),
+                sortOrder = listOf(org.jellyfin.sdk.model.api.SortOrder.DESCENDING),
+                recursive = true,
+                enableImages = true
             )
-            items.map { it.toMediaItem(serverUrl) }
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
         }
     }
 
     override suspend fun getLatestMusic(
         serverUrl: String,
         token: String,
+        userId: String,
         limit: Int
     ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
         runCatching {
             val api = createApi(serverUrl, token)
-            val user by api.userApi.getCurrentUser()
-            val items by api.userLibraryApi.getLatestMedia(
-                userId = user.id,
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
                 limit = limit,
-                includeItemTypes = listOf(BaseItemKind.MUSIC_ALBUM)
+                includeItemTypes = listOf(BaseItemKind.MUSIC_ALBUM),
+                sortBy = listOf(org.jellyfin.sdk.model.api.ItemSortBy.DATE_CREATED),
+                sortOrder = listOf(org.jellyfin.sdk.model.api.SortOrder.DESCENDING),
+                recursive = true,
+                enableImages = true
             )
-            items.map { it.toMediaItem(serverUrl) }
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
         }
     }
 
@@ -253,12 +312,25 @@ class JellyfinDataSourceImpl(
         }
     }
 
-    private fun BaseItemDto.toMediaItem(serverUrl: String): MediaItem {
-        // Prefer Backdrop (16:9) for horizontal cards, fallback to Primary (poster)
-        val imageUrl = backdropImageTags?.firstOrNull()?.let { tag ->
-            "$serverUrl/Items/$id/Images/Backdrop?tag=$tag"
-        } ?: imageTags?.get(ImageType.PRIMARY)?.let { tag ->
-            "$serverUrl/Items/$id/Images/Primary?tag=$tag"
+    private fun BaseItemDto.toMediaItem(serverUrl: String, forceBackdrop: Boolean = false): MediaItem {
+        // Episodes: use Backdrop (horizontal), Movies/Series: use Primary (poster)
+        // forceBackdrop=true always uses horizontal images (e.g., Continue Watching)
+        val isEpisode = type == BaseItemKind.EPISODE
+        val useBackdrop = forceBackdrop || isEpisode
+        val imageUrl = if (useBackdrop) {
+            // Prefer Backdrop (horizontal), fallback to Primary
+            backdropImageTags?.firstOrNull()?.let { tag ->
+                "$serverUrl/Items/$id/Images/Backdrop?tag=$tag"
+            } ?: imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+                "$serverUrl/Items/$id/Images/Primary?tag=$tag"
+            }
+        } else {
+            // For movies/series: prefer Primary (poster), fallback to Backdrop
+            imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+                "$serverUrl/Items/$id/Images/Primary?tag=$tag"
+            } ?: backdropImageTags?.firstOrNull()?.let { tag ->
+                "$serverUrl/Items/$id/Images/Backdrop?tag=$tag"
+            }
         }
         return MediaItem(
             id = id.toString(),
