@@ -11,6 +11,7 @@ import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.quickConnectApi
 import org.jellyfin.sdk.api.client.extensions.sessionApi
 import org.jellyfin.sdk.api.client.extensions.systemApi
+import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.createJellyfin
@@ -178,8 +179,80 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
         }
     }
 
+    override suspend fun getLatestMovies(
+        serverUrl: String,
+        token: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val user by api.userApi.getCurrentUser()
+            val items by api.userLibraryApi.getLatestMedia(
+                userId = user.id,
+                limit = limit,
+                includeItemTypes = listOf(BaseItemKind.MOVIE)
+            )
+            items.map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    override suspend fun getLatestSeries(
+        serverUrl: String,
+        token: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val user by api.userApi.getCurrentUser()
+            val items by api.userLibraryApi.getLatestMedia(
+                userId = user.id,
+                limit = limit,
+                includeItemTypes = listOf(BaseItemKind.SERIES)
+            )
+            items.map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    override suspend fun getLatestMusic(
+        serverUrl: String,
+        token: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val user by api.userApi.getCurrentUser()
+            val items by api.userLibraryApi.getLatestMedia(
+                userId = user.id,
+                limit = limit,
+                includeItemTypes = listOf(BaseItemKind.MUSIC_ALBUM)
+            )
+            items.map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    override suspend fun getNextUpEpisodes(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.tvShowsApi.getNextUp(
+                userId = java.util.UUID.fromString(userId),
+                limit = limit,
+                enableUserData = true,
+                enableImages = true
+            )
+            response.items.orEmpty().map { it.toMediaItem(serverUrl) }
+        }
+    }
+
     private fun BaseItemDto.toMediaItem(serverUrl: String): MediaItem {
-        val imageUrl = imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+        // Prefer Backdrop (16:9) for horizontal cards, fallback to Primary (poster)
+        val imageUrl = backdropImageTags?.firstOrNull()?.let { tag ->
+            "$serverUrl/Items/$id/Images/Backdrop?tag=$tag"
+        } ?: imageTags?.get(ImageType.PRIMARY)?.let { tag ->
             "$serverUrl/Items/$id/Images/Primary?tag=$tag"
         }
         return MediaItem(

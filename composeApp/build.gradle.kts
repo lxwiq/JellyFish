@@ -61,6 +61,10 @@ kotlin {
             // DataStore
             implementation(libs.datastore.preferences)
             implementation(libs.okio)
+
+            // Coil Image Loading
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

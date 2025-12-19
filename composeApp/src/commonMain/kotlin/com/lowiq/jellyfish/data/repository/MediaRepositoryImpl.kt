@@ -3,9 +3,10 @@ package com.lowiq.jellyfish.data.repository
 import com.lowiq.jellyfish.data.local.SecureStorage
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
-import com.lowiq.jellyfish.data.remote.MediaItem
+import com.lowiq.jellyfish.data.remote.MediaItem as DataMediaItem
 import com.lowiq.jellyfish.domain.model.ActivityItem
 import com.lowiq.jellyfish.domain.model.ActivityType
+import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import kotlinx.coroutines.flow.first
 
@@ -70,7 +71,52 @@ class MediaRepositoryImpl(
         return server to token
     }
 
-    private fun MediaItem.toActivityItem(type: ActivityType): ActivityItem {
+    override suspend fun getContinueWatching(serverId: String): Result<List<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getResumeItems(server.url, token, userId)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
+
+    override suspend fun getLatestMovies(serverId: String): Result<List<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getLatestMovies(server.url, token, limit = 10)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
+
+    override suspend fun getLatestSeries(serverId: String): Result<List<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getLatestSeries(server.url, token, limit = 10)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
+
+    override suspend fun getLatestMusic(serverId: String): Result<List<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getLatestMusic(server.url, token, limit = 10)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
+
+    override suspend fun getFavorites(serverId: String): Result<List<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getFavoriteItems(server.url, token, userId, limit = 10)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
+
+    override suspend fun getNextUp(serverId: String): Result<List<MediaItem>> {
+        val (server, token) = getServerAndToken(serverId) ?: return Result.success(emptyList())
+        val userId = server.userId ?: return Result.success(emptyList())
+
+        return jellyfinDataSource.getNextUpEpisodes(server.url, token, userId, limit = 10)
+            .map { items -> items.map { it.toDomainMediaItem() } }
+    }
+
+    private fun DataMediaItem.toActivityItem(type: ActivityType): ActivityItem {
         val subtitle = when {
             this.type == "Episode" && seriesName != null -> {
                 val episodeInfo = "S${seasonNumber ?: 1} E${episodeNumber ?: 1}"
@@ -93,6 +139,28 @@ class MediaRepositoryImpl(
             imageUrl = imageUrl,
             progress = progress,
             type = type
+        )
+    }
+
+    private fun DataMediaItem.toDomainMediaItem(): MediaItem {
+        val subtitle = when {
+            this.type == "Episode" && seriesName != null -> {
+                val episodeInfo = "S${seasonNumber ?: 1} E${episodeNumber ?: 1}"
+                "$seriesName • $episodeInfo"
+            }
+            else -> this.type
+        }
+
+        val progress = if (playbackPositionTicks != null && runTimeTicks != null && runTimeTicks > 0) {
+            (playbackPositionTicks.toFloat() / runTimeTicks.toFloat()).coerceIn(0f, 1f)
+        } else null
+
+        return MediaItem(
+            id = id,
+            title = name,
+            subtitle = subtitle,
+            imageUrl = imageUrl,
+            progress = progress
         )
     }
 

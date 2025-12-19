@@ -4,12 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,9 +22,10 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.lowiq.jellyfish.presentation.components.ActivityFeedItem
 import com.lowiq.jellyfish.presentation.components.AppHeader
 import com.lowiq.jellyfish.presentation.components.AppScaffold
+import com.lowiq.jellyfish.presentation.components.MediaCarousel
+import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 
 class HomeScreen : Screen {
@@ -71,63 +70,99 @@ class HomeScreen : Screen {
                     ) {
                         CircularProgressIndicator(color = Color(0xFFFAFAFA))
                     }
+                } else if (state.error != null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Error: ${state.error}",
+                            color = Color(0xFFFF6B6B)
+                        )
+                    }
                 } else {
-                    ActivityFeed(
-                        state = state,
-                        onItemClick = { /* TODO: Navigate to detail */ }
-                    )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF09090B)),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        // Continue Watching
+                        if (state.continueWatching.isNotEmpty()) {
+                            item {
+                                MediaCarousel(
+                                    title = "Continue Watching",
+                                    items = state.continueWatching.map { it.toCarouselItem() },
+                                    onItemClick = { /* TODO */ }
+                                )
+                            }
+                        }
+
+                        // Latest Movies
+                        if (state.latestMovies.isNotEmpty()) {
+                            item {
+                                MediaCarousel(
+                                    title = "Latest Movies",
+                                    items = state.latestMovies.map { it.toCarouselItem() },
+                                    onItemClick = { /* TODO */ }
+                                )
+                            }
+                        }
+
+                        // Latest Series
+                        if (state.latestSeries.isNotEmpty()) {
+                            item {
+                                MediaCarousel(
+                                    title = "Latest Series",
+                                    items = state.latestSeries.map { it.toCarouselItem() },
+                                    onItemClick = { /* TODO */ }
+                                )
+                            }
+                        }
+
+                        // Latest Music
+                        if (state.latestMusic.isNotEmpty()) {
+                            item {
+                                MediaCarousel(
+                                    title = "Latest Music",
+                                    items = state.latestMusic.map { it.toCarouselItem() },
+                                    onItemClick = { /* TODO */ }
+                                )
+                            }
+                        }
+
+                        // Favorites
+                        if (state.favorites.isNotEmpty()) {
+                            item {
+                                MediaCarousel(
+                                    title = "Favorites",
+                                    items = state.favorites.map { it.toCarouselItem() },
+                                    onItemClick = { /* TODO */ }
+                                )
+                            }
+                        }
+
+                        // Next Up
+                        if (state.nextUp.isNotEmpty()) {
+                            item {
+                                MediaCarousel(
+                                    title = "Next Up",
+                                    items = state.nextUp.map { it.toCarouselItem() },
+                                    onItemClick = { /* TODO */ }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun ActivityFeed(
-    state: HomeState,
-    onItemClick: (String) -> Unit
-) {
-    if (state.error != null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Error: ${state.error}",
-                color = Color(0xFFFF6B6B)
-            )
-        }
-    } else if (state.activityFeed.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "No activity yet",
-                color = Color(0xFFA1A1AA)
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF09090B)),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(
-                items = state.activityFeed,
-                key = { it.id }
-            ) { item ->
-                ActivityFeedItem(
-                    title = item.title,
-                    subtitle = item.subtitle,
-                    timestamp = item.timestamp,
-                    imageUrl = item.imageUrl,
-                    progress = item.progress,
-                    onClick = { onItemClick(item.id) }
-                )
-            }
-        }
-    }
-}
+private fun com.lowiq.jellyfish.domain.model.MediaItem.toCarouselItem() = MediaCarouselItem(
+    id = id,
+    title = title,
+    subtitle = subtitle,
+    imageUrl = imageUrl,
+    progress = progress
+)

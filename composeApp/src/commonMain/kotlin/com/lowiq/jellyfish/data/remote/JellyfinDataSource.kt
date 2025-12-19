@@ -12,6 +12,10 @@ interface JellyfinDataSource {
     suspend fun getLatestItems(serverUrl: String, token: String, limit: Int = 20): Result<List<MediaItem>>
     suspend fun getResumeItems(serverUrl: String, token: String, userId: String, limit: Int = 10): Result<List<MediaItem>>
     suspend fun getFavoriteItems(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
+    suspend fun getLatestMovies(serverUrl: String, token: String, limit: Int = 20): Result<List<MediaItem>>
+    suspend fun getLatestSeries(serverUrl: String, token: String, limit: Int = 20): Result<List<MediaItem>>
+    suspend fun getLatestMusic(serverUrl: String, token: String, limit: Int = 20): Result<List<MediaItem>>
+    suspend fun getNextUpEpisodes(serverUrl: String, token: String, userId: String, limit: Int = 20): Result<List<MediaItem>>
 }
 
 data class ServerInfo(

@@ -2,17 +2,23 @@ package com.lowiq.jellyfish.presentation.screens.home
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.lowiq.jellyfish.domain.model.ActivityItem
+import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.domain.repository.AuthRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 data class HomeState(
     val username: String = "",
     val serverName: String = "",
-    val activityFeed: List<ActivityItem> = emptyList(),
+    val continueWatching: List<MediaItem> = emptyList(),
+    val latestMovies: List<MediaItem> = emptyList(),
+    val latestSeries: List<MediaItem> = emptyList(),
+    val latestMusic: List<MediaItem> = emptyList(),
+    val favorites: List<MediaItem> = emptyList(),
+    val nextUp: List<MediaItem> = emptyList(),
     val selectedNavIndex: Int = 0,
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
@@ -57,31 +63,58 @@ class HomeScreenModel(
                             isLoading = false
                         )
                     }
-                    loadActivityFeed()
+                    loadAllCategories()
                 }
         }
     }
 
-    private fun loadActivityFeed() {
+    private fun loadAllCategories() {
         val serverId = currentServerId ?: return
         screenModelScope.launch {
             _state.update { it.copy(error = null) }
-            mediaRepository.getActivityFeed(serverId)
-                .onSuccess { items ->
-                    println("DEBUG: Loaded ${items.size} activity items")
-                    _state.update { it.copy(activityFeed = items, isRefreshing = false) }
+
+            try {
+                // Load all categories in parallel
+                val continueWatchingDeferred = async { mediaRepository.getContinueWatching(serverId) }
+                val latestMoviesDeferred = async { mediaRepository.getLatestMovies(serverId) }
+                val latestSeriesDeferred = async { mediaRepository.getLatestSeries(serverId) }
+                val latestMusicDeferred = async { mediaRepository.getLatestMusic(serverId) }
+                val favoritesDeferred = async { mediaRepository.getFavorites(serverId) }
+                val nextUpDeferred = async { mediaRepository.getNextUp(serverId) }
+
+                // Wait for all results
+                val continueWatchingResult = continueWatchingDeferred.await()
+                val latestMoviesResult = latestMoviesDeferred.await()
+                val latestSeriesResult = latestSeriesDeferred.await()
+                val latestMusicResult = latestMusicDeferred.await()
+                val favoritesResult = favoritesDeferred.await()
+                val nextUpResult = nextUpDeferred.await()
+
+                // Update state with successful results, using empty list for failures
+                _state.update {
+                    it.copy(
+                        continueWatching = continueWatchingResult.getOrElse { emptyList() },
+                        latestMovies = latestMoviesResult.getOrElse { emptyList() },
+                        latestSeries = latestSeriesResult.getOrElse { emptyList() },
+                        latestMusic = latestMusicResult.getOrElse { emptyList() },
+                        favorites = favoritesResult.getOrElse { emptyList() },
+                        nextUp = nextUpResult.getOrElse { emptyList() },
+                        isRefreshing = false
+                    )
                 }
-                .onFailure { e ->
-                    println("DEBUG: Failed to load activity feed: ${e.message}")
-                    e.printStackTrace()
-                    _state.update { it.copy(isRefreshing = false, error = e.message) }
-                }
+
+                println("DEBUG: Loaded all categories successfully")
+            } catch (e: Exception) {
+                println("DEBUG: Failed to load categories: ${e.message}")
+                e.printStackTrace()
+                _state.update { it.copy(isRefreshing = false, error = e.message) }
+            }
         }
     }
 
     fun refresh() {
         _state.update { it.copy(isRefreshing = true) }
-        loadActivityFeed()
+        loadAllCategories()
     }
 
     fun onNavigationItemSelected(index: Int) {
