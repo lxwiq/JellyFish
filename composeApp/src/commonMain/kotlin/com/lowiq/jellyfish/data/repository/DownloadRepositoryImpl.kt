@@ -120,6 +120,10 @@ class DownloadRepositoryImpl(
         downloadStorage.removeDownload(downloadId)
     }
 
+    override suspend fun updatePlaybackPosition(downloadId: String, positionMs: Long) {
+        downloadStorage.updatePlaybackPosition(downloadId, positionMs)
+    }
+
     override suspend fun getStorageInfo(): StorageInfo {
         val limitMb = downloadSettings.storageLimitMb.first()
         val autoCleanup = downloadSettings.autoCleanup.first()

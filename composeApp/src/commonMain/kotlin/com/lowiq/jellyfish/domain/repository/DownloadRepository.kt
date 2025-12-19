@@ -26,6 +26,8 @@ interface DownloadRepository {
     suspend fun cancelDownload(downloadId: String)
     suspend fun deleteDownload(downloadId: String)
 
+    suspend fun updatePlaybackPosition(downloadId: String, positionMs: Long)
+
     suspend fun getStorageInfo(): StorageInfo
 }
 
