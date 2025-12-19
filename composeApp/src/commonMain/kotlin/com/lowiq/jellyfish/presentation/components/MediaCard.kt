@@ -29,6 +29,8 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
 fun MediaCard(
@@ -40,6 +42,9 @@ fun MediaCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
+
     // Poster: vertical (2:3 ratio), Episode: horizontal (16:9 ratio)
     val cardWidth = if (isPoster) 120.dp else 160.dp
     val imageHeight = if (isPoster) 180.dp else 90.dp
@@ -56,8 +61,8 @@ fun MediaCard(
             modifier = Modifier
                 .width(cardWidth)
                 .height(imageHeight)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFF27272A)),
+                .clip(shapes.default)
+                .background(colors.secondary),
             contentAlignment = Alignment.Center
         ) {
             if (imageUrl != null) {
@@ -75,7 +80,7 @@ fun MediaCard(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = Color(0xFFA1A1AA),
+                    tint = colors.mutedForeground,
                     modifier = Modifier.size(48.dp)
                 )
             }
@@ -88,8 +93,8 @@ fun MediaCard(
                         .fillMaxWidth()
                         .height(3.dp)
                         .align(Alignment.BottomCenter),
-                    color = Color(0xFFFAFAFA),
-                    trackColor = Color(0xFF27272A)
+                    color = colors.foreground,
+                    trackColor = colors.secondary
                 )
             }
         }
@@ -105,7 +110,7 @@ fun MediaCard(
             Text(
                 text = title,
                 fontSize = 14.sp,
-                color = Color(0xFFFAFAFA),
+                color = colors.foreground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth()
@@ -116,7 +121,7 @@ fun MediaCard(
                 Text(
                     text = it,
                     fontSize = 12.sp,
-                    color = Color(0xFFA1A1AA),
+                    color = colors.mutedForeground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier

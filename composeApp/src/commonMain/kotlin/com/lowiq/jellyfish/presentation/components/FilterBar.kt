@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lowiq.jellyfish.domain.model.SortOption
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
 fun FilterBar(
@@ -125,14 +127,16 @@ private fun FilterDropdown(
     onOptionSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         // Dropdown trigger
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFF27272A))
+                .clip(shapes.full)
+                .background(colors.secondary)
                 .clickable { expanded = true }
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
@@ -144,12 +148,12 @@ private fun FilterDropdown(
                 Text(
                     text = label,
                     fontSize = 14.sp,
-                    color = Color(0xFFFAFAFA)
+                    color = colors.foreground
                 )
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
-                    tint = Color(0xFFFAFAFA)
+                    tint = colors.foreground
                 )
             }
         }
@@ -159,7 +163,7 @@ private fun FilterDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             modifier = Modifier
-                .background(Color(0xFF27272A))
+                .background(colors.secondary)
                 .width(200.dp)
         ) {
             options.forEachIndexed { index, option ->
@@ -168,7 +172,7 @@ private fun FilterDropdown(
                         Text(
                             text = option,
                             fontSize = 14.sp,
-                            color = Color(0xFFFAFAFA)
+                            color = colors.foreground
                         )
                     },
                     onClick = {
@@ -188,8 +192,10 @@ private fun FilterChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFFAFAFA) else Color(0xFF27272A)
-    val textColor = if (isSelected) Color(0xFF09090B) else Color(0xFFFAFAFA)
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
+    val backgroundColor = if (isSelected) colors.foreground else colors.secondary
+    val textColor = if (isSelected) colors.background else colors.foreground
 
     Text(
         text = name,
@@ -197,7 +203,7 @@ private fun FilterChip(
         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
         color = textColor,
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(shapes.full)
             .background(backgroundColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp)

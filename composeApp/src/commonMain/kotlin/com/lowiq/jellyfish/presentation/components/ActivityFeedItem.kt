@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
 fun ActivityFeedItem(
@@ -29,15 +31,18 @@ fun ActivityFeedItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF18181B))
+            .clip(shapes.default)
+            .background(colors.card)
             .border(
                 width = 1.dp,
-                color = Color(0xFF27272A),
-                shape = RoundedCornerShape(8.dp)
+                color = colors.secondary,
+                shape = shapes.default
             )
             .clickable(onClick = onClick)
     ) {
@@ -51,14 +56,14 @@ fun ActivityFeedItem(
             Box(
                 modifier = Modifier
                     .size(width = 60.dp, height = 90.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color(0xFF27272A)),
+                    .clip(shapes.sm)
+                    .background(colors.secondary),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = Color(0xFFA1A1AA),
+                    tint = colors.mutedForeground,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -75,7 +80,7 @@ fun ActivityFeedItem(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFFFAFAFA)
+                    color = colors.foreground
                 )
 
                 // Subtitle and timestamp
@@ -83,7 +88,7 @@ fun ActivityFeedItem(
                     text = "$subtitle • $timestamp",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
-                    color = Color(0xFFA1A1AA)
+                    color = colors.mutedForeground
                 )
             }
         }
@@ -95,8 +100,8 @@ fun ActivityFeedItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(3.dp),
-                color = Color(0xFFFAFAFA),
-                trackColor = Color(0xFF27272A)
+                color = colors.foreground,
+                trackColor = colors.secondary
             )
         }
     }

@@ -26,19 +26,21 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
-private val SkeletonBaseColor = Color(0xFF27272A)
-private val SkeletonHighlightColor = Color(0xFF3F3F46)
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
 fun SkeletonCarousel(
     modifier: Modifier = Modifier,
     itemCount: Int = 5
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
+
     val shimmerColors = listOf(
-        SkeletonBaseColor,
-        SkeletonHighlightColor,
-        SkeletonBaseColor
+        colors.secondary,
+        colors.muted,
+        colors.secondary
     )
 
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -65,7 +67,7 @@ fun SkeletonCarousel(
                 .padding(horizontal = 16.dp)
                 .width(120.dp)
                 .height(24.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(shapes.sm)
                 .background(brush)
         )
 
@@ -77,7 +79,7 @@ fun SkeletonCarousel(
             userScrollEnabled = false
         ) {
             items(itemCount) {
-                SkeletonCard(brush = brush)
+                SkeletonCard(brush = brush, shapes = shapes)
             }
         }
     }
@@ -86,6 +88,7 @@ fun SkeletonCarousel(
 @Composable
 private fun SkeletonCard(
     brush: Brush,
+    shapes: com.lowiq.jellyfish.presentation.theme.JellyFishShapes,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -96,7 +99,7 @@ private fun SkeletonCard(
             modifier = Modifier
                 .width(160.dp)
                 .height(90.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(shapes.default)
                 .background(brush)
         )
 
@@ -107,7 +110,7 @@ private fun SkeletonCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(16.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(shapes.sm)
                 .background(brush)
         )
 
@@ -118,7 +121,7 @@ private fun SkeletonCard(
             modifier = Modifier
                 .width(100.dp)
                 .height(14.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(shapes.sm)
                 .background(brush)
         )
     }

@@ -32,6 +32,8 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.lowiq.jellyfish.domain.model.Library
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
 fun LibraryCards(
@@ -59,6 +61,8 @@ private fun LibraryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
     val cardWidth = 140.dp
     val cardHeight = 80.dp
 
@@ -66,8 +70,8 @@ private fun LibraryCard(
         modifier = modifier
             .width(cardWidth)
             .height(cardHeight)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF27272A))
+            .clip(shapes.md)
+            .background(colors.secondary)
             .clickable(onClick = onClick)
     ) {
         // Background image
@@ -90,7 +94,7 @@ private fun LibraryCard(
                 Icon(
                     imageVector = Icons.Default.Folder,
                     contentDescription = null,
-                    tint = Color(0xFF71717A),
+                    tint = colors.mutedForeground,
                     modifier = Modifier.padding(16.dp)
                 )
             }

@@ -32,12 +32,14 @@ import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
 import com.lowiq.jellyfish.presentation.components.SkeletonCarousel
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreen
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 class HomeScreen : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val colors = LocalJellyFishColors.current
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<HomeScreenModel>()
         val state by screenModel.state.collectAsState()
@@ -58,7 +60,7 @@ class HomeScreen : Screen {
         AppScaffold(
             selectedIndex = state.selectedNavIndex,
             onNavigationItemSelected = { screenModel.onNavigationItemSelected(it) },
-            modifier = Modifier.background(Color(0xFF09090B))
+            modifier = Modifier.background(colors.background)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -89,7 +91,7 @@ class HomeScreen : Screen {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color(0xFF09090B)),
+                                .background(colors.background),
                             verticalArrangement = Arrangement.spacedBy(24.dp)
                         ) {
                             items(4) {
@@ -103,14 +105,14 @@ class HomeScreen : Screen {
                         ) {
                             Text(
                                 text = "Error: ${state.error}",
-                                color = Color(0xFFFF6B6B)
+                                color = colors.destructive
                             )
                         }
                     } else {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color(0xFF09090B)),
+                                .background(colors.background),
                             verticalArrangement = Arrangement.spacedBy(24.dp)
                         ) {
                             // Show skeletons while categories are loading

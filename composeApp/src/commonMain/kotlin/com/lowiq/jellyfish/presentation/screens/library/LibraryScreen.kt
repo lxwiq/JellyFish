@@ -69,18 +69,16 @@ import com.lowiq.jellyfish.domain.model.DisplayMode
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.presentation.components.FilterBar
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 import org.koin.core.parameter.parametersOf
-
-private val BackgroundColor = Color(0xFF09090B)
-private val SurfaceColor = Color(0xFF27272A)
-private val TextColor = Color(0xFFFAFAFA)
-private val SubtleTextColor = Color(0xFFA1A1AA)
 
 class LibraryScreen(private val library: Library) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
+        val colors = LocalJellyFishColors.current
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<LibraryScreenModel> { parametersOf(library) }
         val state by screenModel.state.collectAsState()
@@ -111,7 +109,7 @@ class LibraryScreen(private val library: Library) : Screen {
                     title = {
                         Text(
                             text = library.name,
-                            color = TextColor
+                            color = colors.foreground
                         )
                     },
                     navigationIcon = {
@@ -119,7 +117,7 @@ class LibraryScreen(private val library: Library) : Screen {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = TextColor
+                                tint = colors.foreground
                             )
                         }
                     },
@@ -133,21 +131,21 @@ class LibraryScreen(private val library: Library) : Screen {
                                         DisplayMode.LIST -> Icons.AutoMirrored.Filled.ViewList
                                     },
                                     contentDescription = "Display mode",
-                                    tint = TextColor
+                                    tint = colors.foreground
                                 )
                             }
                             DropdownMenu(
                                 expanded = showDisplayModeMenu,
                                 onDismissRequest = { showDisplayModeMenu = false },
-                                containerColor = SurfaceColor
+                                containerColor = colors.secondary
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Posters", color = TextColor) },
+                                    text = { Text("Posters", color = colors.foreground) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.ViewModule,
                                             contentDescription = null,
-                                            tint = TextColor
+                                            tint = colors.foreground
                                         )
                                     },
                                     onClick = {
@@ -156,12 +154,12 @@ class LibraryScreen(private val library: Library) : Screen {
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Grille", color = TextColor) },
+                                    text = { Text("Grille", color = colors.foreground) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.GridView,
                                             contentDescription = null,
-                                            tint = TextColor
+                                            tint = colors.foreground
                                         )
                                     },
                                     onClick = {
@@ -170,12 +168,12 @@ class LibraryScreen(private val library: Library) : Screen {
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Liste", color = TextColor) },
+                                    text = { Text("Liste", color = colors.foreground) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.AutoMirrored.Filled.ViewList,
                                             contentDescription = null,
-                                            tint = TextColor
+                                            tint = colors.foreground
                                         )
                                     },
                                     onClick = {
@@ -187,11 +185,11 @@ class LibraryScreen(private val library: Library) : Screen {
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = BackgroundColor
+                        containerColor = colors.background
                     )
                 )
             },
-            containerColor = BackgroundColor
+            containerColor = colors.background
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -221,7 +219,7 @@ class LibraryScreen(private val library: Library) : Screen {
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = TextColor)
+                            CircularProgressIndicator(color = colors.foreground)
                         }
                     }
                     state.error != null && state.items.isEmpty() -> {
@@ -231,7 +229,7 @@ class LibraryScreen(private val library: Library) : Screen {
                         ) {
                             Text(
                                 text = state.error ?: "An error occurred",
-                                color = SubtleTextColor
+                                color = colors.mutedForeground
                             )
                         }
                     }
@@ -281,7 +279,7 @@ class LibraryScreen(private val library: Library) : Screen {
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 CircularProgressIndicator(
-                                                    color = TextColor,
+                                                    color = colors.foreground,
                                                     modifier = Modifier.size(32.dp)
                                                 )
                                             }
@@ -329,7 +327,7 @@ class LibraryScreen(private val library: Library) : Screen {
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 CircularProgressIndicator(
-                                                    color = TextColor,
+                                                    color = colors.foreground,
                                                     modifier = Modifier.size(32.dp)
                                                 )
                                             }
@@ -351,6 +349,9 @@ private fun LibraryGridItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
+
     Column(
         modifier = modifier.clickable(onClick = onClick)
     ) {
@@ -359,8 +360,8 @@ private fun LibraryGridItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(180.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(SurfaceColor),
+                .clip(shapes.default)
+                .background(colors.secondary),
             contentAlignment = Alignment.Center
         ) {
             if (item.imageUrl != null) {
@@ -377,7 +378,7 @@ private fun LibraryGridItem(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = SubtleTextColor,
+                    tint = colors.mutedForeground,
                     modifier = Modifier.size(48.dp)
                 )
             }
@@ -389,7 +390,7 @@ private fun LibraryGridItem(
         Text(
             text = item.title,
             fontSize = 14.sp,
-            color = TextColor,
+            color = colors.foreground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -399,7 +400,7 @@ private fun LibraryGridItem(
             Text(
                 text = subtitle,
                 fontSize = 12.sp,
-                color = SubtleTextColor,
+                color = colors.mutedForeground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 2.dp)
@@ -414,6 +415,9 @@ private fun LibraryPosterItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
+
     Column(
         modifier = modifier.clickable(onClick = onClick)
     ) {
@@ -422,8 +426,8 @@ private fun LibraryPosterItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
-                .clip(RoundedCornerShape(8.dp))
-                .background(SurfaceColor),
+                .clip(shapes.default)
+                .background(colors.secondary),
             contentAlignment = Alignment.Center
         ) {
             if (item.imageUrl != null) {
@@ -440,7 +444,7 @@ private fun LibraryPosterItem(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = SubtleTextColor,
+                    tint = colors.mutedForeground,
                     modifier = Modifier.size(48.dp)
                 )
             }
@@ -452,7 +456,7 @@ private fun LibraryPosterItem(
         Text(
             text = item.title,
             fontSize = 12.sp,
-            color = TextColor,
+            color = colors.foreground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -465,12 +469,15 @@ private fun LibraryListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(80.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(SurfaceColor)
+            .clip(shapes.default)
+            .background(colors.secondary)
             .clickable(onClick = onClick)
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -481,8 +488,8 @@ private fun LibraryListItem(
             modifier = Modifier
                 .fillMaxHeight()
                 .aspectRatio(2f / 3f)
-                .clip(RoundedCornerShape(4.dp))
-                .background(BackgroundColor),
+                .clip(shapes.sm)
+                .background(colors.background),
             contentAlignment = Alignment.Center
         ) {
             if (item.imageUrl != null) {
@@ -499,7 +506,7 @@ private fun LibraryListItem(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = SubtleTextColor,
+                    tint = colors.mutedForeground,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -513,7 +520,7 @@ private fun LibraryListItem(
             Text(
                 text = item.title,
                 fontSize = 14.sp,
-                color = TextColor,
+                color = colors.foreground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -521,7 +528,7 @@ private fun LibraryListItem(
                 Text(
                     text = subtitle,
                     fontSize = 12.sp,
-                    color = SubtleTextColor,
+                    color = colors.mutedForeground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 4.dp)

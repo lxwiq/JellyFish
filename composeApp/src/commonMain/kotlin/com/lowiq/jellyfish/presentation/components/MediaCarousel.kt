@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 data class MediaCarouselItem(
     val id: String,
@@ -32,12 +33,14 @@ fun MediaCarousel(
     onItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+
     Column(modifier = modifier) {
         Text(
             text = title,
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFFFAFAFA),
+            color = colors.foreground,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 

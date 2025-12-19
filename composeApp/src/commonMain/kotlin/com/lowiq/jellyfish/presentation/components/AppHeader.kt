@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
 fun AppHeader(
@@ -33,13 +34,14 @@ fun AppHeader(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
     var menuExpanded by remember { mutableStateOf(false) }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(Color(0xFF09090B))
+            .background(colors.background)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -47,7 +49,7 @@ fun AppHeader(
         // Left side: App name
         Text(
             text = "JellyFish",
-            color = Color(0xFFFAFAFA),
+            color = colors.foreground,
             fontWeight = FontWeight.Medium,
             fontSize = 18.sp
         )
@@ -58,13 +60,13 @@ fun AppHeader(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF27272A))
+                    .background(colors.secondary)
                     .clickable { menuExpanded = true },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = username.firstOrNull()?.uppercase() ?: "?",
-                    color = Color(0xFFFAFAFA),
+                    color = colors.foreground,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
                 )

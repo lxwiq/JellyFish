@@ -41,6 +41,8 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.lowiq.jellyfish.domain.model.MediaItem
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
 fun MediaGrid(
@@ -51,6 +53,7 @@ fun MediaGrid(
     onItemClick: (MediaItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
     val gridState = rememberLazyGridState()
 
     // Detect when user scrolls near bottom to trigger load more
@@ -78,7 +81,7 @@ fun MediaGrid(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .size(48.dp),
-                color = Color(0xFFFAFAFA)
+                color = colors.foreground
             )
         } else {
             LazyVerticalGrid(
@@ -110,7 +113,7 @@ fun MediaGrid(
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(32.dp),
-                                color = Color(0xFFFAFAFA)
+                                color = colors.foreground
                             )
                         }
                     }
@@ -126,6 +129,8 @@ private fun MediaGridItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+    val shapes = JellyFishTheme.shapes
     val cardWidth = 120.dp
     val imageHeight = 180.dp  // 2:3 aspect ratio for posters
 
@@ -139,8 +144,8 @@ private fun MediaGridItem(
             modifier = Modifier
                 .width(cardWidth)
                 .height(imageHeight)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFF27272A)),
+                .clip(shapes.default)
+                .background(colors.secondary),
             contentAlignment = Alignment.Center
         ) {
             if (item.imageUrl != null) {
@@ -158,7 +163,7 @@ private fun MediaGridItem(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    tint = Color(0xFFA1A1AA),
+                    tint = colors.mutedForeground,
                     modifier = Modifier.size(48.dp)
                 )
             }
@@ -168,7 +173,7 @@ private fun MediaGridItem(
         Text(
             text = item.title,
             fontSize = 14.sp,
-            color = Color(0xFFFAFAFA),
+            color = colors.foreground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
@@ -181,7 +186,7 @@ private fun MediaGridItem(
             Text(
                 text = it,
                 fontSize = 12.sp,
-                color = Color(0xFFA1A1AA),
+                color = colors.mutedForeground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier

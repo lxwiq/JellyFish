@@ -24,6 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 data class NavigationItem(
     val icon: ImageVector,
@@ -44,6 +46,7 @@ fun NavigationRail(
     onItemSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val shapes = JellyFishTheme.shapes
     Column(
         modifier = modifier
             .width(56.dp)
@@ -57,7 +60,8 @@ fun NavigationRail(
                 icon = item.icon,
                 contentDescription = item.contentDescription,
                 isSelected = index == selectedIndex,
-                onClick = { onItemSelected(index) }
+                onClick = { onItemSelected(index) },
+                shapes = shapes
             )
         }
     }
@@ -69,14 +73,17 @@ private fun NavigationRailItem(
     contentDescription: String,
     isSelected: Boolean,
     onClick: () -> Unit,
+    shapes: com.lowiq.jellyfish.presentation.theme.JellyFishShapes,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalJellyFishColors.current
+
     Box(
         modifier = modifier
             .size(56.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(shapes.default)
             .background(
-                if (isSelected) Color(0xFF27272A) else Color.Transparent
+                if (isSelected) colors.secondary else Color.Transparent
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -84,7 +91,7 @@ private fun NavigationRailItem(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = if (isSelected) Color(0xFFFAFAFA) else Color(0xFFA1A1AA),
+            tint = if (isSelected) colors.foreground else colors.mutedForeground,
             modifier = Modifier.size(24.dp)
         )
     }
