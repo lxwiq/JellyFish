@@ -1,5 +1,9 @@
 package com.lowiq.jellyfish.data.remote
 
+import com.lowiq.jellyfish.domain.model.AdminUser
+import com.lowiq.jellyfish.domain.model.LogEntry
+import com.lowiq.jellyfish.domain.model.ScheduledTask
+import com.lowiq.jellyfish.domain.model.TaskState
 import com.lowiq.jellyfish.domain.model.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -8,9 +12,11 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.authenticateUserByName
 import org.jellyfin.sdk.api.client.extensions.authenticateWithQuickConnect
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.mediaInfoApi
 import org.jellyfin.sdk.api.client.extensions.playStateApi
 import org.jellyfin.sdk.api.client.extensions.quickConnectApi
+import org.jellyfin.sdk.api.client.extensions.scheduledTasksApi
 import org.jellyfin.sdk.api.client.extensions.sessionApi
 import org.jellyfin.sdk.api.client.extensions.systemApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
@@ -770,4 +776,110 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
             dateCreated = premiereDate?.toString()
         )
     }
+
+    // Admin: Users
+    override suspend fun getUsers(serverUrl: String, token: String): Result<List<AdminUser>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val api = createApi(serverUrl, token)
+                val users by api.userApi.getUsers()
+                users.map { user ->
+                    AdminUser(
+                        id = user.id.toString(),
+                        name = user.name ?: "",
+                        isAdmin = user.policy?.isAdministrator == true,
+                        isDisabled = user.policy?.isDisabled == true
+                    )
+                }
+            }
+        }
+
+    override suspend fun createUser(
+        serverUrl: String,
+        token: String,
+        username: String,
+        password: String
+    ): Result<AdminUser> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val user by api.userApi.createUserByName(
+                org.jellyfin.sdk.model.api.CreateUserByName(
+                    name = username,
+                    password = password
+                )
+            )
+            AdminUser(
+                id = user.id.toString(),
+                name = user.name ?: username,
+                isAdmin = user.policy?.isAdministrator == true,
+                isDisabled = user.policy?.isDisabled == true
+            )
+        }
+    }
+
+    override suspend fun deleteUser(serverUrl: String, token: String, userId: String): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val api = createApi(serverUrl, token)
+                api.userApi.deleteUser(java.util.UUID.fromString(userId))
+            }
+        }
+
+    // Admin: Libraries
+    override suspend fun refreshLibrary(serverUrl: String, token: String): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val api = createApi(serverUrl, token)
+                api.libraryApi.refreshLibrary()
+            }
+        }
+
+    // Admin: Logs
+    override suspend fun getServerLogs(
+        serverUrl: String,
+        token: String,
+        limit: Int
+    ): Result<List<LogEntry>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.systemApi.getLogEntries(limit = limit)
+            response.items.orEmpty().map { entry ->
+                LogEntry(
+                    timestamp = entry.date?.toInstant()?.toEpochMilli() ?: 0L,
+                    severity = entry.severity?.name ?: "INFO",
+                    message = entry.name ?: ""
+                )
+            }
+        }
+    }
+
+    // Admin: Tasks
+    override suspend fun getScheduledTasks(serverUrl: String, token: String): Result<List<ScheduledTask>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val api = createApi(serverUrl, token)
+                val tasks by api.scheduledTasksApi.getTasks()
+                tasks.map { task ->
+                    ScheduledTask(
+                        id = task.id ?: "",
+                        name = task.name ?: "",
+                        description = task.description ?: "",
+                        state = when (task.state) {
+                            org.jellyfin.sdk.model.api.TaskState.RUNNING -> TaskState.RUNNING
+                            org.jellyfin.sdk.model.api.TaskState.CANCELLING -> TaskState.CANCELLING
+                            else -> TaskState.IDLE
+                        },
+                        lastExecutionResult = task.lastExecutionResult?.status?.name
+                    )
+                }
+            }
+        }
+
+    override suspend fun runTask(serverUrl: String, token: String, taskId: String): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val api = createApi(serverUrl, token)
+                api.scheduledTasksApi.startTask(taskId = taskId)
+            }
+        }
 }
