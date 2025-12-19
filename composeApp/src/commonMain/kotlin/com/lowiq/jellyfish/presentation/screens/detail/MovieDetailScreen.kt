@@ -51,6 +51,8 @@ import com.lowiq.jellyfish.presentation.components.CastCarousel
 import com.lowiq.jellyfish.presentation.components.GenreBadges
 import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
+import com.lowiq.jellyfish.presentation.components.QualitySelectionDialog
+import com.lowiq.jellyfish.presentation.screens.downloads.DownloadsScreen
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 import org.koin.core.parameter.parametersOf
@@ -76,6 +78,9 @@ class MovieDetailScreen(private val itemId: String) : Screen {
                                 startPositionMs = event.startPositionMs
                             )
                         )
+                    }
+                    is MovieDetailEvent.NavigateToDownloads -> {
+                        navigator.push(DownloadsScreen())
                     }
                 }
             }
@@ -294,6 +299,14 @@ class MovieDetailScreen(private val itemId: String) : Screen {
                         }
 
                         Spacer(modifier = Modifier.height(32.dp))
+                    }
+
+                    if (state.showQualityDialog && state.availableQualities.isNotEmpty()) {
+                        QualitySelectionDialog(
+                            qualities = state.availableQualities,
+                            onDismiss = { screenModel.dismissQualityDialog() },
+                            onConfirm = { quality, dontAsk -> screenModel.onQualitySelected(quality, dontAsk) }
+                        )
                     }
                 }
             }

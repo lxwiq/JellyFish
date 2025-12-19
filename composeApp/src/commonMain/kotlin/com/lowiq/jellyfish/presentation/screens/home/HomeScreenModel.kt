@@ -37,6 +37,7 @@ data class HomeState(
 sealed class HomeEvent {
     object LoggedOut : HomeEvent()
     object NavigateToServerList : HomeEvent()
+    object NavigateToDownloads : HomeEvent()
 }
 
 class HomeScreenModel(
@@ -166,6 +167,13 @@ class HomeScreenModel(
 
     fun onNavigationItemSelected(index: Int) {
         _state.update { it.copy(selectedNavIndex = index) }
+
+        screenModelScope.launch {
+            when (index) {
+                3 -> _events.emit(HomeEvent.NavigateToDownloads)
+                // Handle other navigation items as needed
+            }
+        }
     }
 
     fun switchServer() {

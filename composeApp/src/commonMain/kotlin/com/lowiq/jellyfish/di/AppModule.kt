@@ -3,6 +3,7 @@ package com.lowiq.jellyfish.di
 import com.lowiq.jellyfish.data.local.DownloadSettingsStorage
 import com.lowiq.jellyfish.data.local.DownloadStorage
 import com.lowiq.jellyfish.data.local.MediaCache
+import com.lowiq.jellyfish.data.local.PlaybackSyncStorage
 import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.local.UserPreferencesStorage
 import com.lowiq.jellyfish.data.remote.DownloadClient
@@ -13,6 +14,7 @@ import com.lowiq.jellyfish.data.repository.ServerRepositoryImpl
 import com.lowiq.jellyfish.domain.download.DownloadManager
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.Server
+import com.lowiq.jellyfish.domain.sync.PlaybackSyncService
 import com.lowiq.jellyfish.domain.repository.AuthRepository
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
@@ -45,6 +47,7 @@ val appModule = module {
     single { UserPreferencesStorage(get()) }
     single { DownloadStorage(get()) }
     single { DownloadSettingsStorage(get()) }
+    single { PlaybackSyncStorage(get()) }
 }
 
 val dataModule = module {
@@ -54,6 +57,7 @@ val dataModule = module {
     single { DownloadClient(get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
     single { DownloadManager(get(), get(), get(), get(), get(), get(), get()) }
+    single { PlaybackSyncService(get(), get(), get()) }
 }
 
 val domainModule = module {
@@ -71,7 +75,7 @@ val presentationModule = module {
     factory { (server: Server) -> QuickConnectScreenModel(server, get()) }
     factory { HomeScreenModel(get(), get(), get()) }
     factory { (library: Library) -> LibraryScreenModel(library, get(), get(), get()) }
-    factory { (itemId: String) -> MovieDetailScreenModel(itemId, get(), get()) }
+    factory { (itemId: String) -> MovieDetailScreenModel(itemId, get(), get(), get(), get()) }
     factory { (itemId: String) -> SeriesDetailScreenModel(itemId, get(), get()) }
     factory { (itemId: String) -> EpisodeDetailScreenModel(itemId, get(), get()) }
     factory { (itemId: String, title: String, subtitle: String?, startPositionMs: Long) ->

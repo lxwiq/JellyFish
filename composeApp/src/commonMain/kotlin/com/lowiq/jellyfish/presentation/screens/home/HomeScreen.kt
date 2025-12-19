@@ -32,6 +32,7 @@ import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
 import com.lowiq.jellyfish.presentation.components.SkeletonCarousel
 import com.lowiq.jellyfish.presentation.navigation.navigateToDetail
+import com.lowiq.jellyfish.presentation.screens.downloads.DownloadsScreen
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreen
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
@@ -54,6 +55,9 @@ class HomeScreen : Screen {
                     }
                     is HomeEvent.NavigateToServerList -> {
                         navigator.push(ServerListScreen())
+                    }
+                    is HomeEvent.NavigateToDownloads -> {
+                        navigator.push(DownloadsScreen())
                     }
                 }
             }
