@@ -8,6 +8,7 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.authenticateUserByName
 import org.jellyfin.sdk.api.client.extensions.authenticateWithQuickConnect
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.playStateApi
 import org.jellyfin.sdk.api.client.extensions.quickConnectApi
 import org.jellyfin.sdk.api.client.extensions.sessionApi
 import org.jellyfin.sdk.api.client.extensions.systemApi
@@ -395,6 +396,231 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
                 genres = genres,
                 years = years
             )
+        }
+    }
+
+    override suspend fun getItemDetails(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String
+    ): Result<ItemDetails> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val item by api.userLibraryApi.getItem(
+                userId = java.util.UUID.fromString(userId),
+                itemId = java.util.UUID.fromString(itemId)
+            )
+
+            val backdropUrl = item.backdropImageTags?.firstOrNull()?.let { tag ->
+                "$serverUrl/Items/${item.id}/Images/Backdrop?tag=$tag"
+            }
+
+            val posterUrl = item.imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+                "$serverUrl/Items/${item.id}/Images/Primary?tag=$tag"
+            }
+
+            val year = item.productionYear?.toString()
+
+            val genres = item.genres.orEmpty()
+            val studios = item.studios.orEmpty().mapNotNull { it.name }
+
+            val trailerUrl = item.remoteTrailers?.firstOrNull()?.url
+
+            ItemDetails(
+                id = item.id.toString(),
+                name = item.name ?: "",
+                type = item.type?.toString() ?: "",
+                overview = item.overview,
+                backdropUrl = backdropUrl,
+                posterUrl = posterUrl,
+                year = year,
+                runtime = item.runTimeTicks,
+                communityRating = item.communityRating,
+                genres = genres,
+                studios = studios,
+                seriesId = item.seriesId?.toString(),
+                seriesName = item.seriesName,
+                seasonNumber = item.parentIndexNumber,
+                episodeNumber = item.indexNumber,
+                trailerUrl = trailerUrl,
+                isFavorite = item.userData?.isFavorite ?: false,
+                isPlayed = item.userData?.played ?: false,
+                playbackPositionTicks = item.userData?.playbackPositionTicks
+            )
+        }
+    }
+
+    override suspend fun getItemCast(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String
+    ): Result<List<PersonInfo>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val item by api.userLibraryApi.getItem(
+                userId = java.util.UUID.fromString(userId),
+                itemId = java.util.UUID.fromString(itemId)
+            )
+
+            item.people.orEmpty().map { person ->
+                val imageUrl = person.primaryImageTag?.let { tag ->
+                    "$serverUrl/Items/${person.id}/Images/Primary?tag=$tag"
+                }
+
+                PersonInfo(
+                    id = person.id.toString(),
+                    name = person.name ?: "",
+                    role = person.role,
+                    imageUrl = imageUrl
+                )
+            }
+        }
+    }
+
+    override suspend fun getSimilarItems(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String,
+        limit: Int
+    ): Result<List<MediaItem>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            // Get the item first to retrieve its genres for similarity matching
+            val item by api.userLibraryApi.getItem(
+                userId = java.util.UUID.fromString(userId),
+                itemId = java.util.UUID.fromString(itemId)
+            )
+
+            // Use genres from the item to find similar items
+            val response by api.itemsApi.getItems(
+                userId = java.util.UUID.fromString(userId),
+                limit = limit,
+                genres = item.genres?.take(2), // Use first 2 genres for matching
+                includeItemTypes = item.type?.let { listOf(it) },
+                recursive = true,
+                enableImages = true
+            )
+
+            // Filter out the current item and map to MediaItem
+            response.items.orEmpty()
+                .filter { it.id != item.id }
+                .map { it.toMediaItem(serverUrl) }
+        }
+    }
+
+    override suspend fun getSeriesSeasons(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        seriesId: String
+    ): Result<List<SeasonInfo>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.tvShowsApi.getSeasons(
+                seriesId = java.util.UUID.fromString(seriesId),
+                userId = java.util.UUID.fromString(userId)
+            )
+
+            response.items.orEmpty().map { season ->
+                val imageUrl = season.imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+                    "$serverUrl/Items/${season.id}/Images/Primary?tag=$tag"
+                }
+
+                SeasonInfo(
+                    id = season.id.toString(),
+                    name = season.name ?: "Season",
+                    number = season.indexNumber ?: 0,
+                    episodeCount = season.childCount ?: 0,
+                    imageUrl = imageUrl
+                )
+            }.sortedBy { it.number }
+        }
+    }
+
+    override suspend fun getSeasonEpisodes(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        seriesId: String,
+        seasonNumber: Int
+    ): Result<List<EpisodeInfo>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val response by api.tvShowsApi.getEpisodes(
+                seriesId = java.util.UUID.fromString(seriesId),
+                userId = java.util.UUID.fromString(userId),
+                season = seasonNumber
+            )
+
+            response.items.orEmpty().map { episode ->
+                val imageUrl = episode.imageTags?.get(ImageType.PRIMARY)?.let { tag ->
+                    "$serverUrl/Items/${episode.id}/Images/Primary?tag=$tag"
+                }
+
+                EpisodeInfo(
+                    id = episode.id.toString(),
+                    name = episode.name ?: "Episode",
+                    overview = episode.overview,
+                    seasonNumber = episode.parentIndexNumber ?: seasonNumber,
+                    episodeNumber = episode.indexNumber ?: 0,
+                    communityRating = episode.communityRating,
+                    imageUrl = imageUrl,
+                    isPlayed = episode.userData?.played ?: false,
+                    playbackPositionTicks = episode.userData?.playbackPositionTicks,
+                    runTimeTicks = episode.runTimeTicks
+                )
+            }.sortedBy { it.episodeNumber }
+        }
+    }
+
+    override suspend fun toggleFavorite(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String,
+        isFavorite: Boolean
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            if (isFavorite) {
+                api.userLibraryApi.markFavoriteItem(
+                    userId = java.util.UUID.fromString(userId),
+                    itemId = java.util.UUID.fromString(itemId)
+                )
+            } else {
+                api.userLibraryApi.unmarkFavoriteItem(
+                    userId = java.util.UUID.fromString(userId),
+                    itemId = java.util.UUID.fromString(itemId)
+                )
+            }
+            Unit
+        }
+    }
+
+    override suspend fun toggleWatched(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String,
+        isWatched: Boolean
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            if (isWatched) {
+                api.playStateApi.markPlayedItem(
+                    itemId = java.util.UUID.fromString(itemId),
+                    userId = java.util.UUID.fromString(userId)
+                )
+            } else {
+                api.playStateApi.markUnplayedItem(
+                    itemId = java.util.UUID.fromString(itemId),
+                    userId = java.util.UUID.fromString(userId)
+                )
+            }
+            Unit
         }
     }
 

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lowiq.jellyfish.domain.model.MediaType
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 data class MediaCarouselItem(
@@ -23,14 +24,15 @@ data class MediaCarouselItem(
     val subtitle: String? = null,
     val imageUrl: String? = null,
     val progress: Float? = null,
-    val isPoster: Boolean = false
+    val isPoster: Boolean = false,
+    val type: MediaType = MediaType.OTHER
 )
 
 @Composable
 fun MediaCarousel(
     title: String,
     items: List<MediaCarouselItem>,
-    onItemClick: (String) -> Unit,
+    onItemClick: (id: String, type: MediaType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalJellyFishColors.current
@@ -60,7 +62,7 @@ fun MediaCarousel(
                     imageUrl = item.imageUrl,
                     progress = item.progress,
                     isPoster = item.isPoster,
-                    onClick = { onItemClick(item.id) }
+                    onClick = { onItemClick(item.id, item.type) }
                 )
             }
         }

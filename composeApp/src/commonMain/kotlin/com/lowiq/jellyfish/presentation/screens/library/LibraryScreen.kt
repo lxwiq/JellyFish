@@ -69,6 +69,7 @@ import com.lowiq.jellyfish.domain.model.DisplayMode
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.presentation.components.FilterBar
+import com.lowiq.jellyfish.presentation.navigation.navigateToDetail
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 import org.koin.core.parameter.parametersOf
@@ -266,7 +267,7 @@ class LibraryScreen(private val library: Library) : Screen {
                                     ) { item ->
                                         LibraryListItem(
                                             item = item,
-                                            onClick = { /* TODO: Navigate to detail */ }
+                                            onClick = { navigateToDetail(navigator, item.id, item.type) }
                                         )
                                     }
 
@@ -309,11 +310,11 @@ class LibraryScreen(private val library: Library) : Screen {
                                         when (state.displayMode) {
                                             DisplayMode.POSTER -> LibraryPosterItem(
                                                 item = item,
-                                                onClick = { /* TODO: Navigate to detail */ }
+                                                onClick = { navigateToDetail(navigator, item.id, item.type) }
                                             )
                                             else -> LibraryGridItem(
                                                 item = item,
-                                                onClick = { /* TODO: Navigate to detail */ }
+                                                onClick = { navigateToDetail(navigator, item.id, item.type) }
                                             )
                                         }
                                     }

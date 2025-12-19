@@ -38,6 +38,13 @@ interface JellyfinDataSource {
         userId: String,
         libraryId: String
     ): Result<LibraryFilters>
+    suspend fun getItemDetails(serverUrl: String, token: String, userId: String, itemId: String): Result<ItemDetails>
+    suspend fun getItemCast(serverUrl: String, token: String, userId: String, itemId: String): Result<List<PersonInfo>>
+    suspend fun getSimilarItems(serverUrl: String, token: String, userId: String, itemId: String, limit: Int = 10): Result<List<MediaItem>>
+    suspend fun getSeriesSeasons(serverUrl: String, token: String, userId: String, seriesId: String): Result<List<SeasonInfo>>
+    suspend fun getSeasonEpisodes(serverUrl: String, token: String, userId: String, seriesId: String, seasonNumber: Int): Result<List<EpisodeInfo>>
+    suspend fun toggleFavorite(serverUrl: String, token: String, userId: String, itemId: String, isFavorite: Boolean): Result<Unit>
+    suspend fun toggleWatched(serverUrl: String, token: String, userId: String, itemId: String, isWatched: Boolean): Result<Unit>
 }
 
 data class ServerInfo(
@@ -92,4 +99,54 @@ data class LibraryItemsResponse(
 data class LibraryFilters(
     val genres: List<String>,
     val years: List<Int>
+)
+
+data class ItemDetails(
+    val id: String,
+    val name: String,
+    val type: String,
+    val overview: String?,
+    val backdropUrl: String?,
+    val posterUrl: String?,
+    val year: String?,
+    val runtime: Long?, // in ticks
+    val communityRating: Float?,
+    val genres: List<String>,
+    val studios: List<String>,
+    val seriesId: String?,
+    val seriesName: String?,
+    val seasonNumber: Int?,
+    val episodeNumber: Int?,
+    val trailerUrl: String?,
+    val isFavorite: Boolean,
+    val isPlayed: Boolean,
+    val playbackPositionTicks: Long?
+)
+
+data class PersonInfo(
+    val id: String,
+    val name: String,
+    val role: String?,
+    val imageUrl: String?
+)
+
+data class SeasonInfo(
+    val id: String,
+    val name: String,
+    val number: Int,
+    val episodeCount: Int,
+    val imageUrl: String?
+)
+
+data class EpisodeInfo(
+    val id: String,
+    val name: String,
+    val overview: String?,
+    val seasonNumber: Int,
+    val episodeNumber: Int,
+    val communityRating: Float?,
+    val imageUrl: String?,
+    val isPlayed: Boolean,
+    val playbackPositionTicks: Long?,
+    val runTimeTicks: Long?
 )
