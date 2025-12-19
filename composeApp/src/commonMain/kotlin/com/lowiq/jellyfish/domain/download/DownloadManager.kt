@@ -12,8 +12,9 @@ import com.lowiq.jellyfish.domain.model.Download
 import com.lowiq.jellyfish.domain.model.DownloadStatus
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.io.File
-import java.io.FileOutputStream
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import okio.buffer
 
 class DownloadManager(
     private val downloadStorage: DownloadStorage,
@@ -69,11 +70,11 @@ class DownloadManager(
 
                 val fileName = "${download.itemId}_${download.quality}.mp4"
                 val filePath = "${fileManager.getDownloadsDirectory()}/$fileName"
-                val file = File(filePath)
-                val outputStream = FileOutputStream(file)
+                val path = filePath.toPath()
+                val sink = FileSystem.SYSTEM.sink(path).buffer()
 
                 downloadClient.downloadFile(url, filePath) { bytes ->
-                    outputStream.write(bytes)
+                    sink.write(bytes)
                 }.collect { result ->
                     when (result) {
                         is DownloadResult.Progress -> {
@@ -90,13 +91,13 @@ class DownloadManager(
                             ))
                         }
                         is DownloadResult.Success -> {
-                            outputStream.close()
+                            sink.close()
                             downloadStorage.updateStatus(download.id, DownloadStatus.COMPLETED, filePath)
                             _downloadEvents.emit(DownloadEvent.Completed(download.id, download.title))
                         }
                         is DownloadResult.Error -> {
-                            outputStream.close()
-                            file.delete()
+                            sink.close()
+                            FileSystem.SYSTEM.delete(path)
                             downloadStorage.updateStatus(download.id, DownloadStatus.FAILED, errorMessage = result.message)
                             _downloadEvents.emit(DownloadEvent.Failed(download.id, download.title, result.message))
                         }

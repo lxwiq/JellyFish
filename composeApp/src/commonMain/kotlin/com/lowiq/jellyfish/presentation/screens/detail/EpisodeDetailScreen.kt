@@ -262,7 +262,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = String.format("%.1f", rating),
+                                        text = "${(rating * 10).toLong() / 10.0}",
                                         fontSize = 14.sp,
                                         color = colors.mutedForeground
                                     )

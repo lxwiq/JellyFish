@@ -21,6 +21,7 @@ import com.lowiq.jellyfish.domain.model.Season
 import com.lowiq.jellyfish.domain.model.SeriesDetails
 import com.lowiq.jellyfish.domain.repository.HomeMediaData
 import com.lowiq.jellyfish.domain.repository.MediaRepository
+import com.lowiq.jellyfish.util.currentTimeMillis
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -324,7 +325,7 @@ class MediaRepositoryImpl(
      * Converts a timestamp (milliseconds since epoch) to a relative time string
      */
     private fun formatRelativeTime(timestampMillis: Long): String {
-        val now = System.currentTimeMillis()
+        val now = currentTimeMillis()
         val diff = now - timestampMillis
         val seconds = diff / 1000
         val minutes = seconds / 60

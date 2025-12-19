@@ -13,10 +13,12 @@ import com.lowiq.jellyfish.domain.model.DownloadStatus
 import com.lowiq.jellyfish.domain.model.QualityOption
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.StorageInfo
+import com.lowiq.jellyfish.util.currentTimeMillis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class DownloadRepositoryImpl(
     private val downloadStorage: DownloadStorage,
@@ -66,6 +68,7 @@ class DownloadRepositoryImpl(
         return (originalSize * targetBitrate.toLong() / originalBitrate)
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun startDownload(
         serverId: String,
         itemId: String,
@@ -78,7 +81,7 @@ class DownloadRepositoryImpl(
         val server = servers.find { it.id == serverId } ?: return Result.failure(Exception("Server not found"))
         val token = secureStorage.getToken(serverId) ?: return Result.failure(Exception("Not authenticated"))
 
-        val downloadId = UUID.randomUUID().toString()
+        val downloadId = Uuid.random().toString()
         val download = Download(
             id = downloadId,
             itemId = itemId,
@@ -90,7 +93,7 @@ class DownloadRepositoryImpl(
             bitrate = quality.bitrate,
             status = DownloadStatus.QUEUED,
             totalBytes = quality.estimatedSizeBytes,
-            createdAt = System.currentTimeMillis()
+            createdAt = currentTimeMillis()
         )
 
         downloadStorage.saveDownload(download)

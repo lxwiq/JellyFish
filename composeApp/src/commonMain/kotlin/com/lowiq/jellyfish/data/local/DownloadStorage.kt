@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.lowiq.jellyfish.domain.model.Download
 import com.lowiq.jellyfish.domain.model.DownloadStatus
+import com.lowiq.jellyfish.util.currentTimeMillis
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -51,7 +52,7 @@ class DownloadStorage(private val dataStore: DataStore<Preferences>) {
     suspend fun updateStatus(downloadId: String, status: DownloadStatus, filePath: String? = null, errorMessage: String? = null) {
         dataStore.edit { prefs ->
             val existing = prefs[downloadsKey]?.let { parseDownloads(it) } ?: emptyList()
-            val now = System.currentTimeMillis()
+            val now = currentTimeMillis()
             val updated = existing.map {
                 if (it.id == downloadId) it.copy(
                     status = status,

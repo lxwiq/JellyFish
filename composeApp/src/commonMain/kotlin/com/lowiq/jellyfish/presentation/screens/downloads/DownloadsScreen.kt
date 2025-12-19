@@ -285,8 +285,11 @@ private fun CompletedDownloadItem(
 
 private fun formatBytes(bytes: Long): String {
     return when {
-        bytes >= 1_000_000_000 -> String.format("%.1f Go", bytes / 1_000_000_000.0)
-        bytes >= 1_000_000 -> String.format("%.0f Mo", bytes / 1_000_000.0)
-        else -> String.format("%.0f Ko", bytes / 1_000.0)
+        bytes >= 1_000_000_000 -> {
+            val gb = bytes / 1_000_000_000.0
+            "${(gb * 10).toLong() / 10.0} Go"
+        }
+        bytes >= 1_000_000 -> "${bytes / 1_000_000} Mo"
+        else -> "${bytes / 1_000} Ko"
     }
 }

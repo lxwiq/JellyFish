@@ -5,6 +5,7 @@ import com.lowiq.jellyfish.data.local.ServerStorage
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
 import com.lowiq.jellyfish.data.remote.PlaybackProgressInfo
 import com.lowiq.jellyfish.domain.model.PendingPlaybackSync
+import com.lowiq.jellyfish.util.currentTimeMillis
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
 import kotlin.uuid.ExperimentalUuidApi
@@ -32,7 +33,7 @@ class PlaybackSyncService(
                 serverId = serverId,
                 positionTicks = positionTicks,
                 playedPercentage = playedPercentage,
-                timestamp = System.currentTimeMillis()
+                timestamp = currentTimeMillis()
             )
             playbackSyncStorage.addPendingSync(sync)
         }

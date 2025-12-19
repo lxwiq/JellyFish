@@ -178,9 +178,9 @@ private fun formatResumeTime(ms: Long): String {
     val seconds = totalSeconds % 60
 
     return if (hours > 0) {
-        String.format("%d:%02d:%02d", hours, minutes, seconds)
+        "$hours:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
     } else {
-        String.format("%d:%02d", minutes, seconds)
+        "$minutes:${seconds.toString().padStart(2, '0')}"
     }
 }
 
