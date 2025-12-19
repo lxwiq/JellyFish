@@ -1,5 +1,8 @@
 package com.lowiq.jellyfish.data.remote
 
+import com.lowiq.jellyfish.domain.model.AdminUser
+import com.lowiq.jellyfish.domain.model.LogEntry
+import com.lowiq.jellyfish.domain.model.ScheduledTask
 import com.lowiq.jellyfish.domain.model.User
 
 interface JellyfinDataSource {
@@ -84,6 +87,21 @@ interface JellyfinDataSource {
 
     suspend fun getMediaSources(serverUrl: String, token: String, userId: String, itemId: String): Result<List<MediaSourceInfo>>
     fun getTranscodingDownloadUrl(serverUrl: String, token: String, itemId: String, bitrate: Int): String
+
+    // Admin: Users
+    suspend fun getUsers(serverUrl: String, token: String): Result<List<AdminUser>>
+    suspend fun createUser(serverUrl: String, token: String, username: String, password: String): Result<AdminUser>
+    suspend fun deleteUser(serverUrl: String, token: String, userId: String): Result<Unit>
+
+    // Admin: Libraries
+    suspend fun refreshLibrary(serverUrl: String, token: String): Result<Unit>
+
+    // Admin: Logs
+    suspend fun getServerLogs(serverUrl: String, token: String, limit: Int = 100): Result<List<LogEntry>>
+
+    // Admin: Tasks
+    suspend fun getScheduledTasks(serverUrl: String, token: String): Result<List<ScheduledTask>>
+    suspend fun runTask(serverUrl: String, token: String, taskId: String): Result<Unit>
 }
 
 data class ServerInfo(
