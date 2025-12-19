@@ -269,7 +269,7 @@ class MovieDetailScreen(private val itemId: String) : Screen {
                                         type = item.type
                                     )
                                 },
-                                onItemClick = { id ->
+                                onItemClick = { id, type ->
                                     navigator.push(MovieDetailScreen(id))
                                 }
                             )

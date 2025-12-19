@@ -32,7 +32,7 @@ data class MediaCarouselItem(
 fun MediaCarousel(
     title: String,
     items: List<MediaCarouselItem>,
-    onItemClick: (String) -> Unit,
+    onItemClick: (id: String, type: MediaType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalJellyFishColors.current
@@ -62,7 +62,7 @@ fun MediaCarousel(
                     imageUrl = item.imageUrl,
                     progress = item.progress,
                     isPoster = item.isPoster,
-                    onClick = { onItemClick(item.id) }
+                    onClick = { onItemClick(item.id, item.type) }
                 )
             }
         }

@@ -31,6 +31,7 @@ import com.lowiq.jellyfish.presentation.components.LibraryCards
 import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
 import com.lowiq.jellyfish.presentation.components.SkeletonCarousel
+import com.lowiq.jellyfish.presentation.navigation.navigateToDetail
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreen
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
@@ -128,7 +129,7 @@ class HomeScreen : Screen {
                                         MediaCarousel(
                                             title = "Continue Watching",
                                             items = state.continueWatching.map { it.toCarouselItem() },
-                                            onItemClick = { /* TODO */ }
+                                            onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
                                     }
                                 }
@@ -139,7 +140,7 @@ class HomeScreen : Screen {
                                         MediaCarousel(
                                             title = "Latest Movies",
                                             items = state.latestMovies.map { it.toCarouselItem() },
-                                            onItemClick = { /* TODO */ }
+                                            onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
                                     }
                                 }
@@ -150,7 +151,7 @@ class HomeScreen : Screen {
                                         MediaCarousel(
                                             title = "Latest Series",
                                             items = state.latestSeries.map { it.toCarouselItem() },
-                                            onItemClick = { /* TODO */ }
+                                            onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
                                     }
                                 }
@@ -161,7 +162,7 @@ class HomeScreen : Screen {
                                         MediaCarousel(
                                             title = "Latest Music",
                                             items = state.latestMusic.map { it.toCarouselItem() },
-                                            onItemClick = { /* TODO */ }
+                                            onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
                                     }
                                 }
@@ -174,7 +175,7 @@ class HomeScreen : Screen {
                                     MediaCarousel(
                                         title = section.library.name,
                                         items = section.items.map { it.toCarouselItem() },
-                                        onItemClick = { /* TODO */ }
+                                        onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                     )
                                 }
 
@@ -184,7 +185,7 @@ class HomeScreen : Screen {
                                         MediaCarousel(
                                             title = "Favorites",
                                             items = state.favorites.map { it.toCarouselItem() },
-                                            onItemClick = { /* TODO */ }
+                                            onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
                                     }
                                 }
@@ -195,7 +196,7 @@ class HomeScreen : Screen {
                                         MediaCarousel(
                                             title = "Next Up",
                                             items = state.nextUp.map { it.toCarouselItem() },
-                                            onItemClick = { /* TODO */ }
+                                            onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
                                     }
                                 }

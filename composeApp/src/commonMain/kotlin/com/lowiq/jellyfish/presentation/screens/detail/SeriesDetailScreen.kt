@@ -311,7 +311,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                                         type = item.type
                                     )
                                 },
-                                onItemClick = { id ->
+                                onItemClick = { id, type ->
                                     navigator.push(SeriesDetailScreen(id))
                                 }
                             )
