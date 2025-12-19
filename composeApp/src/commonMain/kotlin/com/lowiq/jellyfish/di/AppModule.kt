@@ -2,6 +2,7 @@ package com.lowiq.jellyfish.di
 
 import com.lowiq.jellyfish.data.local.MediaCache
 import com.lowiq.jellyfish.data.local.ServerStorage
+import com.lowiq.jellyfish.data.local.UserPreferencesStorage
 import com.lowiq.jellyfish.data.repository.AuthRepositoryImpl
 import com.lowiq.jellyfish.data.repository.MediaRepositoryImpl
 import com.lowiq.jellyfish.data.repository.ServerRepositoryImpl
@@ -29,6 +30,7 @@ expect val platformModule: Module
 val appModule = module {
     single { ServerStorage(get()) }
     single { MediaCache(get()) }
+    single { UserPreferencesStorage(get()) }
 }
 
 val dataModule = module {
@@ -51,5 +53,5 @@ val presentationModule = module {
     factory { (server: Server) -> LoginScreenModel(server, get()) }
     factory { (server: Server) -> QuickConnectScreenModel(server, get()) }
     factory { HomeScreenModel(get(), get(), get()) }
-    factory { (library: Library) -> LibraryScreenModel(library, get(), get()) }
+    factory { (library: Library) -> LibraryScreenModel(library, get(), get(), get()) }
 }
