@@ -77,5 +77,5 @@ val presentationModule = module {
     factory { (itemId: String, title: String, subtitle: String?, startPositionMs: Long) ->
         VideoPlayerScreenModel(itemId, title, subtitle, startPositionMs, get(), get(), get())
     }
-    // factory { DownloadsScreenModel(get(), get()) } // TODO: Uncomment when DownloadsScreenModel is created
+    factory { DownloadsScreenModel(get(), get()) }
 }
