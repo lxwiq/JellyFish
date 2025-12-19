@@ -74,6 +74,9 @@ interface JellyfinDataSource {
         positionTicks: Long,
         playSessionId: String
     ): Result<Unit>
+
+    suspend fun getMediaSources(serverUrl: String, token: String, userId: String, itemId: String): Result<List<MediaSourceInfo>>
+    fun getTranscodingDownloadUrl(serverUrl: String, token: String, itemId: String, bitrate: Int): String
 }
 
 data class ServerInfo(
@@ -194,4 +197,12 @@ data class PlaybackProgressInfo(
     val positionTicks: Long,
     val isPaused: Boolean,
     val playSessionId: String
+)
+
+data class MediaSourceInfo(
+    val id: String,
+    val name: String,
+    val bitrate: Int?,
+    val size: Long?,
+    val container: String?
 )

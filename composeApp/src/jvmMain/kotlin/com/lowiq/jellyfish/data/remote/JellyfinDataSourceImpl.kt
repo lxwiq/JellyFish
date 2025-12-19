@@ -669,6 +669,46 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
         playSessionId: String
     ): Result<Unit> = Result.success(Unit)
 
+    override suspend fun getMediaSources(
+        serverUrl: String,
+        token: String,
+        userId: String,
+        itemId: String
+    ): Result<List<MediaSourceInfo>> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            val playbackInfo by api.mediaInfoApi.getPlaybackInfo(
+                itemId = java.util.UUID.fromString(itemId),
+                userId = java.util.UUID.fromString(userId)
+            )
+            playbackInfo.mediaSources.orEmpty().map { source ->
+                MediaSourceInfo(
+                    id = source.id ?: itemId,
+                    name = source.name ?: "Original",
+                    bitrate = source.bitrate,
+                    size = source.size,
+                    container = source.container
+                )
+            }
+        }
+    }
+
+    override fun getTranscodingDownloadUrl(
+        serverUrl: String,
+        token: String,
+        itemId: String,
+        bitrate: Int
+    ): String {
+        return "$serverUrl/Videos/$itemId/stream.mp4" +
+            "?static=false" +
+            "&mediaSourceId=$itemId" +
+            "&videoBitRate=$bitrate" +
+            "&audioBitRate=192000" +
+            "&videoCodec=h264" +
+            "&audioCodec=aac" +
+            "&api_key=$token"
+    }
+
     private fun BaseItemDto.toMediaItem(serverUrl: String, forceBackdrop: Boolean = false): MediaItem {
         // Episodes: use Backdrop (horizontal), Movies/Series: use Primary (poster)
         // forceBackdrop=true always uses horizontal images (e.g., Continue Watching)
