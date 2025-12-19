@@ -2,7 +2,7 @@
 
 ## Priorité 1 : Écran de recherche (SearchScreen)
 
-**Statut:** Non implémenté
+**Statut:** ✅ Implémenté
 **Navigation:** Index 1 dans NavigationRail (icône Search)
 
 ### Fonctionnalités requises
@@ -90,7 +90,7 @@ suspend fun search(
 | Index | Icône | Écran | Statut |
 |-------|-------|-------|--------|
 | 0 | Home | HomeScreen | ✅ Implémenté |
-| 1 | Search | SearchScreen | ❌ À faire |
+| 1 | Search | SearchScreen | ✅ Implémenté |
 | 2 | Star | FavoritesScreen | ❌ À faire |
 | 3 | Download | DownloadsScreen | ✅ Implémenté |
 | 4 | Settings | SettingsScreen | ❌ À faire |
