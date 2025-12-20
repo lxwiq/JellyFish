@@ -1,8 +1,10 @@
 package com.lowiq.jellyfish.presentation.screens.quickconnect
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,159 +18,189 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.presentation.screens.home.HomeScreen
-import kotlinx.coroutines.launch
+import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import org.koin.core.parameter.parametersOf
 
 data class QuickConnectScreen(val server: Server) : Screen {
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<QuickConnectScreenModel> { parametersOf(server) }
         val state by screenModel.state.collectAsState()
+        val colors = JellyFishTheme.colors
+        val dimensions = JellyFishTheme.dimensions
+        val shapes = JellyFishTheme.shapes
 
         val snackbarHostState = remember { SnackbarHostState() }
-        val scope = rememberCoroutineScope()
 
-        // Cancel polling on dispose
         DisposableEffect(Unit) {
-            onDispose {
-                screenModel.cancel()
-            }
+            onDispose { screenModel.cancel() }
         }
 
-        // Collect events
         LaunchedEffect(Unit) {
             screenModel.events.collect { event ->
                 when (event) {
-                    is QuickConnectEvent.AuthSuccess -> {
-                        navigator.replaceAll(HomeScreen())
-                    }
-                    is QuickConnectEvent.NetworkError -> {
-                        snackbarHostState.showSnackbar(
-                            message = event.message,
-                            duration = SnackbarDuration.Short
-                        )
-                    }
+                    is QuickConnectEvent.AuthSuccess -> navigator.replaceAll(HomeScreen())
+                    is QuickConnectEvent.NetworkError -> snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = SnackbarDuration.Short
+                    )
                 }
             }
         }
 
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Quick Connect") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
-                    }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.background)
+        ) {
+            // Back button
+            IconButton(
+                onClick = { navigator.pop() },
+                modifier = Modifier
+                    .padding(dimensions.spacing4)
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = colors.foreground
                 )
-            },
-            snackbarHost = { SnackbarHost(snackbarHostState) }
-        ) { paddingValues ->
-            Box(
+            }
+
+            // Main content
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
+                    .padding(horizontal = dimensions.spacing6),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                // Server badge
+                Surface(
+                    color = colors.secondary,
+                    shape = shapes.full,
+                    modifier = Modifier.padding(bottom = dimensions.spacing6)
                 ) {
-                    // Server name
-                    Text(
-                        text = screenModel.serverName,
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center
-                    )
+                    Row(
+                        modifier = Modifier.padding(
+                            horizontal = dimensions.spacing4,
+                            vertical = dimensions.spacing2
+                        ),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(dimensions.spacing2)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Dns,
+                            contentDescription = null,
+                            tint = colors.mutedForeground,
+                            modifier = Modifier.size(dimensions.iconSizeSm)
+                        )
+                        Text(
+                            text = screenModel.serverName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.mutedForeground
+                        )
+                    }
+                }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                // Title
+                Text(
+                    text = "Quick Connect",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = colors.foreground
+                )
 
-                    when {
-                        state.isInitializing -> {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Initializing Quick Connect...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                Spacer(modifier = Modifier.height(dimensions.spacing8))
+
+                when {
+                    state.isInitializing -> {
+                        CircularProgressIndicator(color = colors.primary)
+                        Spacer(modifier = Modifier.height(dimensions.spacing4))
+                        Text(
+                            text = "Initialisation...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.mutedForeground
+                        )
+                    }
+
+                    state.error != null -> {
+                        Text(
+                            text = state.error ?: "Une erreur est survenue",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.destructive,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(dimensions.spacing6))
+                        Button(
+                            onClick = { screenModel.retry() },
+                            shape = shapes.button,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.primary,
+                                contentColor = colors.primaryForeground
                             )
+                        ) {
+                            Text("Réessayer")
                         }
+                    }
 
-                        state.error != null -> {
-                            Text(
-                                text = state.error ?: "An error occurred",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.error,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(onClick = { screenModel.retry() }) {
-                                Text("Retry")
-                            }
-                        }
-
-                        state.code != null -> {
-                            // Large code display
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                )
+                    state.code != null -> {
+                        // Code card
+                        Surface(
+                            color = colors.card,
+                            shape = shapes.lg,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(dimensions.spacing8),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(32.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = state.code ?: "",
-                                        style = MaterialTheme.typography.displayLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            // Instructions
-                            Text(
-                                text = "Enter this code on your Jellyfin server",
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            // Polling indicator
-                            if (state.isPolling) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(32.dp)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Waiting for authorization...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = state.code ?: "",
+                                    style = MaterialTheme.typography.displayLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colors.primary,
+                                    textAlign = TextAlign.Center
                                 )
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(dimensions.spacing6))
+
+                        Text(
+                            text = "Entrez ce code sur votre serveur Jellyfin",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = colors.mutedForeground
+                        )
+
+                        Spacer(modifier = Modifier.height(dimensions.spacing8))
+
+                        if (state.isPolling) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(dimensions.iconSizeXl),
+                                color = colors.primary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.height(dimensions.spacing4))
+                            Text(
+                                text = "En attente d'autorisation...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.mutedForeground
+                            )
                         }
                     }
                 }
             }
+
+            // Snackbar
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
