@@ -445,7 +445,7 @@ private fun StorageSection(
                     color = colors.foreground
                 )
                 Text(
-                    text = String.format("%.2f GB", usedGb),
+                    text = "${"%.2f".format(usedGb)} GB",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = colors.primary
@@ -859,8 +859,7 @@ private fun LogItem(log: LogEntry) {
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
-                    .format(java.util.Date(log.timestamp)),
+                text = formatTimestamp(log.timestamp),
                 fontSize = 12.sp,
                 color = colors.mutedForeground
             )
@@ -981,4 +980,12 @@ private fun CreateUserDialog(
             }
         }
     )
+}
+
+private fun formatTimestamp(timestamp: Long): String {
+    val totalSeconds = timestamp / 1000
+    val hours = (totalSeconds / 3600) % 24
+    val minutes = (totalSeconds / 60) % 60
+    val seconds = totalSeconds % 60
+    return "${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
 }
