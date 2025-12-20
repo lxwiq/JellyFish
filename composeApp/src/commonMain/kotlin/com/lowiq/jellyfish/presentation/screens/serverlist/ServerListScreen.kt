@@ -93,17 +93,19 @@ class ServerListScreen : Screen {
                 }
             }
 
-            // FAB
-            FloatingActionButton(
-                onClick = { navigator.push(AddServerScreen()) },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(dimensions.spacing6),
-                containerColor = colors.primary,
-                contentColor = colors.primaryForeground,
-                shape = shapes.md
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Ajouter un serveur")
+            // FAB - only show when there are servers (empty state has its own button)
+            if (!state.isLoading && state.servers.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = { navigator.push(AddServerScreen()) },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(dimensions.spacing6),
+                    containerColor = colors.primary,
+                    contentColor = colors.primaryForeground,
+                    shape = shapes.md
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Ajouter un serveur")
+                }
             }
         }
     }
