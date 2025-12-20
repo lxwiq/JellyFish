@@ -1,5 +1,6 @@
 package com.lowiq.jellyfish
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
@@ -17,13 +18,13 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun App() {
     JellyFishTheme {
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .safeDrawingPadding(),
+            modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            Navigator(SplashScreen()) { navigator ->
-                SlideTransition(navigator)
+            Box(modifier = Modifier.safeDrawingPadding()) {
+                Navigator(SplashScreen()) { navigator ->
+                    SlideTransition(navigator)
+                }
             }
         }
     }
