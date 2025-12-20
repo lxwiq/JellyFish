@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 data class LoginState(
     val username: String = "",
     val password: String = "",
+    val passwordVisible: Boolean = false,
     val isLoading: Boolean = false,
     val usernameError: String? = null,  // Inline validation
     val passwordError: String? = null   // Inline validation
@@ -40,6 +41,10 @@ class LoginScreenModel(
 
     fun updatePassword(password: String) {
         _state.update { it.copy(password = password, passwordError = null) }
+    }
+
+    fun togglePasswordVisibility() {
+        _state.update { it.copy(passwordVisible = !it.passwordVisible) }
     }
 
     fun login() {
