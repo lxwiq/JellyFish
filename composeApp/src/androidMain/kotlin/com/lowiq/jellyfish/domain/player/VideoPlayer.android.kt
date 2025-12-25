@@ -2,6 +2,7 @@ package com.lowiq.jellyfish.domain.player
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -190,15 +191,25 @@ actual class VideoPlayer(
     actual fun addExternalSubtitle(url: String, name: String?) {
         val player = mediaPlayer ?: return
 
+        Log.d("VLCSubs", "addExternalSubtitle called with url: $url")
+
         scope.launch {
             try {
                 // VLC Android doesn't support HTTP URLs for subtitles
                 // Download to cache first, then add as local file
                 val localFile = downloadSubtitleToCache(url)
-                if (localFile == null) return@launch
+                if (localFile == null) {
+                    Log.e("VLCSubs", "Failed to download subtitle to cache")
+                    return@launch
+                }
+
+                Log.d("VLCSubs", "Subtitle downloaded to: ${localFile.absolutePath}, size: ${localFile.length()} bytes")
 
                 val trackCountBefore = player.spuTracks?.size ?: 0
+                Log.d("VLCSubs", "Tracks before adding: $trackCountBefore")
+
                 val localUri = "file://${localFile.absolutePath}"
+                Log.d("VLCSubs", "Adding subtitle with URI: $localUri")
 
                 player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, localUri, true)
 
@@ -206,14 +217,21 @@ actual class VideoPlayer(
                 delay(500)
 
                 val tracks = player.spuTracks
+                Log.d("VLCSubs", "Tracks after adding: ${tracks?.size ?: 0}")
+                tracks?.forEachIndexed { idx, t -> Log.d("VLCSubs", "  Track $idx: id=${t.id}, name=${t.name}") }
+
                 if (tracks != null && tracks.size > trackCountBefore) {
                     // New track was added - select it (last track in list)
                     val newTrack = tracks.last()
+                    Log.d("VLCSubs", "Selecting new track: id=${newTrack.id}, name=${newTrack.name}")
                     player.spuTrack = newTrack.id
+                    Log.d("VLCSubs", "Current spuTrack after selection: ${player.spuTrack}")
+                } else {
+                    Log.w("VLCSubs", "No new track was added by VLC")
                 }
                 updateTracks()
             } catch (e: Exception) {
-                // Failed to add subtitle
+                Log.e("VLCSubs", "Failed to add subtitle", e)
             }
         }
     }
@@ -226,17 +244,28 @@ actual class VideoPlayer(
             val cacheDir = context.cacheDir
             val subtitleFile = File(cacheDir, fileName)
 
+            Log.d("VLCSubs", "Downloading subtitle: ext=$extension, file=$fileName")
+
             // Download if not already cached
             if (!subtitleFile.exists()) {
+                Log.d("VLCSubs", "File not in cache, downloading from URL...")
                 URL(url).openStream().use { input ->
                     subtitleFile.outputStream().use { output ->
                         input.copyTo(output)
                     }
                 }
+                Log.d("VLCSubs", "Download complete, file size: ${subtitleFile.length()}")
+
+                // Log first few lines of subtitle file for debugging
+                val preview = subtitleFile.readText().take(500)
+                Log.d("VLCSubs", "Subtitle preview:\n$preview")
+            } else {
+                Log.d("VLCSubs", "Using cached file, size: ${subtitleFile.length()}")
             }
 
             subtitleFile
         } catch (e: Exception) {
+            Log.e("VLCSubs", "Failed to download subtitle", e)
             null
         }
     }

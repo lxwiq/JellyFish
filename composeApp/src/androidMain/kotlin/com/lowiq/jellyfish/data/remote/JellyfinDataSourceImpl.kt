@@ -701,7 +701,7 @@ class JellyfinDataSourceImpl(
                         isExternal = stream.isExternal ?: false,
                         isDefault = stream.isDefault ?: false,
                         isForced = stream.isForced ?: false,
-                        deliveryUrl = "$serverUrl/Videos/$itemId/$mediaSourceId/Subtitles/${stream.index ?: index}/0/Stream.$extension?api_key=$token"
+                        deliveryUrl = "$serverUrl/Videos/$itemId/$mediaSourceId/Subtitles/${stream.index ?: index}/Stream.$extension?api_key=$token"
                     )
                 } ?: emptyList()
 
