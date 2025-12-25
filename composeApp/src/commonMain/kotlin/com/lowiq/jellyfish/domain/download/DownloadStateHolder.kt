@@ -3,6 +3,7 @@ package com.lowiq.jellyfish.domain.download
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,46 +34,50 @@ class DownloadStateHolder(
         observeDownloadEvents()
     }
 
+    fun close() {
+        scope.cancel()
+    }
+
     private fun observeDownloadEvents() {
         scope.launch {
             downloadManager.downloadEvents.collect { event ->
                 when (event) {
                     is DownloadEvent.Started -> {
-                        _activeDownloads.update { list ->
+                        updateState { list ->
                             list + ActiveDownload(event.downloadId, event.title, 0f)
                         }
-                        updateDerivedState()
                     }
                     is DownloadEvent.Progress -> {
-                        _activeDownloads.update { list ->
+                        updateState { list ->
                             list.map { download ->
                                 if (download.id == event.downloadId) {
                                     download.copy(progress = event.progress)
                                 } else download
                             }
                         }
-                        updateDerivedState()
                     }
-                    is DownloadEvent.Completed, is DownloadEvent.Failed -> {
-                        val downloadId = when (event) {
-                            is DownloadEvent.Completed -> event.downloadId
-                            is DownloadEvent.Failed -> event.downloadId
-                            else -> return@collect
+                    is DownloadEvent.Completed -> {
+                        updateState { list ->
+                            list.filter { it.id != event.downloadId }
                         }
-                        _activeDownloads.update { list ->
-                            list.filter { it.id != downloadId }
+                    }
+                    is DownloadEvent.Failed -> {
+                        updateState { list ->
+                            list.filter { it.id != event.downloadId }
                         }
-                        updateDerivedState()
                     }
                 }
             }
         }
     }
 
-    private fun updateDerivedState() {
-        val downloads = _activeDownloads.value
-        _activeCount.value = downloads.size
-        _averageProgress.value = if (downloads.isEmpty()) 0f
-            else downloads.map { it.progress }.average().toFloat()
+    private fun updateState(transform: (List<ActiveDownload>) -> List<ActiveDownload>) {
+        _activeDownloads.update { list ->
+            val newList = transform(list)
+            _activeCount.value = newList.size
+            _averageProgress.value = if (newList.isEmpty()) 0f
+                else newList.map { it.progress }.average().toFloat()
+            newList
+        }
     }
 }
