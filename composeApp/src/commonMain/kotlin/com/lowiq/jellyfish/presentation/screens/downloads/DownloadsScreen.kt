@@ -55,6 +55,15 @@ class DownloadsScreen : Screen {
                         "Téléchargements",
                         style = MaterialTheme.typography.headlineSmall
                     )
+                    if (state.activeDownloads.isNotEmpty() || state.completedDownloads.isNotEmpty()) {
+                        IconButton(onClick = { screenModel.showDeleteAllConfirmation() }) {
+                            Icon(
+                                Icons.Default.DeleteSweep,
+                                contentDescription = "Tout effacer",
+                                tint = colors.destructive
+                            )
+                        }
+                    }
                 }
                 state.storageInfo?.let { info ->
                     Text(
@@ -63,6 +72,32 @@ class DownloadsScreen : Screen {
                         color = colors.mutedForeground
                     )
                 }
+            }
+
+            // Delete All Confirmation Dialog
+            if (state.showDeleteAllDialog) {
+                AlertDialog(
+                    onDismissRequest = { screenModel.hideDeleteAllConfirmation() },
+                    title = { Text("Effacer tous les téléchargements ?") },
+                    text = {
+                        Text(
+                            "Cette action supprimera ${state.totalDownloadCount} fichiers (${formatBytes(state.totalDownloadBytes)}). Cette action est irréversible."
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { screenModel.deleteAllDownloads() },
+                            colors = ButtonDefaults.textButtonColors(contentColor = colors.destructive)
+                        ) {
+                            Text("Effacer")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { screenModel.hideDeleteAllConfirmation() }) {
+                            Text("Annuler")
+                        }
+                    }
+                )
             }
 
             if (state.isLoading) {
@@ -206,15 +241,32 @@ private fun ActiveDownloadItem(
                     color = colors.mutedForeground
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { download.progress },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text(
-                    "${(download.progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.mutedForeground
-                )
+                if (download.status == DownloadStatus.QUEUED) {
+                    // Indeterminate progress for queued downloads (waiting to start)
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = colors.primary,
+                        trackColor = colors.primary.copy(alpha = 0.2f)
+                    )
+                    Text(
+                        "En attente...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.mutedForeground
+                    )
+                } else {
+                    // Determinate progress for active downloads
+                    LinearProgressIndicator(
+                        progress = { download.progress.coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = colors.primary,
+                        trackColor = colors.primary.copy(alpha = 0.2f)
+                    )
+                    Text(
+                        "${(download.progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.mutedForeground
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))

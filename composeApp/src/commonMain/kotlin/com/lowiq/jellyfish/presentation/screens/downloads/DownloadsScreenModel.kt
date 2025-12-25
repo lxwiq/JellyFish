@@ -15,7 +15,10 @@ data class DownloadsState(
     val activeDownloads: List<Download> = emptyList(),
     val completedDownloads: List<Download> = emptyList(),
     val storageInfo: StorageInfo? = null,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val showDeleteAllDialog: Boolean = false,
+    val totalDownloadCount: Int = 0,
+    val totalDownloadBytes: Long = 0
 )
 
 class DownloadsScreenModel(
@@ -37,11 +40,15 @@ class DownloadsScreenModel(
                 downloadRepository.getActiveDownloads(),
                 downloadRepository.getCompletedDownloads()
             ) { active, completed ->
+                val totalCount = active.size + completed.size
+                val totalBytes = active.sumOf { it.totalBytes } + completed.sumOf { it.downloadedBytes }
                 _state.update {
                     it.copy(
                         activeDownloads = active,
                         completedDownloads = completed,
-                        isLoading = false
+                        isLoading = false,
+                        totalDownloadCount = totalCount,
+                        totalDownloadBytes = totalBytes
                     )
                 }
             }.collect()
@@ -55,11 +62,65 @@ class DownloadsScreenModel(
 
     private fun observeEvents() {
         screenModelScope.launch {
+            println("[DownloadsScreenModel] observeEvents: Starting to collect events")
             downloadManager.downloadEvents.collect { event ->
                 when (event) {
-                    is DownloadEvent.Completed -> refreshStorageInfo()
-                    else -> {}
+                    is DownloadEvent.Progress -> {
+                        val progressPercent = (event.progress * 100).toInt()
+                        val currentDownloads = _state.value.activeDownloads
+                        val foundDownload = currentDownloads.find { it.id == event.downloadId }
+
+                        if (progressPercent % 10 == 0) {
+                            println("[DownloadsScreenModel] Progress: ${event.downloadId} -> $progressPercent%, activeDownloads=${currentDownloads.size}, found=${foundDownload != null}")
+                        }
+
+                        if (foundDownload != null) {
+                            // Update progress in real-time from events
+                            _state.update { currentState ->
+                                currentState.copy(
+                                    activeDownloads = currentState.activeDownloads.map { download ->
+                                        if (download.id == event.downloadId) {
+                                            download.copy(
+                                                progress = event.progress,
+                                                downloadedBytes = event.bytesDownloaded
+                                            )
+                                        } else download
+                                    }
+                                )
+                            }
+                        } else {
+                            println("[DownloadsScreenModel] WARNING: Download ${event.downloadId} not in activeDownloads list!")
+                        }
+                    }
+                    is DownloadEvent.Completed -> {
+                        println("[DownloadsScreenModel] Completed event: ${event.downloadId}")
+                        refreshDownloadLists()
+                    }
+                    is DownloadEvent.Started -> {
+                        println("[DownloadsScreenModel] Started event: ${event.downloadId} - ${event.title}")
+                        refreshDownloadLists()
+                    }
+                    is DownloadEvent.Failed -> {
+                        println("[DownloadsScreenModel] Failed event: ${event.downloadId} - ${event.error}")
+                        refreshDownloadLists()
+                    }
                 }
+            }
+        }
+    }
+
+    private fun refreshDownloadLists() {
+        screenModelScope.launch {
+            val active = downloadRepository.getActiveDownloads().first()
+            val completed = downloadRepository.getCompletedDownloads().first()
+            val info = downloadRepository.getStorageInfo()
+            println("[DownloadsScreenModel] Refreshed lists: ${active.size} active, ${completed.size} completed")
+            _state.update {
+                it.copy(
+                    activeDownloads = active,
+                    completedDownloads = completed,
+                    storageInfo = info
+                )
             }
         }
     }
@@ -95,6 +156,23 @@ class DownloadsScreenModel(
         screenModelScope.launch {
             downloadRepository.deleteDownload(downloadId)
             refreshStorageInfo()
+        }
+    }
+
+    fun showDeleteAllConfirmation() {
+        _state.update { it.copy(showDeleteAllDialog = true) }
+    }
+
+    fun hideDeleteAllConfirmation() {
+        _state.update { it.copy(showDeleteAllDialog = false) }
+    }
+
+    fun deleteAllDownloads() {
+        screenModelScope.launch {
+            hideDeleteAllConfirmation()
+            downloadManager.cancelAll()
+            downloadRepository.deleteAllDownloads()
+            refreshDownloadLists()
         }
     }
 }
