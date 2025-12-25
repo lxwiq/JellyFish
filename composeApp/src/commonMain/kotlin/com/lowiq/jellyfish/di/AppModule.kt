@@ -86,7 +86,7 @@ val presentationModule = module {
     factory { (server: Server) -> QuickConnectScreenModel(server, get()) }
     factory { HomeScreenModel(get(), get(), get()) }
     factory { (library: Library) -> LibraryScreenModel(library, get(), get(), get()) }
-    factory { (itemId: String) -> MovieDetailScreenModel(itemId, get(), get(), get(), get()) }
+    factory { (itemId: String) -> MovieDetailScreenModel(itemId, get(), get(), get(), get(), get()) }
     factory { (itemId: String) -> SeriesDetailScreenModel(itemId, get(), get()) }
     factory { (itemId: String) -> EpisodeDetailScreenModel(itemId, get(), get()) }
     factory { params ->

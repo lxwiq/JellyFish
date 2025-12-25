@@ -51,7 +51,10 @@ import com.lowiq.jellyfish.presentation.components.CastCarousel
 import com.lowiq.jellyfish.presentation.components.GenreBadges
 import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
+import com.lowiq.jellyfish.presentation.components.NotificationPermissionEffect
 import com.lowiq.jellyfish.presentation.components.QualitySelectionDialog
+import com.lowiq.jellyfish.domain.download.NotificationPermissionHandler
+import org.koin.compose.koinInject
 import com.lowiq.jellyfish.presentation.screens.downloads.DownloadsScreen
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
@@ -66,6 +69,10 @@ class MovieDetailScreen(private val itemId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<MovieDetailScreenModel> { parametersOf(itemId) }
         val state by screenModel.state.collectAsState()
+        val notificationPermissionHandler = koinInject<NotificationPermissionHandler>()
+
+        // Handle notification permission requests on Android
+        NotificationPermissionEffect(notificationPermissionHandler)
 
         LaunchedEffect(Unit) {
             screenModel.events.collect { event ->

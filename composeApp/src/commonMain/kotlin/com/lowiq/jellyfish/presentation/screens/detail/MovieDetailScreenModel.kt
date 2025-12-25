@@ -3,6 +3,7 @@ package com.lowiq.jellyfish.presentation.screens.detail
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.lowiq.jellyfish.data.local.DownloadSettingsStorage
+import com.lowiq.jellyfish.domain.download.NotificationPermissionHandler
 import com.lowiq.jellyfish.domain.model.CastMember
 import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.domain.model.QualityOption
@@ -55,7 +56,8 @@ class MovieDetailScreenModel(
     private val serverRepository: ServerRepository,
     private val mediaRepository: MediaRepository,
     private val downloadRepository: DownloadRepository,
-    private val downloadSettings: DownloadSettingsStorage
+    private val downloadSettings: DownloadSettingsStorage,
+    private val notificationPermissionHandler: NotificationPermissionHandler
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(MovieDetailState())
@@ -196,6 +198,10 @@ class MovieDetailScreenModel(
     private suspend fun startDownload(quality: QualityOption) {
         val serverId = currentServerId ?: return
         val state = _state.value
+
+        // Request notification permission before starting download (on Android 13+)
+        // Continue with download regardless of result - notifications are optional
+        notificationPermissionHandler.requestPermissionIfNeeded()
 
         downloadRepository.startDownload(
             serverId = serverId,
