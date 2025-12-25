@@ -15,5 +15,6 @@ data class MovieDetails(
     val similarItems: List<MediaItem>,
     val trailerUrl: String?,
     val isFavorite: Boolean,
-    val isWatched: Boolean
+    val isWatched: Boolean,
+    val playbackPositionTicks: Long?
 )

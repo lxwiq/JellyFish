@@ -17,5 +17,6 @@ data class EpisodeDetails(
     val nextEpisodeId: String?,
     val isFavorite: Boolean,
     val isWatched: Boolean,
-    val progress: Float?
+    val progress: Float?,
+    val playbackPositionTicks: Long?
 )

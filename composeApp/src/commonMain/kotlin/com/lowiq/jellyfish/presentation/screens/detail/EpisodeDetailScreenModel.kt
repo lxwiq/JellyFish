@@ -18,11 +18,18 @@ import kotlinx.coroutines.launch
 sealed class EpisodeDetailEvent {
     data class NavigateToEpisode(val episodeId: String) : EpisodeDetailEvent()
     data class NavigateToSeries(val seriesId: String) : EpisodeDetailEvent()
+    data class PlayVideo(
+        val itemId: String,
+        val title: String,
+        val subtitle: String,
+        val startPositionMs: Long
+    ) : EpisodeDetailEvent()
 }
 
 data class EpisodeDetailState(
     val isLoading: Boolean = true,
     val error: String? = null,
+    val itemId: String = "",
     val title: String = "",
     val overview: String? = null,
     val thumbnailUrl: String? = null,
@@ -39,7 +46,8 @@ data class EpisodeDetailState(
     val nextEpisodeId: String? = null,
     val isFavorite: Boolean = false,
     val isWatched: Boolean = false,
-    val progress: Float? = null
+    val progress: Float? = null,
+    val playbackPositionMs: Long = 0
 )
 
 class EpisodeDetailScreenModel(
@@ -71,9 +79,12 @@ class EpisodeDetailScreenModel(
 
             mediaRepository.getEpisodeDetails(server.id, episodeId)
                 .onSuccess { details ->
+                    // Convert ticks to milliseconds (1 tick = 100 nanoseconds, so 10,000 ticks = 1 ms)
+                    val positionMs = details.playbackPositionTicks?.div(10_000) ?: 0
                     _state.update {
                         it.copy(
                             isLoading = false,
+                            itemId = details.id,
                             title = details.title,
                             overview = details.overview,
                             thumbnailUrl = details.thumbnailUrl,
@@ -90,7 +101,8 @@ class EpisodeDetailScreenModel(
                             nextEpisodeId = details.nextEpisodeId,
                             isFavorite = details.isFavorite,
                             isWatched = details.isWatched,
-                            progress = details.progress
+                            progress = details.progress,
+                            playbackPositionMs = positionMs
                         )
                     }
                 }
@@ -154,7 +166,18 @@ class EpisodeDetailScreenModel(
     }
 
     fun onPlay() {
-        // TODO: Implement playback
+        val state = _state.value
+        val subtitle = "${state.seriesName} • S${state.seasonNumber} E${state.episodeNumber}"
+        screenModelScope.launch {
+            _events.emit(
+                EpisodeDetailEvent.PlayVideo(
+                    itemId = state.itemId,
+                    title = state.title,
+                    subtitle = subtitle,
+                    startPositionMs = state.playbackPositionMs
+                )
+            )
+        }
     }
 
     fun onDownload() {

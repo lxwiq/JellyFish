@@ -37,7 +37,8 @@ data class MovieDetailState(
     val showQualityDialog: Boolean = false,
     val availableQualities: List<QualityOption> = emptyList(),
     val isLoadingQualities: Boolean = false,
-    val posterUrl: String? = null
+    val posterUrl: String? = null,
+    val playbackPositionMs: Long = 0
 )
 
 sealed class MovieDetailEvent {
@@ -78,6 +79,8 @@ class MovieDetailScreenModel(
 
             mediaRepository.getMovieDetails(server.id, itemId)
                 .onSuccess { details ->
+                    // Convert ticks to milliseconds (1 tick = 100 nanoseconds, so 10,000 ticks = 1 ms)
+                    val positionMs = details.playbackPositionTicks?.div(10_000) ?: 0
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -94,7 +97,8 @@ class MovieDetailScreenModel(
                             similarItems = details.similarItems,
                             trailerUrl = details.trailerUrl,
                             isFavorite = details.isFavorite,
-                            isWatched = details.isWatched
+                            isWatched = details.isWatched,
+                            playbackPositionMs = positionMs
                         )
                     }
                 }
@@ -139,7 +143,7 @@ class MovieDetailScreenModel(
                 MovieDetailEvent.PlayVideo(
                     itemId = itemId,
                     title = _state.value.title,
-                    startPositionMs = 0 // Start from beginning for now
+                    startPositionMs = _state.value.playbackPositionMs
                 )
             )
         }

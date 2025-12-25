@@ -16,6 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +51,7 @@ class HomeScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<HomeScreenModel>()
         val state by screenModel.state.collectAsState()
+        var sidebarVisible by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             screenModel.events.collect { event ->
@@ -73,7 +77,11 @@ class HomeScreen : Screen {
 
         AppScaffold(
             selectedIndex = state.selectedNavIndex,
-            onNavigationItemSelected = { screenModel.onNavigationItemSelected(it) },
+            onNavigationItemSelected = {
+                screenModel.onNavigationItemSelected(it)
+                sidebarVisible = false
+            },
+            showSidebar = sidebarVisible,
             modifier = Modifier.background(colors.background)
         ) {
             Column(
@@ -81,19 +89,11 @@ class HomeScreen : Screen {
             ) {
                 AppHeader(
                     username = state.username,
+                    isSidebarOpen = sidebarVisible,
+                    onMenuClick = { sidebarVisible = !sidebarVisible },
                     onSwitchServer = { screenModel.switchServer() },
                     onLogout = { screenModel.logout() }
                 )
-
-                if (state.libraries.isNotEmpty()) {
-                    LibraryCards(
-                        libraries = state.libraries,
-                        onLibraryClick = { library ->
-                            navigator.push(LibraryScreen(library))
-                        },
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                }
 
                 PullToRefreshBox(
                     isRefreshing = state.isRefreshing,
@@ -135,6 +135,19 @@ class HomeScreen : Screen {
                                     SkeletonCarousel()
                                 }
                             } else {
+                                // Library Cards
+                                if (state.libraries.isNotEmpty()) {
+                                    item {
+                                        LibraryCards(
+                                            libraries = state.libraries,
+                                            onLibraryClick = { library ->
+                                                navigator.push(LibraryScreen(library))
+                                            },
+                                            modifier = Modifier.padding(vertical = 12.dp)
+                                        )
+                                    }
+                                }
+
                                 // Continue Watching
                                 if (state.continueWatching.isNotEmpty()) {
                                     item {

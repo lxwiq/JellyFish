@@ -671,16 +671,42 @@ class JellyfinDataSourceImpl(
         itemId: String
     ): Result<StreamInfo> = withContext(Dispatchers.IO) {
         runCatching {
+            val api = createApi(serverUrl, token)
             val playSessionId = java.util.UUID.randomUUID().toString()
-            val directPlayUrl = "$serverUrl/Videos/$itemId/stream?static=true&mediaSourceId=$itemId&api_key=$token"
-            val transcodingUrl = "$serverUrl/Videos/$itemId/master.m3u8?mediaSourceId=$itemId&api_key=$token"
+
+            // Get playback info from Jellyfin to determine best playback method
+            val playbackInfo by api.mediaInfoApi.getPlaybackInfo(
+                itemId = java.util.UUID.fromString(itemId),
+                userId = java.util.UUID.fromString(userId)
+            )
+
+            val mediaSource = playbackInfo.mediaSources?.firstOrNull()
+            val mediaSourceId = mediaSource?.id ?: itemId
+            val supportsDirectPlay = mediaSource?.supportsDirectPlay ?: false
+
+            // Direct play URL - for containers that can be played directly
+            val directPlayUrl = "$serverUrl/Videos/$itemId/stream" +
+                "?static=true" +
+                "&mediaSourceId=$mediaSourceId" +
+                "&playSessionId=$playSessionId" +
+                "&api_key=$token"
+
+            // HLS transcoding URL - ensures audio/video compatibility
+            val transcodingUrl = "$serverUrl/Videos/$itemId/master.m3u8" +
+                "?mediaSourceId=$mediaSourceId" +
+                "&playSessionId=$playSessionId" +
+                "&videoCodec=h264" +
+                "&audioCodec=aac,mp3" +
+                "&audioBitRate=192000" +
+                "&maxAudioChannels=6" +
+                "&api_key=$token"
 
             StreamInfo(
                 directPlayUrl = directPlayUrl,
                 transcodingUrl = transcodingUrl,
-                mediaSourceId = itemId,
+                mediaSourceId = mediaSourceId,
                 playSessionId = playSessionId,
-                supportsDirectPlay = true  // Assume direct play is supported, will fallback if not
+                supportsDirectPlay = supportsDirectPlay
             )
         }
     }
@@ -691,13 +717,50 @@ class JellyfinDataSourceImpl(
         itemId: String,
         mediaSourceId: String,
         playSessionId: String
-    ): Result<Unit> = Result.success(Unit)
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            api.playStateApi.reportPlaybackStart(
+                org.jellyfin.sdk.model.api.PlaybackStartInfo(
+                    itemId = java.util.UUID.fromString(itemId),
+                    mediaSourceId = mediaSourceId,
+                    playSessionId = playSessionId,
+                    canSeek = true,
+                    isMuted = false,
+                    isPaused = false,
+                    playMethod = org.jellyfin.sdk.model.api.PlayMethod.DIRECT_PLAY,
+                    repeatMode = org.jellyfin.sdk.model.api.RepeatMode.REPEAT_NONE,
+                    playbackOrder = org.jellyfin.sdk.model.api.PlaybackOrder.DEFAULT
+                )
+            )
+            Unit
+        }
+    }
 
     override suspend fun reportPlaybackProgress(
         serverUrl: String,
         token: String,
         progress: PlaybackProgressInfo
-    ): Result<Unit> = Result.success(Unit)
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            api.playStateApi.reportPlaybackProgress(
+                org.jellyfin.sdk.model.api.PlaybackProgressInfo(
+                    itemId = java.util.UUID.fromString(progress.itemId),
+                    mediaSourceId = progress.mediaSourceId,
+                    positionTicks = progress.positionTicks,
+                    isPaused = progress.isPaused,
+                    playSessionId = progress.playSessionId,
+                    canSeek = true,
+                    isMuted = false,
+                    playMethod = org.jellyfin.sdk.model.api.PlayMethod.DIRECT_PLAY,
+                    repeatMode = org.jellyfin.sdk.model.api.RepeatMode.REPEAT_NONE,
+                    playbackOrder = org.jellyfin.sdk.model.api.PlaybackOrder.DEFAULT
+                )
+            )
+            Unit
+        }
+    }
 
     override suspend fun reportPlaybackStopped(
         serverUrl: String,
@@ -706,7 +769,21 @@ class JellyfinDataSourceImpl(
         mediaSourceId: String,
         positionTicks: Long,
         playSessionId: String
-    ): Result<Unit> = Result.success(Unit)
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val api = createApi(serverUrl, token)
+            api.playStateApi.reportPlaybackStopped(
+                org.jellyfin.sdk.model.api.PlaybackStopInfo(
+                    itemId = java.util.UUID.fromString(itemId),
+                    mediaSourceId = mediaSourceId,
+                    positionTicks = positionTicks,
+                    playSessionId = playSessionId,
+                    failed = false
+                )
+            )
+            Unit
+        }
+    }
 
     override suspend fun getMediaSources(
         serverUrl: String,

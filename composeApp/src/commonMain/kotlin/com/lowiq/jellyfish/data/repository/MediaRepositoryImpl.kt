@@ -437,7 +437,8 @@ class MediaRepositoryImpl(
                 similarItems = similar.map { it.toDomainMediaItem() },
                 trailerUrl = details.trailerUrl,
                 isFavorite = details.isFavorite,
-                isWatched = details.isPlayed
+                isWatched = details.isPlayed,
+                playbackPositionTicks = details.playbackPositionTicks
             )
         }
     }
@@ -529,7 +530,8 @@ class MediaRepositoryImpl(
                 nextEpisodeId = nextId,
                 isFavorite = details.isFavorite,
                 isWatched = details.isPlayed,
-                progress = progress
+                progress = progress,
+                playbackPositionTicks = details.playbackPositionTicks
             )
         }
     }

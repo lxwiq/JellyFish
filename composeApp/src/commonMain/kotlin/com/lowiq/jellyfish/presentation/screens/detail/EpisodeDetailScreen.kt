@@ -61,6 +61,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.lowiq.jellyfish.presentation.components.ActionButtonsRow
 import com.lowiq.jellyfish.presentation.components.CastCarousel
+import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 import org.koin.core.parameter.parametersOf
 
@@ -83,6 +84,16 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                     }
                     is EpisodeDetailEvent.NavigateToEpisode -> {
                         // Events are handled by reloading in the same screen
+                    }
+                    is EpisodeDetailEvent.PlayVideo -> {
+                        navigator.push(
+                            VideoPlayerScreen(
+                                itemId = event.itemId,
+                                title = event.title,
+                                subtitle = event.subtitle,
+                                startPositionMs = event.startPositionMs
+                            )
+                        )
                     }
                 }
             }
