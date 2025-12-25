@@ -13,6 +13,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -34,7 +36,13 @@ fun DownloadIndicator(
     val trackColor = colors.muted
     val badgeColor = colors.destructive
 
-    Box(modifier = modifier.size(size)) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .semantics {
+                contentDescription = "$activeCount téléchargement${if (activeCount > 1) "s" else ""} en cours, ${(averageProgress * 100).toInt()}%"
+            }
+    ) {
         // Circular progress arc
         Canvas(modifier = Modifier.size(size)) {
             val stroke = strokeWidth.toPx()
@@ -56,7 +64,7 @@ fun DownloadIndicator(
             drawArc(
                 color = progressColor,
                 startAngle = -90f,
-                sweepAngle = 360f * averageProgress,
+                sweepAngle = 360f * averageProgress.coerceIn(0f, 1f),
                 useCenter = false,
                 topLeft = topLeft,
                 size = Size(diameter, diameter),
