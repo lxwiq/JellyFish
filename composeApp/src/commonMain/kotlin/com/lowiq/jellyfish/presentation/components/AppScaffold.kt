@@ -21,6 +21,8 @@ fun AppScaffold(
     selectedIndex: Int,
     onNavigationItemSelected: (Int) -> Unit,
     showSidebar: Boolean,
+    activeDownloadCount: Int = 0,
+    downloadProgress: Float = 0f,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -40,6 +42,8 @@ fun AppScaffold(
             NavigationRail(
                 selectedIndex = selectedIndex,
                 onItemSelected = onNavigationItemSelected,
+                activeDownloadCount = activeDownloadCount,
+                downloadProgress = downloadProgress,
                 modifier = Modifier
                     .fillMaxHeight()
                     .offset(x = sidebarOffset)
