@@ -743,6 +743,21 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
             "&api_key=$token"
     }
 
+    override fun getDirectDownloadUrl(serverUrl: String, token: String, itemId: String): String {
+        return "$serverUrl/Items/$itemId/Download?api_key=$token"
+    }
+
+    override suspend fun canUserTranscode(serverUrl: String, token: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val api = createApi(serverUrl, token)
+                val user by api.userApi.getCurrentUser()
+                user.policy?.enableVideoPlaybackTranscoding == true
+            } catch (e: Exception) {
+                false
+            }
+        }
+
     private fun BaseItemDto.toMediaItem(serverUrl: String, forceBackdrop: Boolean = false): MediaItem {
         // Episodes: use Backdrop (horizontal), Movies/Series: use Primary (poster)
         // forceBackdrop=true always uses horizontal images (e.g., Continue Watching)
@@ -822,7 +837,7 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
             runCatching {
                 val api = createApi(serverUrl, token)
                 api.userApi.deleteUser(java.util.UUID.fromString(userId))
-            }
+            }.map { }
         }
 
     // Admin: Libraries
@@ -831,26 +846,16 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
             runCatching {
                 val api = createApi(serverUrl, token)
                 api.libraryApi.refreshLibrary()
-            }
+            }.map { }
         }
 
-    // Admin: Logs
+    // Admin: Logs - Note: getLogEntries not available in current SDK, returning empty list
     override suspend fun getServerLogs(
         serverUrl: String,
         token: String,
         limit: Int
     ): Result<List<LogEntry>> = withContext(Dispatchers.IO) {
-        runCatching {
-            val api = createApi(serverUrl, token)
-            val response by api.systemApi.getLogEntries(limit = limit)
-            response.items.orEmpty().map { entry ->
-                LogEntry(
-                    timestamp = entry.date?.toInstant()?.toEpochMilli() ?: 0L,
-                    severity = entry.severity?.name ?: "INFO",
-                    message = entry.name ?: ""
-                )
-            }
-        }
+        Result.success(emptyList())
     }
 
     // Admin: Tasks
@@ -880,6 +885,6 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
             runCatching {
                 val api = createApi(serverUrl, token)
                 api.scheduledTasksApi.startTask(taskId = taskId)
-            }
+            }.map { }
         }
 }

@@ -118,4 +118,12 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
             "&audioCodec=aac" +
             "&api_key=$token"
     }
+
+    override fun getDirectDownloadUrl(serverUrl: String, token: String, itemId: String): String {
+        return "$serverUrl/Items/$itemId/Download?api_key=$token"
+    }
+
+    override suspend fun canUserTranscode(serverUrl: String, token: String): Boolean {
+        return true // iOS: assume transcoding allowed, implement properly later
+    }
 }

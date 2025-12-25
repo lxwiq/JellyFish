@@ -825,6 +825,22 @@ class JellyfinDataSourceImpl(
             "&api_key=$token"
     }
 
+    override fun getDirectDownloadUrl(serverUrl: String, token: String, itemId: String): String {
+        // Direct download without transcoding - gets original file
+        return "$serverUrl/Items/$itemId/Download?api_key=$token"
+    }
+
+    override suspend fun canUserTranscode(serverUrl: String, token: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val api = createApi(serverUrl, token)
+                val user by api.userApi.getCurrentUser()
+                user.policy?.enableVideoPlaybackTranscoding == true
+            } catch (e: Exception) {
+                false // Default to no transcoding if we can't check
+            }
+        }
+
     private fun BaseItemDto.toMediaItem(serverUrl: String, forceBackdrop: Boolean = false): MediaItem {
         // Episodes: use Backdrop (horizontal), Movies/Series: use Primary (poster)
         // forceBackdrop=true always uses horizontal images (e.g., Continue Watching)

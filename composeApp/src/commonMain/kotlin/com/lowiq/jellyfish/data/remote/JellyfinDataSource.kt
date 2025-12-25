@@ -87,6 +87,8 @@ interface JellyfinDataSource {
 
     suspend fun getMediaSources(serverUrl: String, token: String, userId: String, itemId: String): Result<List<MediaSourceInfo>>
     fun getTranscodingDownloadUrl(serverUrl: String, token: String, itemId: String, bitrate: Int): String
+    fun getDirectDownloadUrl(serverUrl: String, token: String, itemId: String): String
+    suspend fun canUserTranscode(serverUrl: String, token: String): Boolean
 
     // Admin: Users
     suspend fun getUsers(serverUrl: String, token: String): Result<List<AdminUser>>
