@@ -105,7 +105,7 @@ class DownloadManager(
                 val sink = FileSystem.SYSTEM.sink(path).buffer()
 
                 var lastLoggedProgress = 0
-                downloadClient.downloadFile(url, filePath) { bytes ->
+                downloadClient.downloadFile(url, filePath, token) { bytes ->
                     sink.write(bytes)
                 }.collect { result ->
                     when (result) {

@@ -30,6 +30,7 @@ class DownloadClient(private val httpClient: HttpClient) {
     fun downloadFile(
         url: String,
         destinationPath: String,
+        token: String? = null,
         onWrite: suspend (ByteArray) -> Unit
     ): Flow<DownloadResult> = flow {
         try {
@@ -41,13 +42,25 @@ class DownloadClient(private val httpClient: HttpClient) {
                     connectTimeoutMillis = CONNECT_TIMEOUT_MS
                     socketTimeoutMillis = SOCKET_TIMEOUT_MS
                 }
+                // Add authentication header if token provided
+                token?.let {
+                    header("X-MediaBrowser-Token", it)
+                }
             }.execute { response ->
+                println("[DownloadClient] Response status: ${response.status}")
+                println("[DownloadClient] Content-Length: ${response.contentLength()}")
+                println("[DownloadClient] Content-Type: ${response.contentType()}")
+
                 if (!response.status.isSuccess()) {
                     emit(DownloadResult.Error("HTTP ${response.status.value}: ${response.status.description}"))
                     return@execute
                 }
 
                 val contentLength = response.contentLength() ?: 0L
+                if (contentLength < 1_000_000) {
+                    // Less than 1MB - probably an error page, not a video
+                    println("[DownloadClient] WARNING: Content-Length is suspiciously small: $contentLength bytes")
+                }
                 var bytesDownloaded = 0L
                 val channel = response.bodyAsChannel()
 
