@@ -6,7 +6,6 @@ import com.lowiq.jellyfish.data.local.SecureStorage
 import com.lowiq.jellyfish.data.local.createDataStore
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
 import com.lowiq.jellyfish.data.remote.JellyfinDataSourceImpl
-import com.lowiq.jellyfish.domain.download.DownloadNotifier
 import com.lowiq.jellyfish.domain.download.DownloadServiceController
 import com.lowiq.jellyfish.domain.download.NotificationPermissionHandler
 import com.lowiq.jellyfish.domain.player.VideoPlayer
@@ -26,7 +25,6 @@ actual val platformModule: Module = module {
     factory { VideoPlayer(androidContext()) }
     single { HttpClient(OkHttp) }
     single { FileManager(androidContext()) }
-    single { DownloadNotifier(androidContext()) }
     single { NotificationPermissionHandler(androidContext()) }
     single { DownloadServiceController(androidContext()) }
 }
