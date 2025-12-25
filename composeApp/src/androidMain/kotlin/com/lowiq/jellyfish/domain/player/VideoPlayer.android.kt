@@ -187,10 +187,21 @@ actual class VideoPlayer(
     actual fun addExternalSubtitle(url: String, name: String?) {
         val player = mediaPlayer ?: return
         try {
+            // Count tracks before adding
+            val trackCountBefore = player.spuTracks?.size ?: 0
+
             player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, url, true)
-            // Update tracks after adding external subtitle
+
+            // Wait for VLC to load the subtitle, then select it
             scope.launch {
-                delay(500) // Give VLC time to load the subtitle
+                delay(1000) // Give VLC time to load the subtitle
+
+                val tracks = player.spuTracks
+                if (tracks != null && tracks.size > trackCountBefore) {
+                    // New track was added - select it (last track in list)
+                    val newTrack = tracks.last()
+                    player.spuTrack = newTrack.id
+                }
                 updateTracks()
             }
         } catch (e: Exception) {
