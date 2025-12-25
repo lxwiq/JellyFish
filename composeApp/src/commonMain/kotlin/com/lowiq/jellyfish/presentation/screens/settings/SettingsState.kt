@@ -22,6 +22,8 @@ data class SettingsState(
     val usedStorageBytes: Long = 0,
     val storageLimitMb: Int = 10240,
     val isClearingCache: Boolean = false,
+    val showDeleteAllDownloadsDialog: Boolean = false,
+    val isDeletingAllDownloads: Boolean = false,
 
     // Admin
     val isAdmin: Boolean = false,

@@ -130,7 +130,9 @@ class SettingsScreen : Screen {
                         storageLimitMb = state.storageLimitMb,
                         onStorageLimitChange = screenModel::setStorageLimit,
                         isClearingCache = state.isClearingCache,
-                        onClearCache = screenModel::clearCache
+                        onClearCache = screenModel::clearCache,
+                        isDeletingAllDownloads = state.isDeletingAllDownloads,
+                        onDeleteAllDownloads = screenModel::showDeleteAllDownloadsDialog
                     )
                 }
 
@@ -183,6 +185,25 @@ class SettingsScreen : Screen {
                 },
                 dismissButton = {
                     TextButton(onClick = { showLogoutDialog = false }) {
+                        Text("Annuler", color = colors.foreground)
+                    }
+                }
+            )
+        }
+
+        // Delete All Downloads Confirmation Dialog
+        if (state.showDeleteAllDownloadsDialog) {
+            AlertDialog(
+                onDismissRequest = { screenModel.hideDeleteAllDownloadsDialog() },
+                title = { Text("Effacer tous les téléchargements ?") },
+                text = { Text("Cette action supprimera tous les fichiers téléchargés. Cette action est irréversible.") },
+                confirmButton = {
+                    TextButton(onClick = { screenModel.deleteAllDownloads() }) {
+                        Text("Effacer", color = colors.destructive)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { screenModel.hideDeleteAllDownloadsDialog() }) {
                         Text("Annuler", color = colors.foreground)
                     }
                 }
@@ -418,7 +439,9 @@ private fun StorageSection(
     storageLimitMb: Int,
     onStorageLimitChange: (Int) -> Unit,
     isClearingCache: Boolean,
-    onClearCache: () -> Unit
+    onClearCache: () -> Unit,
+    isDeletingAllDownloads: Boolean,
+    onDeleteAllDownloads: () -> Unit
 ) {
     val colors = LocalJellyFishColors.current
     val usedMb = usedStorageBytes / (1024 * 1024)
@@ -502,6 +525,26 @@ private fun StorageSection(
                     )
                 } else {
                     Text("Vider le cache")
+                }
+            }
+
+            // Delete all downloads button
+            Button(
+                onClick = onDeleteAllDownloads,
+                enabled = !isDeletingAllDownloads,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.destructive,
+                    contentColor = colors.foreground
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (isDeletingAllDownloads) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = colors.foreground
+                    )
+                } else {
+                    Text("Effacer tous les téléchargements")
                 }
             }
         }

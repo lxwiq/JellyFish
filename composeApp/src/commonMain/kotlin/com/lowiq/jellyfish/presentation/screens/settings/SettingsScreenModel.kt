@@ -134,6 +134,28 @@ class SettingsScreenModel(
         }
     }
 
+    fun showDeleteAllDownloadsDialog() {
+        _state.update { it.copy(showDeleteAllDownloadsDialog = true) }
+    }
+
+    fun hideDeleteAllDownloadsDialog() {
+        _state.update { it.copy(showDeleteAllDownloadsDialog = false) }
+    }
+
+    fun deleteAllDownloads() {
+        screenModelScope.launch {
+            _state.update { it.copy(isDeletingAllDownloads = true, showDeleteAllDownloadsDialog = false) }
+            val result = downloadRepository.deleteAllDownloads()
+            val storageInfo = downloadRepository.getStorageInfo()
+            _state.update { it.copy(
+                isDeletingAllDownloads = false,
+                usedStorageBytes = storageInfo.usedBytes
+            )}
+            val freedMb = result.freedBytes / (1024 * 1024)
+            _events.emit(SettingsEvent.Success("${result.deletedCount} téléchargement(s) supprimé(s), ${freedMb} Mo libérés"))
+        }
+    }
+
     // Admin actions
     fun loadUsers() {
         screenModelScope.launch {
