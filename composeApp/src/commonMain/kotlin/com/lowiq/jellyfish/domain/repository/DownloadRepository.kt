@@ -25,6 +25,7 @@ interface DownloadRepository {
     suspend fun resumeDownload(downloadId: String)
     suspend fun cancelDownload(downloadId: String)
     suspend fun deleteDownload(downloadId: String)
+    suspend fun deleteAllDownloads(): DeleteAllResult
 
     suspend fun updatePlaybackPosition(downloadId: String, positionMs: Long)
 
@@ -35,4 +36,9 @@ data class StorageInfo(
     val usedBytes: Long,
     val availableBytes: Long,
     val limitBytes: Long?
+)
+
+data class DeleteAllResult(
+    val deletedCount: Int,
+    val freedBytes: Long
 )

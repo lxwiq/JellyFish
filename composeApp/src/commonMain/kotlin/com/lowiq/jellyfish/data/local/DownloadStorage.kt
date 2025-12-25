@@ -81,6 +81,12 @@ class DownloadStorage(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    suspend fun clearAll() {
+        dataStore.edit { prefs ->
+            prefs.remove(downloadsKey)
+        }
+    }
+
     private fun serializeDownloads(downloads: List<Download>): String {
         return downloads.joinToString("\n\n") { d ->
             listOf(

@@ -11,6 +11,7 @@ import com.lowiq.jellyfish.data.remote.JellyfinDataSource
 import com.lowiq.jellyfish.domain.model.Download
 import com.lowiq.jellyfish.domain.model.DownloadStatus
 import com.lowiq.jellyfish.domain.model.QualityOption
+import com.lowiq.jellyfish.domain.repository.DeleteAllResult
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.StorageInfo
 import com.lowiq.jellyfish.util.currentTimeMillis
@@ -49,17 +50,23 @@ class DownloadRepositoryImpl(
         val server = servers.find { it.id == serverId } ?: return Result.failure(Exception("Server not found"))
         val token = secureStorage.getToken(serverId) ?: return Result.failure(Exception("Not authenticated"))
 
+        // Check if user can transcode
+        val canTranscode = jellyfinDataSource.canUserTranscode(server.url, token)
+
         return jellyfinDataSource.getMediaSources(server.url, token, server.userId ?: "", itemId)
             .map { sources ->
                 val original = sources.firstOrNull()
                 val originalBitrate = original?.bitrate ?: 20_000_000
 
-                listOf(
+                val allQualities = listOf(
                     QualityOption("original", "Original", originalBitrate, original?.size ?: 0),
                     QualityOption("1080p", "1080p", 8_000_000, estimateSize(8_000_000, original?.size, originalBitrate)),
                     QualityOption("720p", "720p", 4_000_000, estimateSize(4_000_000, original?.size, originalBitrate)),
                     QualityOption("480p", "480p", 1_500_000, estimateSize(1_500_000, original?.size, originalBitrate))
                 ).filter { it.bitrate <= originalBitrate }
+
+                // If user can't transcode, only return Original quality
+                if (canTranscode) allQualities else allQualities.filter { it.id == "original" }
             }
     }
 
@@ -118,6 +125,27 @@ class DownloadRepositoryImpl(
         val download = downloadStorage.getAllDownloads().first().find { it.id == downloadId }
         download?.filePath?.let { fileManager.deleteFile(it) }
         downloadStorage.removeDownload(downloadId)
+    }
+
+    override suspend fun deleteAllDownloads(): DeleteAllResult {
+        val downloads = downloadStorage.getAllDownloads().first()
+        var freedBytes = 0L
+
+        downloads.forEach { download ->
+            download.filePath?.let { path ->
+                if (fileManager.fileExists(path)) {
+                    freedBytes += fileManager.getFileSize(path)
+                    fileManager.deleteFile(path)
+                }
+            }
+        }
+
+        downloadStorage.clearAll()
+
+        return DeleteAllResult(
+            deletedCount = downloads.size,
+            freedBytes = freedBytes
+        )
     }
 
     override suspend fun updatePlaybackPosition(downloadId: String, positionMs: Long) {
