@@ -171,15 +171,6 @@ class VideoPlayerScreenModel(
                     // Store available subtitle streams for external loading
                     availableSubtitleStreams = streamInfo.subtitleStreams
 
-                    // Auto-load default subtitle if available
-                    streamInfo.subtitleStreams
-                        .find { it.isDefault && it.deliveryUrl != null }
-                        ?.let { defaultSub ->
-                            defaultSub.deliveryUrl?.let { url ->
-                                videoPlayer.addExternalSubtitle(url, defaultSub.title)
-                            }
-                        }
-
                     _state.update { it.copy(isLoading = false) }
 
                     // Show resume dialog if we have a start position
@@ -226,6 +217,18 @@ class VideoPlayerScreenModel(
         videoPlayer.play(url, headers, positionMs)
         reportPlaybackStart()
         startProgressReporting()
+
+        // Load default subtitle after playback starts (VLC needs media to be loaded first)
+        screenModelScope.launch {
+            delay(1500) // Wait for VLC to load the media
+            availableSubtitleStreams
+                .find { it.isDefault && it.deliveryUrl != null }
+                ?.let { defaultSub ->
+                    defaultSub.deliveryUrl?.let { subUrl ->
+                        videoPlayer.addExternalSubtitle(subUrl, defaultSub.title)
+                    }
+                }
+        }
     }
 
     private fun reportPlaybackStart() {
