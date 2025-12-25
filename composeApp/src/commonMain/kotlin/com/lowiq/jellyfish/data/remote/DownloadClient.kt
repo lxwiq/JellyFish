@@ -1,6 +1,7 @@
 package com.lowiq.jellyfish.data.remote
 
 import io.ktor.client.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -32,7 +33,15 @@ class DownloadClient(private val httpClient: HttpClient) {
         onWrite: suspend (ByteArray) -> Unit
     ): Flow<DownloadResult> = flow {
         try {
-            httpClient.prepareGet(url).execute { response ->
+            println("[DownloadClient] Starting download: $url")
+            httpClient.prepareGet(url) {
+                // Long timeout for transcoding - server may take time to prepare stream
+                timeout {
+                    requestTimeoutMillis = DOWNLOAD_TIMEOUT_MS
+                    connectTimeoutMillis = CONNECT_TIMEOUT_MS
+                    socketTimeoutMillis = SOCKET_TIMEOUT_MS
+                }
+            }.execute { response ->
                 if (!response.status.isSuccess()) {
                     emit(DownloadResult.Error("HTTP ${response.status.value}: ${response.status.description}"))
                     return@execute
@@ -72,5 +81,9 @@ class DownloadClient(private val httpClient: HttpClient) {
 
     companion object {
         private const val DEFAULT_BUFFER_SIZE = 8192
+        // Transcoding can take time to start - use generous timeouts
+        private const val CONNECT_TIMEOUT_MS = 60_000L      // 60s to connect
+        private const val SOCKET_TIMEOUT_MS = 120_000L     // 120s between data chunks
+        private const val DOWNLOAD_TIMEOUT_MS = Long.MAX_VALUE  // No overall limit for downloads
     }
 }
