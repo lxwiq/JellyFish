@@ -8,6 +8,7 @@ import com.lowiq.jellyfish.data.remote.DownloadClient
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
 import com.lowiq.jellyfish.data.remote.JellyfinDataSourceImpl
 import com.lowiq.jellyfish.domain.download.DownloadNotifier
+import com.lowiq.jellyfish.domain.download.DownloadServiceController
 import com.lowiq.jellyfish.domain.download.NotificationPermissionHandler
 import com.lowiq.jellyfish.domain.player.VideoPlayer
 import io.ktor.client.HttpClient
@@ -43,4 +44,5 @@ actual val platformModule: Module = module {
     factory { VideoPlayer() }
     single { DownloadNotifier() }
     single { NotificationPermissionHandler() }
+    single { DownloadServiceController() }
 }

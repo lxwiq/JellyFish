@@ -24,7 +24,8 @@ class DownloadManager(
     private val secureStorage: SecureStorage,
     private val fileManager: FileManager,
     private val jellyfinDataSource: JellyfinDataSource,
-    private val downloadClient: DownloadClient
+    private val downloadClient: DownloadClient,
+    private val serviceController: DownloadServiceController
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val activeJobs = mutableMapOf<String, Job>()
@@ -70,6 +71,9 @@ class DownloadManager(
     }
 
     private fun startDownloadJob(download: Download) {
+        // Start foreground service to keep downloads running in background (Android)
+        serviceController.startService()
+
         val job = scope.launch {
             try {
                 log("startDownloadJob: Starting download for ${download.title} (id=${download.id})")

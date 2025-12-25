@@ -7,6 +7,7 @@ import com.lowiq.jellyfish.data.local.createDataStore
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
 import com.lowiq.jellyfish.data.remote.JellyfinDataSourceImpl
 import com.lowiq.jellyfish.domain.download.DownloadNotifier
+import com.lowiq.jellyfish.domain.download.DownloadServiceController
 import com.lowiq.jellyfish.domain.download.NotificationPermissionHandler
 import com.lowiq.jellyfish.domain.player.VideoPlayer
 import io.ktor.client.*
@@ -27,4 +28,5 @@ actual val platformModule: Module = module {
     single { FileManager(androidContext()) }
     single { DownloadNotifier(androidContext()) }
     single { NotificationPermissionHandler(androidContext()) }
+    single { DownloadServiceController(androidContext()) }
 }
