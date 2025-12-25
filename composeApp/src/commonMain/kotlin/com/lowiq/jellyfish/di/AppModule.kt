@@ -65,7 +65,7 @@ val dataModule = module {
     single { DownloadClient(get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
     single { DownloadManager(get(), get(), get(), get(), get(), get(), get()) }
-    single { DownloadStateHolder(get()) }
+    single { DownloadStateHolder(get(), get()) }
     single { PlaybackSyncService(get(), get(), get()) }
 }
 

@@ -17,7 +17,8 @@ data class ActiveDownload(
 )
 
 class DownloadStateHolder(
-    private val downloadManager: DownloadManager
+    private val downloadManager: DownloadManager,
+    private val downloadNotifier: DownloadNotifier
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -46,8 +47,11 @@ class DownloadStateHolder(
                         updateState { list ->
                             list + ActiveDownload(event.downloadId, event.title, 0f)
                         }
+                        downloadNotifier.updateProgress(event.downloadId, event.title, 0f)
                     }
                     is DownloadEvent.Progress -> {
+                        val title = _activeDownloads.value
+                            .find { it.id == event.downloadId }?.title ?: ""
                         updateState { list ->
                             list.map { download ->
                                 if (download.id == event.downloadId) {
@@ -55,16 +59,19 @@ class DownloadStateHolder(
                                 } else download
                             }
                         }
+                        downloadNotifier.updateProgress(event.downloadId, title, event.progress)
                     }
                     is DownloadEvent.Completed -> {
                         updateState { list ->
                             list.filter { it.id != event.downloadId }
                         }
+                        downloadNotifier.showCompleted(event.downloadId, event.title)
                     }
                     is DownloadEvent.Failed -> {
                         updateState { list ->
                             list.filter { it.id != event.downloadId }
                         }
+                        downloadNotifier.showFailed(event.downloadId, event.title, event.error)
                     }
                 }
             }
