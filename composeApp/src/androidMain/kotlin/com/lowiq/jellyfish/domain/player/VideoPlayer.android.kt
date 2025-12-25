@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.net.URL
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
@@ -186,15 +189,21 @@ actual class VideoPlayer(
 
     actual fun addExternalSubtitle(url: String, name: String?) {
         val player = mediaPlayer ?: return
-        try {
-            // Count tracks before adding
-            val trackCountBefore = player.spuTracks?.size ?: 0
 
-            player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, url, true)
+        scope.launch {
+            try {
+                // VLC Android doesn't support HTTP URLs for subtitles
+                // Download to cache first, then add as local file
+                val localFile = downloadSubtitleToCache(url)
+                if (localFile == null) return@launch
 
-            // Wait for VLC to load the subtitle, then select it
-            scope.launch {
-                delay(1000) // Give VLC time to load the subtitle
+                val trackCountBefore = player.spuTracks?.size ?: 0
+                val localUri = "file://${localFile.absolutePath}"
+
+                player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, localUri, true)
+
+                // Wait for VLC to load the subtitle, then select it
+                delay(500)
 
                 val tracks = player.spuTracks
                 if (tracks != null && tracks.size > trackCountBefore) {
@@ -203,9 +212,32 @@ actual class VideoPlayer(
                     player.spuTrack = newTrack.id
                 }
                 updateTracks()
+            } catch (e: Exception) {
+                // Failed to add subtitle
             }
+        }
+    }
+
+    private suspend fun downloadSubtitleToCache(url: String): File? = withContext(Dispatchers.IO) {
+        try {
+            // Extract extension from URL (e.g., Stream.srt, Stream.ass, Stream.vtt)
+            val extension = url.substringAfterLast("Stream.").substringBefore("?").ifEmpty { "srt" }
+            val fileName = "subtitle_${url.hashCode()}.$extension"
+            val cacheDir = context.cacheDir
+            val subtitleFile = File(cacheDir, fileName)
+
+            // Download if not already cached
+            if (!subtitleFile.exists()) {
+                URL(url).openStream().use { input ->
+                    subtitleFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+
+            subtitleFile
         } catch (e: Exception) {
-            // Failed to add subtitle
+            null
         }
     }
 
