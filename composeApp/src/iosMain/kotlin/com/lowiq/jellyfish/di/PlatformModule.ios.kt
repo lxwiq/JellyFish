@@ -7,6 +7,7 @@ import com.lowiq.jellyfish.data.local.createDataStore
 import com.lowiq.jellyfish.data.remote.DownloadClient
 import com.lowiq.jellyfish.data.remote.JellyfinDataSource
 import com.lowiq.jellyfish.data.remote.JellyfinDataSourceImpl
+import com.lowiq.jellyfish.domain.download.DownloadNotifier
 import com.lowiq.jellyfish.domain.player.VideoPlayer
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
@@ -39,4 +40,5 @@ actual val platformModule: Module = module {
     single { DownloadClient(get()) }
     single { FileManager() }
     factory { VideoPlayer() }
+    single { DownloadNotifier() }
 }
