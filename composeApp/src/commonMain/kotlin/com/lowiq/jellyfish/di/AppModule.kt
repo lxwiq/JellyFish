@@ -14,6 +14,7 @@ import com.lowiq.jellyfish.data.repository.DownloadRepositoryImpl
 import com.lowiq.jellyfish.data.repository.MediaRepositoryImpl
 import com.lowiq.jellyfish.data.repository.ServerRepositoryImpl
 import com.lowiq.jellyfish.domain.download.DownloadManager
+import com.lowiq.jellyfish.domain.download.DownloadStateHolder
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.domain.sync.PlaybackSyncService
@@ -64,6 +65,7 @@ val dataModule = module {
     single { DownloadClient(get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(get(), get(), get(), get(), get(), get(), get()) }
     single { DownloadManager(get(), get(), get(), get(), get(), get(), get()) }
+    single { DownloadStateHolder(get()) }
     single { PlaybackSyncService(get(), get(), get()) }
 }
 

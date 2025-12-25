@@ -27,7 +27,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lowiq.jellyfish.domain.download.DownloadStateHolder
 import com.lowiq.jellyfish.domain.model.MediaType
+import org.koin.compose.koinInject
 import com.lowiq.jellyfish.presentation.components.AppHeader
 import com.lowiq.jellyfish.presentation.components.AppScaffold
 import com.lowiq.jellyfish.presentation.components.LibraryCards
@@ -52,6 +54,9 @@ class HomeScreen : Screen {
         val screenModel = koinScreenModel<HomeScreenModel>()
         val state by screenModel.state.collectAsState()
         var sidebarVisible by remember { mutableStateOf(false) }
+        val downloadStateHolder = koinInject<DownloadStateHolder>()
+        val activeDownloadCount by downloadStateHolder.activeCount.collectAsState()
+        val downloadProgress by downloadStateHolder.averageProgress.collectAsState()
 
         LaunchedEffect(Unit) {
             screenModel.events.collect { event ->
@@ -82,6 +87,8 @@ class HomeScreen : Screen {
                 sidebarVisible = false
             },
             showSidebar = sidebarVisible,
+            activeDownloadCount = activeDownloadCount,
+            downloadProgress = downloadProgress,
             modifier = Modifier.background(colors.background)
         ) {
             Column(
