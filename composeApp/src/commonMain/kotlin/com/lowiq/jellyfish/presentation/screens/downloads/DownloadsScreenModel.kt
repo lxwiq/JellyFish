@@ -36,22 +36,20 @@ class DownloadsScreenModel(
 
     private fun loadDownloads() {
         screenModelScope.launch {
-            combine(
-                downloadRepository.getActiveDownloads(),
-                downloadRepository.getCompletedDownloads()
-            ) { active, completed ->
-                val totalCount = active.size + completed.size
-                val totalBytes = active.sumOf { it.totalBytes } + completed.sumOf { it.downloadedBytes }
-                _state.update {
-                    it.copy(
-                        activeDownloads = active,
-                        completedDownloads = completed,
-                        isLoading = false,
-                        totalDownloadCount = totalCount,
-                        totalDownloadBytes = totalBytes
-                    )
-                }
-            }.collect()
+            // Load ONCE at startup, then rely on events for updates
+            val active = downloadRepository.getActiveDownloads().first()
+            val completed = downloadRepository.getCompletedDownloads().first()
+            val totalCount = active.size + completed.size
+            val totalBytes = active.sumOf { it.totalBytes } + completed.sumOf { it.downloadedBytes }
+            _state.update {
+                it.copy(
+                    activeDownloads = active,
+                    completedDownloads = completed,
+                    isLoading = false,
+                    totalDownloadCount = totalCount,
+                    totalDownloadBytes = totalBytes
+                )
+            }
         }
 
         screenModelScope.launch {
