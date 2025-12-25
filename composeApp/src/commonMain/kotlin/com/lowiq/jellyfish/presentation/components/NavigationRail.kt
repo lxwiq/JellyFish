@@ -32,6 +32,8 @@ data class NavigationItem(
     val contentDescription: String
 )
 
+private const val DOWNLOADS_INDEX = 3
+
 private val navigationItems = listOf(
     NavigationItem(Icons.Default.Home, "Home"),
     NavigationItem(Icons.Default.Search, "Search"),
@@ -44,6 +46,8 @@ private val navigationItems = listOf(
 fun NavigationRail(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit,
+    activeDownloadCount: Int = 0,
+    downloadProgress: Float = 0f,
     modifier: Modifier = Modifier
 ) {
     val shapes = JellyFishTheme.shapes
@@ -56,13 +60,25 @@ fun NavigationRail(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         navigationItems.forEachIndexed { index, item ->
-            NavigationRailItem(
-                icon = item.icon,
-                contentDescription = item.contentDescription,
-                isSelected = index == selectedIndex,
-                onClick = { onItemSelected(index) },
-                shapes = shapes
-            )
+            if (index == DOWNLOADS_INDEX && activeDownloadCount > 0) {
+                DownloadNavigationItem(
+                    icon = item.icon,
+                    contentDescription = item.contentDescription,
+                    isSelected = index == selectedIndex,
+                    onClick = { onItemSelected(index) },
+                    shapes = shapes,
+                    activeCount = activeDownloadCount,
+                    progress = downloadProgress
+                )
+            } else {
+                NavigationRailItem(
+                    icon = item.icon,
+                    contentDescription = item.contentDescription,
+                    isSelected = index == selectedIndex,
+                    onClick = { onItemSelected(index) },
+                    shapes = shapes
+                )
+            }
         }
     }
 }
@@ -94,5 +110,43 @@ private fun NavigationRailItem(
             tint = if (isSelected) colors.foreground else colors.mutedForeground,
             modifier = Modifier.size(24.dp)
         )
+    }
+}
+
+@Composable
+private fun DownloadNavigationItem(
+    icon: ImageVector,
+    contentDescription: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    shapes: com.lowiq.jellyfish.presentation.theme.JellyFishShapes,
+    activeCount: Int,
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalJellyFishColors.current
+
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .clip(shapes.default)
+            .background(if (isSelected) colors.secondary else Color.Transparent)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            DownloadIndicator(
+                activeCount = activeCount,
+                averageProgress = progress,
+                size = 40.dp,
+                strokeWidth = 3.dp
+            )
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = if (isSelected) colors.foreground else colors.mutedForeground,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
