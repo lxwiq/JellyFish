@@ -1,19 +1,7 @@
 package com.lowiq.jellyfish.domain.player
 
 import android.content.Context
-import androidx.annotation.OptIn
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.common.TrackSelectionOverride
-import androidx.media3.common.Tracks
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.hls.HlsMediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import android.net.Uri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -23,12 +11,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.videolan.libvlc.LibVLC
+import org.videolan.libvlc.Media
+import org.videolan.libvlc.MediaPlayer
+import org.videolan.libvlc.interfaces.IVLCVout
+import org.videolan.libvlc.util.VLCVideoLayout
 
-@OptIn(UnstableApi::class)
 actual class VideoPlayer(
     private val context: Context
 ) {
-    private var exoPlayer: ExoPlayer? = null
+    private var libVLC: LibVLC? = null
+    private var mediaPlayer: MediaPlayer? = null
     private val scope = CoroutineScope(Dispatchers.Main)
     private var positionUpdateJob: Job? = null
 
@@ -45,203 +38,197 @@ actual class VideoPlayer(
     actual val qualityOptions: StateFlow<List<QualityOption>> = _qualityOptions.asStateFlow()
 
     private var currentPlaybackSpeed = 1f
+    private var videoLayout: VLCVideoLayout? = null
 
     actual fun initialize() {
-        if (exoPlayer != null) return
+        if (libVLC != null) return
 
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(C.USAGE_MEDIA)
-            .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
-            .build()
+        val options = arrayListOf(
+            "--aout=opensles",
+            "--audio-time-stretch",
+            "--network-caching=1500",
+            "--file-caching=300",
+            "--live-caching=1500",
+            "--http-reconnect",
+            "--avcodec-skiploopfilter=0"
+        )
 
-        exoPlayer = ExoPlayer.Builder(context)
-            .setAudioAttributes(audioAttributes, true)
-            .build().apply {
-            addListener(object : Player.Listener {
-                override fun onPlaybackStateChanged(state: Int) {
-                    updatePlaybackState()
+        libVLC = LibVLC(context, options)
+        mediaPlayer = MediaPlayer(libVLC).apply {
+            setEventListener { event ->
+                when (event.type) {
+                    MediaPlayer.Event.Opening -> {
+                        _playbackState.value = PlaybackState.Buffering
+                    }
+                    MediaPlayer.Event.Playing -> {
+                        updatePlaybackState()
+                        startPositionUpdates()
+                    }
+                    MediaPlayer.Event.Paused -> {
+                        updatePlaybackState()
+                    }
+                    MediaPlayer.Event.Stopped, MediaPlayer.Event.EndReached -> {
+                        positionUpdateJob?.cancel()
+                        _playbackState.value = PlaybackState.Idle
+                    }
+                    MediaPlayer.Event.EncounteredError -> {
+                        positionUpdateJob?.cancel()
+                        _playbackState.value = PlaybackState.Error(
+                            message = "Playback error",
+                            canRetry = true
+                        )
+                    }
+                    MediaPlayer.Event.ESAdded, MediaPlayer.Event.ESSelected -> {
+                        updateTracks()
+                    }
+                    MediaPlayer.Event.Buffering -> {
+                        if (event.buffering < 100f) {
+                            _playbackState.value = PlaybackState.Buffering
+                        }
+                    }
                 }
-
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    updatePlaybackState()
-                }
-
-                override fun onPlayerError(error: PlaybackException) {
-                    _playbackState.value = PlaybackState.Error(
-                        message = error.message ?: "Playback error",
-                        canRetry = true
-                    )
-                }
-
-                override fun onTracksChanged(tracks: Tracks) {
-                    updateTracks(tracks)
-                }
-            })
+            }
         }
     }
 
     actual fun release() {
         positionUpdateJob?.cancel()
-        exoPlayer?.release()
-        exoPlayer = null
+        videoLayout?.let { mediaPlayer?.detachViews() }
+        mediaPlayer?.release()
+        libVLC?.release()
+        mediaPlayer = null
+        libVLC = null
+        videoLayout = null
         _playbackState.value = PlaybackState.Idle
     }
 
     actual fun play(url: String, headers: Map<String, String>, startPositionMs: Long) {
-        val player = exoPlayer ?: return
+        val vlc = libVLC ?: return
+        val player = mediaPlayer ?: return
 
-        val dataSourceFactory = DefaultHttpDataSource.Factory()
-            .setDefaultRequestProperties(headers)
-
-        val mediaSource = if (url.contains(".m3u8")) {
-            HlsMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(MediaItem.fromUri(url))
-        } else {
-            ProgressiveMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(MediaItem.fromUri(url))
+        val media = Media(vlc, Uri.parse(url)).apply {
+            // Add HTTP headers if present
+            headers.forEach { (key, value) ->
+                when (key.lowercase()) {
+                    "authorization" -> addOption(":http-auth=$value")
+                    "user-agent" -> addOption(":http-user-agent=$value")
+                    else -> addOption(":http-header=$key: $value")
+                }
+            }
+            // Enable hardware decoding
+            setHWDecoderEnabled(true, false)
         }
 
-        player.setMediaSource(mediaSource)
-        player.prepare()
+        player.media = media
+        media.release()
+        player.play()
 
         if (startPositionMs > 0) {
-            player.seekTo(startPositionMs)
+            player.time = startPositionMs
         }
-
-        player.play()
-        startPositionUpdates()
     }
 
     actual fun pause() {
-        exoPlayer?.pause()
+        mediaPlayer?.pause()
     }
 
     actual fun resume() {
-        exoPlayer?.play()
+        mediaPlayer?.play()
     }
 
     actual fun stop() {
         positionUpdateJob?.cancel()
-        exoPlayer?.stop()
+        mediaPlayer?.stop()
         _playbackState.value = PlaybackState.Idle
     }
 
     actual fun seekTo(positionMs: Long) {
-        exoPlayer?.seekTo(positionMs)
+        mediaPlayer?.time = positionMs
     }
 
     actual fun seekForward(ms: Long) {
-        val player = exoPlayer ?: return
-        val newPosition = (player.currentPosition + ms).coerceAtMost(player.duration)
-        player.seekTo(newPosition)
+        val player = mediaPlayer ?: return
+        val newPosition = (player.time + ms).coerceAtMost(player.length)
+        player.time = newPosition
     }
 
     actual fun seekBackward(ms: Long) {
-        val player = exoPlayer ?: return
-        val newPosition = (player.currentPosition - ms).coerceAtLeast(0)
-        player.seekTo(newPosition)
+        val player = mediaPlayer ?: return
+        val newPosition = (player.time - ms).coerceAtLeast(0)
+        player.time = newPosition
     }
 
     actual fun setPlaybackSpeed(speed: Float) {
         currentPlaybackSpeed = speed
-        exoPlayer?.setPlaybackSpeed(speed)
+        mediaPlayer?.rate = speed
     }
 
     actual fun selectAudioTrack(index: Int) {
-        val player = exoPlayer ?: return
-        val tracks = player.currentTracks
-
-        tracks.groups.forEachIndexed { groupIndex, group ->
-            if (group.type == C.TRACK_TYPE_AUDIO) {
-                for (i in 0 until group.length) {
-                    if (i == index) {
-                        player.trackSelectionParameters = player.trackSelectionParameters
-                            .buildUpon()
-                            .setOverrideForType(
-                                TrackSelectionOverride(group.mediaTrackGroup, listOf(i))
-                            )
-                            .build()
-                        updateTracks(player.currentTracks)
-                        return
-                    }
-                }
-            }
+        val tracks = mediaPlayer?.audioTracks ?: return
+        if (index in tracks.indices) {
+            mediaPlayer?.audioTrack = tracks[index].id
+            updateTracks()
         }
     }
 
     actual fun selectSubtitleTrack(index: Int) {
-        val player = exoPlayer ?: return
-        val tracks = player.currentTracks
-
-        tracks.groups.forEachIndexed { groupIndex, group ->
-            if (group.type == C.TRACK_TYPE_TEXT) {
-                for (i in 0 until group.length) {
-                    if (i == index) {
-                        player.trackSelectionParameters = player.trackSelectionParameters
-                            .buildUpon()
-                            .setOverrideForType(
-                                TrackSelectionOverride(group.mediaTrackGroup, listOf(i))
-                            )
-                            .build()
-                        updateTracks(player.currentTracks)
-                        return
-                    }
-                }
-            }
+        val tracks = mediaPlayer?.spuTracks ?: return
+        if (index in tracks.indices) {
+            mediaPlayer?.spuTrack = tracks[index].id
+            updateTracks()
         }
     }
 
     actual fun disableSubtitles() {
-        val player = exoPlayer ?: return
-        player.trackSelectionParameters = player.trackSelectionParameters
-            .buildUpon()
-            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-            .build()
-        updateTracks(player.currentTracks)
+        mediaPlayer?.spuTrack = -1
+        updateTracks()
     }
 
-    actual fun selectQuality(index: Int) {
-        val player = exoPlayer ?: return
-        val tracks = player.currentTracks
-
-        tracks.groups.forEachIndexed { groupIndex, group ->
-            if (group.type == C.TRACK_TYPE_VIDEO) {
-                for (i in 0 until group.length) {
-                    if (i == index) {
-                        player.trackSelectionParameters = player.trackSelectionParameters
-                            .buildUpon()
-                            .setOverrideForType(
-                                TrackSelectionOverride(group.mediaTrackGroup, listOf(i))
-                            )
-                            .build()
-                        return
-                    }
-                }
+    actual fun addExternalSubtitle(url: String, name: String?) {
+        val player = mediaPlayer ?: return
+        try {
+            player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, url, true)
+            // Update tracks after adding external subtitle
+            scope.launch {
+                delay(500) // Give VLC time to load the subtitle
+                updateTracks()
             }
+        } catch (e: Exception) {
+            // Failed to add subtitle
         }
     }
 
-    fun getExoPlayer(): ExoPlayer? = exoPlayer
+    actual fun selectQuality(index: Int) {
+        // VLC handles quality automatically via adaptive streaming
+        // No manual quality selection needed
+    }
+
+    fun attachToLayout(layout: VLCVideoLayout) {
+        videoLayout = layout
+        mediaPlayer?.attachViews(layout, null, false, false)
+    }
+
+    fun detachFromLayout() {
+        mediaPlayer?.detachViews()
+        videoLayout = null
+    }
 
     private fun updatePlaybackState() {
-        val player = exoPlayer ?: return
+        val player = mediaPlayer ?: return
+        val position = player.time.coerceAtLeast(0)
+        val duration = player.length.coerceAtLeast(0)
 
-        _playbackState.value = when {
-            player.playbackState == Player.STATE_BUFFERING -> PlaybackState.Buffering
-            player.playbackState == Player.STATE_ENDED -> PlaybackState.Paused(
-                positionMs = player.duration,
-                durationMs = player.duration
-            )
-            player.isPlaying -> PlaybackState.Playing(
-                positionMs = player.currentPosition,
-                durationMs = player.duration.coerceAtLeast(0),
+        _playbackState.value = if (player.isPlaying) {
+            PlaybackState.Playing(
+                positionMs = position,
+                durationMs = duration,
                 playbackSpeed = currentPlaybackSpeed
             )
-            player.playbackState == Player.STATE_READY -> PlaybackState.Paused(
-                positionMs = player.currentPosition,
-                durationMs = player.duration.coerceAtLeast(0)
+        } else {
+            PlaybackState.Paused(
+                positionMs = position,
+                durationMs = duration
             )
-            else -> PlaybackState.Idle
         }
     }
 
@@ -255,71 +242,36 @@ actual class VideoPlayer(
         }
     }
 
-    private fun updateTracks(tracks: Tracks) {
-        val audioList = mutableListOf<AudioTrack>()
-        val subtitleList = mutableListOf<SubtitleTrack>()
-        val qualityList = mutableListOf<QualityOption>()
+    private fun updateTracks() {
+        val player = mediaPlayer ?: return
 
-        var audioIndex = 0
-        var subtitleIndex = 0
-        var videoIndex = 0
-
-        tracks.groups.forEach { group ->
-            when (group.type) {
-                C.TRACK_TYPE_AUDIO -> {
-                    for (i in 0 until group.length) {
-                        val format = group.getTrackFormat(i)
-                        audioList.add(
-                            AudioTrack(
-                                index = audioIndex++,
-                                language = format.language,
-                                label = format.label ?: format.language ?: "Track ${audioIndex}",
-                                codec = format.codecs,
-                                channels = format.channelCount,
-                                isSelected = group.isTrackSelected(i)
-                            )
-                        )
-                    }
-                }
-                C.TRACK_TYPE_TEXT -> {
-                    for (i in 0 until group.length) {
-                        val format = group.getTrackFormat(i)
-                        subtitleList.add(
-                            SubtitleTrack(
-                                index = subtitleIndex++,
-                                language = format.language,
-                                label = format.label ?: format.language ?: "Subtitle ${subtitleIndex}",
-                                isSelected = group.isTrackSelected(i)
-                            )
-                        )
-                    }
-                }
-                C.TRACK_TYPE_VIDEO -> {
-                    for (i in 0 until group.length) {
-                        val format = group.getTrackFormat(i)
-                        val height = format.height
-                        val label = when {
-                            height >= 2160 -> "4K"
-                            height >= 1080 -> "1080p"
-                            height >= 720 -> "720p"
-                            height >= 480 -> "480p"
-                            else -> "${height}p"
-                        }
-                        qualityList.add(
-                            QualityOption(
-                                index = videoIndex++,
-                                label = label,
-                                bitrate = format.bitrate.toLong(),
-                                isSelected = group.isTrackSelected(i)
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
+        // Audio tracks
+        val currentAudioTrack = player.audioTrack
+        val audioList = player.audioTracks?.mapIndexed { index, track ->
+            AudioTrack(
+                index = index,
+                language = null,
+                label = track.name ?: "Audio ${index + 1}",
+                codec = null,
+                channels = null,
+                isSelected = track.id == currentAudioTrack
+            )
+        } ?: emptyList()
         _audioTracks.value = audioList
+
+        // Subtitle tracks
+        val currentSpuTrack = player.spuTrack
+        val subtitleList = player.spuTracks?.mapIndexed { index, track ->
+            SubtitleTrack(
+                index = index,
+                language = null,
+                label = track.name ?: "Subtitle ${index + 1}",
+                isSelected = track.id == currentSpuTrack
+            )
+        } ?: emptyList()
         _subtitleTracks.value = subtitleList
-        _qualityOptions.value = qualityList
+
+        // VLC doesn't expose quality options for HLS in the same way
+        _qualityOptions.value = emptyList()
     }
 }

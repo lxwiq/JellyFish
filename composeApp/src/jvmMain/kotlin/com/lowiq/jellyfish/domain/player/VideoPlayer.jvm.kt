@@ -36,5 +36,6 @@ actual class VideoPlayer {
     actual fun selectAudioTrack(index: Int) {}
     actual fun selectSubtitleTrack(index: Int) {}
     actual fun disableSubtitles() {}
+    actual fun addExternalSubtitle(url: String, name: String?) {}
     actual fun selectQuality(index: Int) {}
 }

@@ -3,6 +3,7 @@ package com.lowiq.jellyfish.presentation.screens.player
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.lowiq.jellyfish.data.remote.PlaybackProgressInfo
+import com.lowiq.jellyfish.data.remote.SubtitleStreamInfo
 import com.lowiq.jellyfish.domain.player.PlaybackState
 import com.lowiq.jellyfish.domain.player.VideoPlayer
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
@@ -58,6 +59,7 @@ class VideoPlayerScreenModel(
     private var streamUrl: String? = null
     private var streamHeaders: Map<String, String> = emptyMap()
     private var offlineProgressJob: Job? = null
+    private var availableSubtitleStreams: List<SubtitleStreamInfo> = emptyList()
 
     init {
         videoPlayer.initialize()
@@ -165,6 +167,18 @@ class VideoPlayerScreenModel(
                     }
 
                     streamHeaders = emptyMap()  // Token is passed in URL
+
+                    // Store available subtitle streams for external loading
+                    availableSubtitleStreams = streamInfo.subtitleStreams
+
+                    // Auto-load default subtitle if available
+                    streamInfo.subtitleStreams
+                        .find { it.isDefault && it.deliveryUrl != null }
+                        ?.let { defaultSub ->
+                            defaultSub.deliveryUrl?.let { url ->
+                                videoPlayer.addExternalSubtitle(url, defaultSub.title)
+                            }
+                        }
 
                     _state.update { it.copy(isLoading = false) }
 
@@ -294,7 +308,13 @@ class VideoPlayerScreenModel(
     }
 
     fun onSelectSubtitleTrack(index: Int) {
+        // First try embedded subtitle
         videoPlayer.selectSubtitleTrack(index)
+
+        // Also try to load from external URL if available
+        availableSubtitleStreams.getOrNull(index)?.deliveryUrl?.let { url ->
+            videoPlayer.addExternalSubtitle(url, availableSubtitleStreams[index].title)
+        }
     }
 
     fun onDisableSubtitles() {

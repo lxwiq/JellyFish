@@ -674,7 +674,6 @@ class JellyfinDataSourceImpl(
             val api = createApi(serverUrl, token)
             val playSessionId = java.util.UUID.randomUUID().toString()
 
-            // Get playback info from Jellyfin to determine best playback method
             val playbackInfo by api.mediaInfoApi.getPlaybackInfo(
                 itemId = java.util.UUID.fromString(itemId),
                 userId = java.util.UUID.fromString(userId)
@@ -684,14 +683,36 @@ class JellyfinDataSourceImpl(
             val mediaSourceId = mediaSource?.id ?: itemId
             val supportsDirectPlay = mediaSource?.supportsDirectPlay ?: false
 
-            // Direct play URL - for containers that can be played directly
+            // Extract subtitle streams
+            val subtitleStreams = mediaSource?.mediaStreams
+                ?.filter { it.type == org.jellyfin.sdk.model.api.MediaStreamType.SUBTITLE }
+                ?.mapIndexed { index, stream ->
+                    val codec = stream.codec ?: "srt"
+                    val extension = when (codec.lowercase()) {
+                        "ass", "ssa" -> "ass"
+                        "vtt", "webvtt" -> "vtt"
+                        else -> "srt"
+                    }
+                    SubtitleStreamInfo(
+                        index = stream.index ?: index,
+                        language = stream.language,
+                        title = stream.displayTitle ?: stream.title ?: stream.language ?: "Subtitle ${index + 1}",
+                        codec = codec,
+                        isExternal = stream.isExternal ?: false,
+                        isDefault = stream.isDefault ?: false,
+                        isForced = stream.isForced ?: false,
+                        deliveryUrl = "$serverUrl/Videos/$itemId/$mediaSourceId/Subtitles/${stream.index ?: index}/0/Stream.$extension?api_key=$token"
+                    )
+                } ?: emptyList()
+
+            // Direct play URL
             val directPlayUrl = "$serverUrl/Videos/$itemId/stream" +
                 "?static=true" +
                 "&mediaSourceId=$mediaSourceId" +
                 "&playSessionId=$playSessionId" +
                 "&api_key=$token"
 
-            // HLS transcoding URL - ensures audio/video compatibility
+            // HLS transcoding URL
             val transcodingUrl = "$serverUrl/Videos/$itemId/master.m3u8" +
                 "?mediaSourceId=$mediaSourceId" +
                 "&playSessionId=$playSessionId" +
@@ -706,7 +727,8 @@ class JellyfinDataSourceImpl(
                 transcodingUrl = transcodingUrl,
                 mediaSourceId = mediaSourceId,
                 playSessionId = playSessionId,
-                supportsDirectPlay = supportsDirectPlay
+                supportsDirectPlay = supportsDirectPlay,
+                subtitleStreams = subtitleStreams
             )
         }
     }

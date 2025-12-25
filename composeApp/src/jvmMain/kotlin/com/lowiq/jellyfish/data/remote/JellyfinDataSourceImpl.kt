@@ -666,16 +666,64 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
         itemId: String
     ): Result<StreamInfo> = withContext(Dispatchers.IO) {
         runCatching {
+            val api = createApi(serverUrl, token)
             val playSessionId = java.util.UUID.randomUUID().toString()
-            val directPlayUrl = "$serverUrl/Videos/$itemId/stream?static=true&mediaSourceId=$itemId&api_key=$token"
-            val transcodingUrl = "$serverUrl/Videos/$itemId/master.m3u8?mediaSourceId=$itemId&api_key=$token"
+
+            val playbackInfo by api.mediaInfoApi.getPlaybackInfo(
+                itemId = java.util.UUID.fromString(itemId),
+                userId = java.util.UUID.fromString(userId)
+            )
+
+            val mediaSource = playbackInfo.mediaSources?.firstOrNull()
+            val mediaSourceId = mediaSource?.id ?: itemId
+            val supportsDirectPlay = mediaSource?.supportsDirectPlay ?: false
+
+            // Extract subtitle streams
+            val subtitleStreams = mediaSource?.mediaStreams
+                ?.filter { it.type == org.jellyfin.sdk.model.api.MediaStreamType.SUBTITLE }
+                ?.mapIndexed { index, stream ->
+                    val codec = stream.codec ?: "srt"
+                    val extension = when (codec.lowercase()) {
+                        "ass", "ssa" -> "ass"
+                        "vtt", "webvtt" -> "vtt"
+                        else -> "srt"
+                    }
+                    SubtitleStreamInfo(
+                        index = stream.index ?: index,
+                        language = stream.language,
+                        title = stream.displayTitle ?: stream.title ?: stream.language ?: "Subtitle ${index + 1}",
+                        codec = codec,
+                        isExternal = stream.isExternal ?: false,
+                        isDefault = stream.isDefault ?: false,
+                        isForced = stream.isForced ?: false,
+                        deliveryUrl = "$serverUrl/Videos/$itemId/$mediaSourceId/Subtitles/${stream.index ?: index}/0/Stream.$extension?api_key=$token"
+                    )
+                } ?: emptyList()
+
+            // Direct play URL
+            val directPlayUrl = "$serverUrl/Videos/$itemId/stream" +
+                "?static=true" +
+                "&mediaSourceId=$mediaSourceId" +
+                "&playSessionId=$playSessionId" +
+                "&api_key=$token"
+
+            // HLS transcoding URL
+            val transcodingUrl = "$serverUrl/Videos/$itemId/master.m3u8" +
+                "?mediaSourceId=$mediaSourceId" +
+                "&playSessionId=$playSessionId" +
+                "&videoCodec=h264" +
+                "&audioCodec=aac,mp3" +
+                "&audioBitRate=192000" +
+                "&maxAudioChannels=6" +
+                "&api_key=$token"
 
             StreamInfo(
                 directPlayUrl = directPlayUrl,
                 transcodingUrl = transcodingUrl,
-                mediaSourceId = itemId,
+                mediaSourceId = mediaSourceId,
                 playSessionId = playSessionId,
-                supportsDirectPlay = true  // Assume direct play is supported, will fallback if not
+                supportsDirectPlay = supportsDirectPlay,
+                subtitleStreams = subtitleStreams
             )
         }
     }

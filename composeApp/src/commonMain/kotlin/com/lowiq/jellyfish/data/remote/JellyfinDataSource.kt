@@ -210,12 +210,24 @@ data class EpisodeInfo(
     val runTimeTicks: Long?
 )
 
+data class SubtitleStreamInfo(
+    val index: Int,
+    val language: String?,
+    val title: String?,
+    val codec: String,
+    val isExternal: Boolean,
+    val isDefault: Boolean,
+    val isForced: Boolean,
+    val deliveryUrl: String?
+)
+
 data class StreamInfo(
     val directPlayUrl: String,
     val transcodingUrl: String?,
     val mediaSourceId: String,
     val playSessionId: String,
-    val supportsDirectPlay: Boolean
+    val supportsDirectPlay: Boolean,
+    val subtitleStreams: List<SubtitleStreamInfo> = emptyList()
 )
 
 data class PlaybackProgressInfo(

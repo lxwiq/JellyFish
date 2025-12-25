@@ -7,8 +7,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.ui.PlayerView
 import com.lowiq.jellyfish.domain.player.VideoPlayer
+import org.videolan.libvlc.util.VLCVideoLayout
 
 @Composable
 actual fun VideoSurface(
@@ -16,7 +16,6 @@ actual fun VideoSurface(
     modifier: Modifier
 ) {
     val context = LocalContext.current
-    val exoPlayer = videoPlayer.getExoPlayer()
 
     // Force landscape orientation when video player is shown
     DisposableEffect(Unit) {
@@ -32,13 +31,15 @@ actual fun VideoSurface(
 
     AndroidView(
         factory = { ctx ->
-            PlayerView(ctx).apply {
-                player = exoPlayer
-                useController = false // We use our own controls
+            VLCVideoLayout(ctx).also { layout ->
+                videoPlayer.attachToLayout(layout)
             }
         },
-        update = { playerView ->
-            playerView.player = exoPlayer
+        update = { _ ->
+            // Layout is already attached in factory
+        },
+        onRelease = { _ ->
+            videoPlayer.detachFromLayout()
         },
         modifier = modifier
     )
