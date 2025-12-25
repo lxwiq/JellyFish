@@ -5,6 +5,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.lowiq.jellyfish.data.remote.PlaybackProgressInfo
 import com.lowiq.jellyfish.data.remote.SubtitleStreamInfo
 import com.lowiq.jellyfish.domain.player.PlaybackState
+import com.lowiq.jellyfish.domain.player.SubtitleTrack
 import com.lowiq.jellyfish.domain.player.VideoPlayer
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
@@ -60,6 +61,7 @@ class VideoPlayerScreenModel(
     private var streamHeaders: Map<String, String> = emptyMap()
     private var offlineProgressJob: Job? = null
     private var availableSubtitleStreams: List<SubtitleStreamInfo> = emptyList()
+    private var selectedSubtitleIndex: Int = -1  // -1 means disabled
 
     init {
         videoPlayer.initialize()
@@ -95,16 +97,25 @@ class VideoPlayerScreenModel(
                 _state.update { it.copy(audioTracks = tracks) }
             }
         }
-        screenModelScope.launch {
-            videoPlayer.subtitleTracks.collect { tracks ->
-                _state.update { it.copy(subtitleTracks = tracks) }
-            }
-        }
+        // Subtitle tracks are populated from Jellyfin API, not VLC detection
+        // This ensures we have all available subtitles with delivery URLs
         screenModelScope.launch {
             videoPlayer.qualityOptions.collect { options ->
                 _state.update { it.copy(qualityOptions = options) }
             }
         }
+    }
+
+    private fun updateSubtitleTracksFromJellyfin() {
+        val tracks = availableSubtitleStreams.mapIndexed { index, stream ->
+            SubtitleTrack(
+                index = index,
+                language = stream.language,
+                label = stream.title ?: stream.language ?: "Subtitle ${index + 1}",
+                isSelected = index == selectedSubtitleIndex
+            )
+        }
+        _state.update { it.copy(subtitleTracks = tracks) }
     }
 
     private fun setupOfflinePlayback() {
@@ -168,8 +179,9 @@ class VideoPlayerScreenModel(
 
                     streamHeaders = emptyMap()  // Token is passed in URL
 
-                    // Store available subtitle streams for external loading
+                    // Store available subtitle streams and expose to UI
                     availableSubtitleStreams = streamInfo.subtitleStreams
+                    updateSubtitleTracksFromJellyfin()
 
                     _state.update { it.copy(isLoading = false) }
 
@@ -221,13 +233,14 @@ class VideoPlayerScreenModel(
         // Load default subtitle after playback starts (VLC needs media to be loaded first)
         screenModelScope.launch {
             delay(1500) // Wait for VLC to load the media
-            availableSubtitleStreams
-                .find { it.isDefault && it.deliveryUrl != null }
-                ?.let { defaultSub ->
-                    defaultSub.deliveryUrl?.let { subUrl ->
-                        videoPlayer.addExternalSubtitle(subUrl, defaultSub.title)
-                    }
+            val defaultIndex = availableSubtitleStreams.indexOfFirst { it.isDefault && it.deliveryUrl != null }
+            if (defaultIndex >= 0) {
+                selectedSubtitleIndex = defaultIndex
+                updateSubtitleTracksFromJellyfin()
+                availableSubtitleStreams[defaultIndex].deliveryUrl?.let { subUrl ->
+                    videoPlayer.addExternalSubtitle(subUrl, availableSubtitleStreams[defaultIndex].title)
                 }
+            }
         }
     }
 
@@ -311,16 +324,20 @@ class VideoPlayerScreenModel(
     }
 
     fun onSelectSubtitleTrack(index: Int) {
-        // First try embedded subtitle
-        videoPlayer.selectSubtitleTrack(index)
+        selectedSubtitleIndex = index
+        updateSubtitleTracksFromJellyfin()
 
-        // Also try to load from external URL if available
-        availableSubtitleStreams.getOrNull(index)?.deliveryUrl?.let { url ->
-            videoPlayer.addExternalSubtitle(url, availableSubtitleStreams[index].title)
+        // Load external subtitle from Jellyfin
+        availableSubtitleStreams.getOrNull(index)?.let { stream ->
+            stream.deliveryUrl?.let { url ->
+                videoPlayer.addExternalSubtitle(url, stream.title)
+            }
         }
     }
 
     fun onDisableSubtitles() {
+        selectedSubtitleIndex = -1
+        updateSubtitleTracksFromJellyfin()
         videoPlayer.disableSubtitles()
     }
 
