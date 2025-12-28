@@ -108,7 +108,9 @@ data class VideoPlayerScreen(
                     onSeekBackward = screenModel::onSeekBackward,
                     onSeekTo = screenModel::onSeekTo,
                     onSettingsClick = screenModel::onShowSettings,
-                    onAudioSubtitlesClick = screenModel::onShowTrackSelector
+                    onAudioSubtitlesClick = screenModel::onShowTrackSelector,
+                    scaleMode = state.scaleMode,
+                    onScaleModeClick = screenModel::onCycleScaleMode
                 )
             }
 

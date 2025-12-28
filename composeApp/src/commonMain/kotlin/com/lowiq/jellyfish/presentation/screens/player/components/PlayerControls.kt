@@ -26,6 +26,9 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AspectRatio
+import androidx.compose.material.icons.outlined.Crop
+import androidx.compose.material.icons.outlined.FitScreen
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lowiq.jellyfish.domain.player.PlaybackState
+import com.lowiq.jellyfish.domain.player.VideoScaleMode
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 @Composable
@@ -58,6 +62,8 @@ fun PlayerControls(
     onSeekTo: (Long) -> Unit,
     onSettingsClick: () -> Unit,
     onAudioSubtitlesClick: () -> Unit,
+    scaleMode: VideoScaleMode,
+    onScaleModeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalJellyFishColors.current
@@ -227,13 +233,28 @@ fun PlayerControls(
 
                     // Action buttons
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedButton(
                             onClick = onAudioSubtitlesClick,
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text("Audio & Subtitles", color = Color.White)
+                        }
+
+                        // Scale mode button
+                        IconButton(onClick = onScaleModeClick) {
+                            Icon(
+                                imageVector = when (scaleMode) {
+                                    VideoScaleMode.FIT -> Icons.Outlined.FitScreen
+                                    VideoScaleMode.FILL -> Icons.Outlined.Crop
+                                    VideoScaleMode.STRETCH -> Icons.Outlined.AspectRatio
+                                },
+                                contentDescription = "Scale: ${scaleMode.displayName}",
+                                tint = Color.White
+                            )
                         }
                     }
                 }
