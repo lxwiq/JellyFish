@@ -38,4 +38,7 @@ actual class VideoPlayer {
     actual fun disableSubtitles() {}
     actual fun addExternalSubtitle(url: String, name: String?) {}
     actual fun selectQuality(index: Int) {}
+    actual fun setScaleMode(mode: VideoScaleMode) {
+        // TODO: Implement when iOS video playback is added
+    }
 }

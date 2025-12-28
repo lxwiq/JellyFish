@@ -54,7 +54,14 @@ actual class VideoPlayer(
             "--file-caching=300",
             "--live-caching=1500",
             "--http-reconnect",
-            "--avcodec-skiploopfilter=0"
+            "--avcodec-skiploopfilter=0",
+            // Subtitle rendering options
+            "--sub-source=freetype",
+            "--freetype-font=Sans",
+            "--freetype-fontsize=16",
+            "--freetype-color=16777215",
+            "--freetype-outline-thickness=4",
+            "--freetype-shadow-opacity=128"
         )
 
         libVLC = LibVLC(context, options)
@@ -208,10 +215,11 @@ actual class VideoPlayer(
                 val trackCountBefore = player.spuTracks?.size ?: 0
                 Log.d("VLCSubs", "Tracks before adding: $trackCountBefore")
 
-                val localUri = "file://${localFile.absolutePath}"
-                Log.d("VLCSubs", "Adding subtitle with URI: $localUri")
+                // VLC Android expects just the absolute path, not a file:// URI
+                val localPath = localFile.absolutePath
+                Log.d("VLCSubs", "Adding subtitle with path: $localPath")
 
-                player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, localUri, true)
+                player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, localPath, true)
 
                 // Wait for VLC to load the subtitle, then select it
                 delay(500)
@@ -275,9 +283,18 @@ actual class VideoPlayer(
         // No manual quality selection needed
     }
 
+    actual fun setScaleMode(mode: VideoScaleMode) {
+        val scaleType = when (mode) {
+            VideoScaleMode.FIT -> MediaPlayer.ScaleType.SURFACE_BEST_FIT
+            VideoScaleMode.FILL -> MediaPlayer.ScaleType.SURFACE_FILL
+            VideoScaleMode.STRETCH -> MediaPlayer.ScaleType.SURFACE_FIT_SCREEN
+        }
+        mediaPlayer?.videoScale = scaleType
+    }
+
     fun attachToLayout(layout: VLCVideoLayout) {
         videoLayout = layout
-        mediaPlayer?.attachViews(layout, null, false, false)
+        mediaPlayer?.attachViews(layout, null, true, false)
     }
 
     fun detachFromLayout() {

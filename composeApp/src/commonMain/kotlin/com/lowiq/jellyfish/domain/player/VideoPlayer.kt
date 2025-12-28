@@ -26,4 +26,5 @@ expect class VideoPlayer {
     fun disableSubtitles()
     fun selectQuality(index: Int)
     fun addExternalSubtitle(url: String, name: String? = null)
+    fun setScaleMode(mode: VideoScaleMode)
 }
