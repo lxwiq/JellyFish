@@ -124,6 +124,7 @@ class MediaRepositoryImpl(
     override suspend fun getLibraryItemsPaginated(
         serverId: String,
         libraryId: String,
+        libraryType: String?,
         limit: Int,
         offset: Int,
         sortBy: com.lowiq.jellyfish.domain.model.SortOption,
@@ -146,6 +147,7 @@ class MediaRepositoryImpl(
             token = token,
             userId = userId,
             libraryId = libraryId,
+            libraryType = libraryType,
             limit = limit,
             startIndex = offset,
             sortBy = sortBy.apiValue,

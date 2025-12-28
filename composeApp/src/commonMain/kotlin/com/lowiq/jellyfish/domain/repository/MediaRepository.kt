@@ -35,6 +35,7 @@ interface MediaRepository {
     suspend fun getLibraryItemsPaginated(
         serverId: String,
         libraryId: String,
+        libraryType: String? = null,
         limit: Int = 20,
         offset: Int = 0,
         sortBy: SortOption = SortOption.DATE_ADDED,

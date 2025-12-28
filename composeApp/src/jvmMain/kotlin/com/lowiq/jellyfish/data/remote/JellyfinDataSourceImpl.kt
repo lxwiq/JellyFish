@@ -365,6 +365,7 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
         token: String,
         userId: String,
         libraryId: String,
+        libraryType: String?,
         limit: Int,
         startIndex: Int,
         sortBy: String,
@@ -393,6 +394,14 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
                 else -> org.jellyfin.sdk.model.api.SortOrder.DESCENDING
             }
 
+            // Filter by item type based on library type
+            val includeItemTypes = when (libraryType?.lowercase()) {
+                "movies" -> listOf(BaseItemKind.MOVIE)
+                "tvshows" -> listOf(BaseItemKind.SERIES)
+                "music" -> listOf(BaseItemKind.MUSIC_ALBUM)
+                else -> null
+            }
+
             val response by api.itemsApi.getItems(
                 userId = java.util.UUID.fromString(userId),
                 parentId = java.util.UUID.fromString(libraryId),
@@ -404,6 +413,7 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
                 years = years?.map { it },
                 isPlayed = isPlayed,
                 isFavorite = isFavorite,
+                includeItemTypes = includeItemTypes,
                 recursive = true,
                 enableImages = true,
                 enableUserData = true

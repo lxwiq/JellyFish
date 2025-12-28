@@ -58,6 +58,7 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
         token: String,
         userId: String,
         libraryId: String,
+        libraryType: String?,
         limit: Int,
         startIndex: Int,
         sortBy: String,

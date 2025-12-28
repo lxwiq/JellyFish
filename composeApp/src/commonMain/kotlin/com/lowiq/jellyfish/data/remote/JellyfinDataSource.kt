@@ -33,6 +33,7 @@ interface JellyfinDataSource {
         token: String,
         userId: String,
         libraryId: String,
+        libraryType: String? = null,
         limit: Int = 20,
         startIndex: Int = 0,
         sortBy: String = "DateCreated",

@@ -29,7 +29,7 @@ data class LibraryState(
     val displayMode: DisplayMode = DisplayMode.POSTER,
 
     // Filters
-    val sortBy: SortOption = SortOption.DATE_ADDED,
+    val sortBy: SortOption = SortOption.NAME,
     val selectedGenre: String? = null,
     val selectedYear: Int? = null,
     val showWatchedOnly: Boolean? = null, // null = all, true = watched, false = unwatched
@@ -101,6 +101,7 @@ class LibraryScreenModel(
         mediaRepository.getLibraryItemsPaginated(
             serverId = serverId,
             libraryId = library.id,
+            libraryType = library.type,
             limit = pageSize,
             offset = currentOffset,
             sortBy = currentState.sortBy,
