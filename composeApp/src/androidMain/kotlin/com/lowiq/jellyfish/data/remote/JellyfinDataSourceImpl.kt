@@ -392,7 +392,7 @@ class JellyfinDataSourceImpl(
                 years = years?.map { it },
                 isPlayed = isPlayed,
                 isFavorite = isFavorite,
-                recursive = false,
+                recursive = true,
                 enableImages = true,
                 enableUserData = true
             )
@@ -413,11 +413,11 @@ class JellyfinDataSourceImpl(
         runCatching {
             val api = createApi(serverUrl, token)
 
-            // Get top-level items from the library to extract unique genres and years
+            // Get all items from the library to extract unique genres and years
             val response by api.itemsApi.getItems(
                 userId = java.util.UUID.fromString(userId),
                 parentId = java.util.UUID.fromString(libraryId),
-                recursive = false
+                recursive = true
             )
 
             // Extract unique genres
