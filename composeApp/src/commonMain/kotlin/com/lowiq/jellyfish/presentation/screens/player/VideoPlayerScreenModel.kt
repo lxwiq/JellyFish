@@ -7,6 +7,7 @@ import com.lowiq.jellyfish.data.remote.SubtitleStreamInfo
 import com.lowiq.jellyfish.domain.player.PlaybackState
 import com.lowiq.jellyfish.domain.player.SubtitleTrack
 import com.lowiq.jellyfish.domain.player.VideoPlayer
+import com.lowiq.jellyfish.domain.player.VideoScaleMode
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.MediaRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
@@ -317,6 +318,12 @@ class VideoPlayerScreenModel(
     fun onSetPlaybackSpeed(speed: Float) {
         videoPlayer.setPlaybackSpeed(speed)
         _state.update { it.copy(playbackSpeed = speed) }
+    }
+
+    fun onCycleScaleMode() {
+        val newMode = _state.value.scaleMode.next()
+        _state.update { it.copy(scaleMode = newMode) }
+        videoPlayer.setScaleMode(newMode)
     }
 
     fun onSelectAudioTrack(index: Int) {
