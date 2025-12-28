@@ -387,8 +387,14 @@ class JellyfinDataSourceImpl(
                 "movies" -> listOf(BaseItemKind.MOVIE)
                 "tvshows" -> listOf(BaseItemKind.SERIES)
                 "music" -> listOf(BaseItemKind.MUSIC_ALBUM)
+                "boxsets" -> listOf(BaseItemKind.BOX_SET)
                 else -> null
             }
+
+            // Exclude folder types for custom libraries
+            val excludeItemTypes = if (includeItemTypes == null) {
+                listOf(BaseItemKind.FOLDER, BaseItemKind.COLLECTION_FOLDER)
+            } else null
 
             val response by api.itemsApi.getItems(
                 userId = java.util.UUID.fromString(userId),
@@ -402,6 +408,7 @@ class JellyfinDataSourceImpl(
                 isPlayed = isPlayed,
                 isFavorite = isFavorite,
                 includeItemTypes = includeItemTypes,
+                excludeItemTypes = excludeItemTypes,
                 recursive = true,
                 enableImages = true,
                 enableUserData = true
