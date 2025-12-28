@@ -4,6 +4,7 @@ import com.lowiq.jellyfish.domain.player.AudioTrack
 import com.lowiq.jellyfish.domain.player.PlaybackState
 import com.lowiq.jellyfish.domain.player.QualityOption
 import com.lowiq.jellyfish.domain.player.SubtitleTrack
+import com.lowiq.jellyfish.domain.player.VideoScaleMode
 
 data class VideoPlayerState(
     val isLoading: Boolean = true,
@@ -15,6 +16,7 @@ data class VideoPlayerState(
     val subtitleTracks: List<SubtitleTrack> = emptyList(),
     val qualityOptions: List<QualityOption> = emptyList(),
     val playbackSpeed: Float = 1f,
+    val scaleMode: VideoScaleMode = VideoScaleMode.FIT,
     val controlsVisible: Boolean = true,
     val showTrackSelector: Boolean = false,
     val showSettingsSheet: Boolean = false,
