@@ -2,6 +2,9 @@ package com.lowiq.jellyfish.presentation.screens.player
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
+import android.os.Build
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
@@ -26,6 +29,31 @@ actual fun VideoSurface(
         onDispose {
             // Restore original orientation when leaving video player
             activity?.requestedOrientation = originalOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
+    // Enable immersive mode to hide system bars during video playback
+    DisposableEffect(Unit) {
+        val activity = context as? Activity
+        val window = activity?.window
+        val controller = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window?.insetsController
+        } else {
+            null
+        }
+
+        // Hide system bars (status bar + navigation bar)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            controller?.hide(WindowInsets.Type.systemBars())
+            controller?.systemBarsBehavior =
+                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+
+        onDispose {
+            // Restore system bars when leaving video player
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                controller?.show(WindowInsets.Type.systemBars())
+            }
         }
     }
 
