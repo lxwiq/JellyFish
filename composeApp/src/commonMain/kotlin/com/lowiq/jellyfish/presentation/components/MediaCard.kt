@@ -29,8 +29,10 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.lowiq.jellyfish.isDesktopPlatform
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import com.lowiq.jellyfish.presentation.theme.getResponsiveCardDimensions
 
 @Composable
 fun MediaCard(
@@ -44,10 +46,11 @@ fun MediaCard(
 ) {
     val colors = LocalJellyFishColors.current
     val shapes = JellyFishTheme.shapes
+    val cardDimensions = getResponsiveCardDimensions(isDesktopPlatform())
 
     // Poster: vertical (2:3 ratio), Episode: horizontal (16:9 ratio)
-    val cardWidth = if (isPoster) 120.dp else 160.dp
-    val imageHeight = if (isPoster) 180.dp else 90.dp
+    val cardWidth = if (isPoster) cardDimensions.posterWidth else cardDimensions.episodeWidth
+    val imageHeight = if (isPoster) cardDimensions.posterHeight else cardDimensions.episodeHeight
     // Fixed height for text area to ensure consistent card heights
     val textAreaHeight = if (isPoster) 56.dp else 56.dp
 

@@ -41,8 +41,10 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.lowiq.jellyfish.domain.model.MediaItem
+import com.lowiq.jellyfish.isDesktopPlatform
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import com.lowiq.jellyfish.presentation.theme.getResponsiveCardDimensions
 
 @Composable
 fun MediaGrid(
@@ -55,6 +57,7 @@ fun MediaGrid(
 ) {
     val colors = LocalJellyFishColors.current
     val gridState = rememberLazyGridState()
+    val cardDimensions = getResponsiveCardDimensions(isDesktopPlatform())
 
     // Detect when user scrolls near bottom to trigger load more
     val shouldLoadMore by remember {
@@ -85,7 +88,7 @@ fun MediaGrid(
             )
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 120.dp),
+                columns = GridCells.Adaptive(minSize = cardDimensions.posterWidth),
                 state = gridState,
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -131,8 +134,9 @@ private fun MediaGridItem(
 ) {
     val colors = LocalJellyFishColors.current
     val shapes = JellyFishTheme.shapes
-    val cardWidth = 120.dp
-    val imageHeight = 180.dp  // 2:3 aspect ratio for posters
+    val cardDimensions = getResponsiveCardDimensions(isDesktopPlatform())
+    val cardWidth = cardDimensions.posterWidth
+    val imageHeight = cardDimensions.posterHeight  // 2:3 aspect ratio for posters
 
     Column(
         modifier = modifier

@@ -53,7 +53,19 @@ data class JellyFishDimensions(
     val avatarSm: Dp = 32.dp,
     val avatar: Dp = 40.dp,
     val avatarLg: Dp = 56.dp,
-    val avatarXl: Dp = 80.dp
+    val avatarXl: Dp = 80.dp,
+
+    // Poster card dimensions (mobile defaults, use posterCardWidth/posterCardHeight for responsive)
+    val posterWidthMobile: Dp = 120.dp,
+    val posterHeightMobile: Dp = 180.dp,  // 2:3 ratio
+    val posterWidthDesktop: Dp = 160.dp,
+    val posterHeightDesktop: Dp = 240.dp,  // 2:3 ratio
+
+    // Episode card dimensions (mobile defaults)
+    val episodeWidthMobile: Dp = 160.dp,
+    val episodeHeightMobile: Dp = 90.dp,  // 16:9 ratio
+    val episodeWidthDesktop: Dp = 200.dp,
+    val episodeHeightDesktop: Dp = 112.dp  // 16:9 ratio
 )
 
 /**
@@ -80,3 +92,35 @@ data class JellyFishShapes(
 
 val LocalJellyFishDimensions = staticCompositionLocalOf { JellyFishDimensions() }
 val LocalJellyFishShapes = staticCompositionLocalOf { JellyFishShapes() }
+
+/**
+ * Responsive card dimensions based on platform
+ */
+data class ResponsiveCardDimensions(
+    val posterWidth: Dp,
+    val posterHeight: Dp,
+    val episodeWidth: Dp,
+    val episodeHeight: Dp
+)
+
+/**
+ * Returns responsive card dimensions based on whether running on desktop or mobile
+ */
+fun getResponsiveCardDimensions(isDesktop: Boolean): ResponsiveCardDimensions {
+    val dimensions = JellyFishDimensions()
+    return if (isDesktop) {
+        ResponsiveCardDimensions(
+            posterWidth = dimensions.posterWidthDesktop,
+            posterHeight = dimensions.posterHeightDesktop,
+            episodeWidth = dimensions.episodeWidthDesktop,
+            episodeHeight = dimensions.episodeHeightDesktop
+        )
+    } else {
+        ResponsiveCardDimensions(
+            posterWidth = dimensions.posterWidthMobile,
+            posterHeight = dimensions.posterHeightMobile,
+            episodeWidth = dimensions.episodeWidthMobile,
+            episodeHeight = dimensions.episodeHeightMobile
+        )
+    }
+}
