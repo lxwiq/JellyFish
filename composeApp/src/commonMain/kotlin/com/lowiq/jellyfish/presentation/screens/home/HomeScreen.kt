@@ -42,6 +42,7 @@ import com.lowiq.jellyfish.presentation.screens.library.LibraryScreen
 import com.lowiq.jellyfish.presentation.screens.search.SearchScreen
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 import com.lowiq.jellyfish.presentation.screens.settings.SettingsScreen
+import com.lowiq.jellyfish.isDesktopPlatform
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 
 class HomeScreen : Screen {
@@ -89,6 +90,10 @@ class HomeScreen : Screen {
             showSidebar = sidebarVisible,
             activeDownloadCount = activeDownloadCount,
             downloadProgress = downloadProgress,
+            libraries = state.libraries,
+            onLibraryClick = { library ->
+                navigator.push(LibraryScreen(library))
+            },
             modifier = Modifier.background(colors.background)
         ) {
             Column(
@@ -99,7 +104,8 @@ class HomeScreen : Screen {
                     isSidebarOpen = sidebarVisible,
                     onMenuClick = { sidebarVisible = !sidebarVisible },
                     onSwitchServer = { screenModel.switchServer() },
-                    onLogout = { screenModel.logout() }
+                    onLogout = { screenModel.logout() },
+                    showMenuButton = !isDesktopPlatform()
                 )
 
                 PullToRefreshBox(

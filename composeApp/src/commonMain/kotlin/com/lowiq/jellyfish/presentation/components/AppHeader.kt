@@ -44,6 +44,7 @@ fun AppHeader(
     onMenuClick: () -> Unit,
     onSwitchServer: () -> Unit,
     onLogout: () -> Unit,
+    showMenuButton: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalJellyFishColors.current
@@ -63,19 +64,22 @@ fun AppHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left side: Burger menu + App name
+        // Left side: Burger menu (if shown) + App name
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = if (showMenuButton) 0.dp else 8.dp)
         ) {
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = if (isSidebarOpen) Icons.Default.Close else Icons.Default.Menu,
-                    contentDescription = if (isSidebarOpen) "Close menu" else "Open menu",
-                    tint = colors.foreground,
-                    modifier = Modifier.rotate(iconRotation)
-                )
+            if (showMenuButton) {
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        imageVector = if (isSidebarOpen) Icons.Default.Close else Icons.Default.Menu,
+                        contentDescription = if (isSidebarOpen) "Close menu" else "Open menu",
+                        tint = colors.foreground,
+                        modifier = Modifier.rotate(iconRotation)
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
             }
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "JellyFish",
                 color = colors.foreground,

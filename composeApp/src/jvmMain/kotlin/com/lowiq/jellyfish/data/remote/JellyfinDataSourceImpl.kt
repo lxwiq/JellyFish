@@ -25,18 +25,35 @@ import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.createJellyfin
 import org.jellyfin.sdk.model.ClientInfo
+import org.jellyfin.sdk.model.DeviceInfo
 import org.jellyfin.sdk.model.UUID
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
+import java.net.InetAddress
 
 class JellyfinDataSourceImpl : JellyfinDataSource {
 
     private val jellyfin: Jellyfin by lazy {
+        val hostname = try {
+            InetAddress.getLocalHost().hostName
+        } catch (e: Exception) {
+            "Desktop"
+        }
+
+        // Generate a stable device ID based on hostname and user
+        val deviceId = java.util.UUID.nameUUIDFromBytes(
+            "${System.getProperty("user.name")}@$hostname".toByteArray()
+        ).toString()
+
         createJellyfin {
             clientInfo = ClientInfo(
                 name = "JellyFish",
                 version = "1.0.0"
+            )
+            deviceInfo = DeviceInfo(
+                id = deviceId,
+                name = "$hostname (Desktop)"
             )
         }
     }

@@ -13,8 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.lowiq.jellyfish.domain.model.Library
+import com.lowiq.jellyfish.isDesktopPlatform
 
-private val SidebarWidth = 56.dp
+private val CollapsedSidebarWidth = 56.dp
+private val ExpandedSidebarWidth = 200.dp
 
 @Composable
 fun AppScaffold(
@@ -23,11 +26,16 @@ fun AppScaffold(
     showSidebar: Boolean,
     activeDownloadCount: Int = 0,
     downloadProgress: Float = 0f,
+    libraries: List<Library> = emptyList(),
+    onLibraryClick: ((Library) -> Unit)? = null,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val isDesktop = isDesktopPlatform()
+    val sidebarWidth = if (isDesktop) ExpandedSidebarWidth else CollapsedSidebarWidth
+
     val sidebarOffset by animateDpAsState(
-        targetValue = if (showSidebar) 0.dp else -SidebarWidth,
+        targetValue = if (isDesktop || showSidebar) 0.dp else -sidebarWidth,
         animationSpec = tween(durationMillis = 250)
     )
 
@@ -36,7 +44,7 @@ fun AppScaffold(
     ) {
         Box(
             modifier = Modifier
-                .width(SidebarWidth + sidebarOffset)
+                .width(sidebarWidth + sidebarOffset)
                 .fillMaxHeight()
         ) {
             NavigationRail(
@@ -44,6 +52,9 @@ fun AppScaffold(
                 onItemSelected = onNavigationItemSelected,
                 activeDownloadCount = activeDownloadCount,
                 downloadProgress = downloadProgress,
+                expanded = isDesktop,
+                libraries = libraries,
+                onLibraryClick = onLibraryClick,
                 modifier = Modifier
                     .fillMaxHeight()
                     .offset(x = sidebarOffset)
