@@ -86,17 +86,24 @@ class LibraryScreen(private val library: Library) : Screen {
 
         val gridState = rememberLazyGridState()
 
-        // Infinite scroll detection
+        // Infinite scroll detection - triggers when near end OR when viewport not filled
         val shouldLoadMore by remember {
             derivedStateOf {
-                val lastVisibleItem = gridState.layoutInfo.visibleItemsInfo.lastOrNull()
+                val layoutInfo = gridState.layoutInfo
+                val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
                     ?: return@derivedStateOf false
-                val totalItems = gridState.layoutInfo.totalItemsCount
-                lastVisibleItem.index >= totalItems - 6
+                val totalItems = layoutInfo.totalItemsCount
+
+                // Load more if: near the end OR all items are visible (viewport not filled)
+                val nearEnd = lastVisibleItem.index >= totalItems - 6
+                val viewportNotFilled = layoutInfo.visibleItemsInfo.size >= totalItems && totalItems > 0
+
+                nearEnd || viewportNotFilled
             }
         }
 
-        LaunchedEffect(shouldLoadMore) {
+        // Use state.items.size as key to re-trigger when new items are loaded
+        LaunchedEffect(shouldLoadMore, state.items.size) {
             if (shouldLoadMore && !state.isLoading && !state.isLoadingMore && state.hasMoreItems) {
                 screenModel.loadMore()
             }
