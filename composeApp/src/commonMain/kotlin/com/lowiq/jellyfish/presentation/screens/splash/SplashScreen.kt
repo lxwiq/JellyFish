@@ -1,7 +1,9 @@
 package com.lowiq.jellyfish.presentation.screens.splash
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -38,7 +40,9 @@ class SplashScreen : Screen {
         }
 
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0F0915)),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
