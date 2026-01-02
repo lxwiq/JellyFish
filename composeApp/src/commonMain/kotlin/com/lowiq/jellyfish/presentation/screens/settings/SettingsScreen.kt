@@ -28,7 +28,9 @@ import com.lowiq.jellyfish.domain.model.TaskState
 import com.lowiq.jellyfish.presentation.locale.AppLanguage
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 class SettingsScreen : Screen {
 
@@ -73,13 +75,13 @@ class SettingsScreen : Screen {
                 IconButton(onClick = { navigator.pop() }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Retour",
+                        contentDescription = stringResource(Res.string.common_back),
                         tint = colors.foreground
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Paramètres",
+                    text = stringResource(Res.string.settings_title),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = colors.foreground
@@ -93,7 +95,7 @@ class SettingsScreen : Screen {
             ) {
                 // Account Section
                 item {
-                    SectionTitle("Compte")
+                    SectionTitle(stringResource(Res.string.settings_section_account))
                 }
                 item {
                     AccountSection(
@@ -106,7 +108,7 @@ class SettingsScreen : Screen {
 
                 // Playback Section
                 item {
-                    SectionTitle("Lecture")
+                    SectionTitle(stringResource(Res.string.settings_section_playback))
                 }
                 item {
                     PlaybackSection(
@@ -125,7 +127,7 @@ class SettingsScreen : Screen {
 
                 // Storage Section
                 item {
-                    SectionTitle("Stockage")
+                    SectionTitle(stringResource(Res.string.settings_section_storage))
                 }
                 item {
                     StorageSection(
@@ -141,7 +143,7 @@ class SettingsScreen : Screen {
 
                 // About Section
                 item {
-                    SectionTitle("À propos")
+                    SectionTitle(stringResource(Res.string.settings_section_about))
                 }
                 item {
                     AboutSection()
@@ -150,7 +152,7 @@ class SettingsScreen : Screen {
                 // Admin Section (only if admin)
                 if (state.isAdmin) {
                     item {
-                        SectionTitle("Administration")
+                        SectionTitle(stringResource(Res.string.settings_section_admin))
                     }
                     item {
                         AdminSection(
@@ -174,8 +176,8 @@ class SettingsScreen : Screen {
         if (showLogoutDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
-                title = { Text("Déconnexion") },
-                text = { Text("Voulez-vous vraiment vous déconnecter ?") },
+                title = { Text(stringResource(Res.string.settings_logout_dialog_title)) },
+                text = { Text(stringResource(Res.string.settings_logout_dialog_message)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -183,12 +185,12 @@ class SettingsScreen : Screen {
                             screenModel.logout()
                         }
                     ) {
-                        Text("Déconnexion", color = colors.destructive)
+                        Text(stringResource(Res.string.settings_logout_dialog_title), color = colors.destructive)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showLogoutDialog = false }) {
-                        Text("Annuler", color = colors.foreground)
+                        Text(stringResource(Res.string.common_cancel), color = colors.foreground)
                     }
                 }
             )
@@ -198,16 +200,16 @@ class SettingsScreen : Screen {
         if (state.showDeleteAllDownloadsDialog) {
             AlertDialog(
                 onDismissRequest = { screenModel.hideDeleteAllDownloadsDialog() },
-                title = { Text("Effacer tous les téléchargements ?") },
-                text = { Text("Cette action supprimera tous les fichiers téléchargés. Cette action est irréversible.") },
+                title = { Text(stringResource(Res.string.settings_clear_downloads_dialog_title)) },
+                text = { Text(stringResource(Res.string.settings_clear_downloads_dialog_message)) },
                 confirmButton = {
                     TextButton(onClick = { screenModel.deleteAllDownloads() }) {
-                        Text("Effacer", color = colors.destructive)
+                        Text(stringResource(Res.string.common_clear), color = colors.destructive)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { screenModel.hideDeleteAllDownloadsDialog() }) {
-                        Text("Annuler", color = colors.foreground)
+                        Text(stringResource(Res.string.common_cancel), color = colors.foreground)
                     }
                 }
             )
@@ -291,7 +293,7 @@ private fun AccountSection(
                         color = colors.foreground
                     )
                 } else {
-                    Text("Se déconnecter")
+                    Text(stringResource(Res.string.settings_logout_button))
                 }
             }
         }
@@ -326,7 +328,7 @@ private fun PlaybackSection(
         ) {
             // Streaming quality
             QualityDropdown(
-                label = "Qualité streaming",
+                label = stringResource(Res.string.settings_streaming_quality),
                 selectedQuality = streamingQuality,
                 qualityOptions = qualityOptions,
                 onQualitySelected = onStreamingQualityChange
@@ -334,7 +336,7 @@ private fun PlaybackSection(
 
             // Download quality
             QualityDropdown(
-                label = "Qualité téléchargement",
+                label = stringResource(Res.string.settings_download_quality),
                 selectedQuality = downloadQuality,
                 qualityOptions = qualityOptions,
                 onQualitySelected = onDownloadQualityChange
@@ -344,7 +346,7 @@ private fun PlaybackSection(
             OutlinedTextField(
                 value = audioLanguage,
                 onValueChange = onAudioLanguageChange,
-                label = { Text("Langue audio", color = colors.mutedForeground) },
+                label = { Text(stringResource(Res.string.settings_audio_language), color = colors.mutedForeground) },
                 placeholder = { Text("fr, en", color = colors.mutedForeground) },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -360,7 +362,7 @@ private fun PlaybackSection(
             OutlinedTextField(
                 value = subtitleLanguage,
                 onValueChange = onSubtitleLanguageChange,
-                label = { Text("Langue sous-titres", color = colors.mutedForeground) },
+                label = { Text(stringResource(Res.string.settings_subtitle_language), color = colors.mutedForeground) },
                 placeholder = { Text("fr, en", color = colors.mutedForeground) },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -455,7 +457,7 @@ private fun LanguageSelector(
 
     Column {
         Text(
-            text = "Langue de l'application",
+            text = stringResource(Res.string.settings_app_language),
             fontSize = 14.sp,
             color = colors.mutedForeground
         )
@@ -536,7 +538,7 @@ private fun StorageSection(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Stockage utilisé",
+                    text = stringResource(Res.string.settings_storage_used),
                     fontSize = 16.sp,
                     color = colors.foreground
                 )
@@ -555,7 +557,7 @@ private fun StorageSection(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Limite de stockage",
+                        text = stringResource(Res.string.settings_storage_limit),
                         fontSize = 14.sp,
                         color = colors.mutedForeground
                     )
@@ -597,7 +599,7 @@ private fun StorageSection(
                         color = colors.foreground
                     )
                 } else {
-                    Text("Vider le cache")
+                    Text(stringResource(Res.string.settings_clear_cache))
                 }
             }
 
@@ -617,7 +619,7 @@ private fun StorageSection(
                         color = colors.foreground
                     )
                 } else {
-                    Text("Effacer tous les téléchargements")
+                    Text(stringResource(Res.string.settings_clear_downloads))
                 }
             }
         }
@@ -644,7 +646,7 @@ private fun AboutSection() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Version",
+                    text = stringResource(Res.string.settings_version),
                     fontSize = 16.sp,
                     color = colors.foreground
                 )
@@ -666,7 +668,7 @@ private fun AboutSection() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Licences",
+                    text = stringResource(Res.string.settings_licenses),
                     fontSize = 16.sp,
                     color = colors.foreground
                 )
@@ -707,7 +709,7 @@ private fun AdminSection(
         ) {
             // Users
             ExpandableAdminSection(
-                title = "Utilisateurs",
+                title = stringResource(Res.string.settings_admin_users),
                 icon = Icons.Default.People,
                 onExpand = onLoadUsers
             ) {
@@ -736,7 +738,7 @@ private fun AdminSection(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Ajouter un utilisateur")
+                            Text(stringResource(Res.string.settings_admin_add_user))
                         }
                     }
                 }
@@ -746,7 +748,7 @@ private fun AdminSection(
 
             // Libraries
             ExpandableAdminSection(
-                title = "Bibliothèques",
+                title = stringResource(Res.string.settings_admin_libraries),
                 icon = Icons.Default.VideoLibrary
             ) {
                 Button(
@@ -766,7 +768,7 @@ private fun AdminSection(
                     } else {
                         Icon(Icons.Default.Refresh, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Actualiser les bibliothèques")
+                        Text(stringResource(Res.string.settings_admin_refresh_libraries))
                     }
                 }
             }
@@ -775,7 +777,7 @@ private fun AdminSection(
 
             // Logs
             ExpandableAdminSection(
-                title = "Journaux",
+                title = stringResource(Res.string.settings_admin_logs),
                 icon = Icons.Default.Description,
                 onExpand = onLoadLogs
             ) {
@@ -804,7 +806,7 @@ private fun AdminSection(
 
             // Tasks
             ExpandableAdminSection(
-                title = "Tâches",
+                title = stringResource(Res.string.settings_admin_tasks),
                 icon = Icons.Default.Task,
                 onExpand = onLoadTasks
             ) {
@@ -841,18 +843,18 @@ private fun AdminSection(
     adminState.showDeleteUserDialog?.let { user ->
         AlertDialog(
             onDismissRequest = { onShowDeleteUserDialog(null) },
-            title = { Text("Supprimer l'utilisateur") },
-            text = { Text("Voulez-vous vraiment supprimer ${user.name} ?") },
+            title = { Text(stringResource(Res.string.admin_delete_user_title)) },
+            text = { Text(stringResource(Res.string.admin_delete_user_message, user.name)) },
             confirmButton = {
                 TextButton(
                     onClick = { onDeleteUser(user.id) }
                 ) {
-                    Text("Supprimer", color = LocalJellyFishColors.current.destructive)
+                    Text(stringResource(Res.string.common_delete), color = LocalJellyFishColors.current.destructive)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { onShowDeleteUserDialog(null) }) {
-                    Text("Annuler", color = LocalJellyFishColors.current.foreground)
+                    Text(stringResource(Res.string.common_cancel), color = LocalJellyFishColors.current.foreground)
                 }
             }
         )
@@ -934,7 +936,7 @@ private fun UserItem(
             )
             if (user.isAdmin) {
                 Text(
-                    text = "Administrateur",
+                    text = stringResource(Res.string.settings_admin_administrator),
                     fontSize = 12.sp,
                     color = colors.mutedForeground
                 )
@@ -943,7 +945,7 @@ private fun UserItem(
         IconButton(onClick = onDeleteClick) {
             Icon(
                 Icons.Default.Delete,
-                contentDescription = "Supprimer",
+                contentDescription = stringResource(Res.string.common_delete),
                 tint = colors.destructive
             )
         }
@@ -1017,7 +1019,7 @@ private fun TaskItem(
             )
             task.lastExecutionResult?.let {
                 Text(
-                    text = "Dernier résultat: $it",
+                    text = stringResource(Res.string.settings_admin_last_result, it),
                     fontSize = 12.sp,
                     color = colors.mutedForeground
                 )
@@ -1029,7 +1031,7 @@ private fun TaskItem(
         ) {
             Icon(
                 Icons.Default.PlayArrow,
-                contentDescription = "Exécuter",
+                contentDescription = stringResource(Res.string.settings_admin_run_content_description),
                 tint = if (task.state == TaskState.IDLE) colors.primary else colors.mutedForeground
             )
         }
@@ -1047,13 +1049,13 @@ private fun CreateUserDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Créer un utilisateur") },
+        title = { Text(stringResource(Res.string.admin_create_user_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Nom d'utilisateur", color = colors.mutedForeground) },
+                    label = { Text(stringResource(Res.string.admin_create_user_username), color = colors.mutedForeground) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colors.foreground,
@@ -1066,7 +1068,7 @@ private fun CreateUserDialog(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Mot de passe", color = colors.mutedForeground) },
+                    label = { Text(stringResource(Res.string.admin_create_user_password), color = colors.mutedForeground) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = colors.foreground,
@@ -1087,12 +1089,12 @@ private fun CreateUserDialog(
                 },
                 enabled = username.isNotBlank() && password.isNotBlank()
             ) {
-                Text("Créer", color = colors.primary)
+                Text(stringResource(Res.string.common_create), color = colors.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler", color = colors.foreground)
+                Text(stringResource(Res.string.common_cancel), color = colors.foreground)
             }
         }
     )
