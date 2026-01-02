@@ -24,6 +24,23 @@ import com.lowiq.jellyfish.domain.model.Download
 import com.lowiq.jellyfish.domain.model.DownloadStatus
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.common_back
+import jellyfish.composeapp.generated.resources.common_cancel
+import jellyfish.composeapp.generated.resources.common_clear
+import jellyfish.composeapp.generated.resources.downloads_cancel_content_description
+import jellyfish.composeapp.generated.resources.downloads_clear_all
+import jellyfish.composeapp.generated.resources.downloads_clear_dialog_message
+import jellyfish.composeapp.generated.resources.downloads_clear_dialog_title
+import jellyfish.composeapp.generated.resources.downloads_completed
+import jellyfish.composeapp.generated.resources.downloads_delete_content_description
+import jellyfish.composeapp.generated.resources.downloads_empty
+import jellyfish.composeapp.generated.resources.downloads_in_progress
+import jellyfish.composeapp.generated.resources.downloads_play_content_description
+import jellyfish.composeapp.generated.resources.downloads_queued
+import jellyfish.composeapp.generated.resources.downloads_storage_label
+import jellyfish.composeapp.generated.resources.downloads_title
+import org.jetbrains.compose.resources.stringResource
 
 class DownloadsScreen : Screen {
 
@@ -49,17 +66,17 @@ class DownloadsScreen : Screen {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { navigator.pop() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(Res.string.common_back))
                     }
                     Text(
-                        "Téléchargements",
+                        stringResource(Res.string.downloads_title),
                         style = MaterialTheme.typography.headlineSmall
                     )
                     if (state.activeDownloads.isNotEmpty() || state.completedDownloads.isNotEmpty()) {
                         IconButton(onClick = { screenModel.showDeleteAllConfirmation() }) {
                             Icon(
                                 Icons.Default.DeleteSweep,
-                                contentDescription = "Tout effacer",
+                                contentDescription = stringResource(Res.string.downloads_clear_all),
                                 tint = colors.destructive
                             )
                         }
@@ -67,7 +84,7 @@ class DownloadsScreen : Screen {
                 }
                 state.storageInfo?.let { info ->
                     Text(
-                        "Espace: ${formatBytes(info.usedBytes)}",
+                        stringResource(Res.string.downloads_storage_label, formatBytes(info.usedBytes)),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.mutedForeground
                     )
@@ -78,10 +95,10 @@ class DownloadsScreen : Screen {
             if (state.showDeleteAllDialog) {
                 AlertDialog(
                     onDismissRequest = { screenModel.hideDeleteAllConfirmation() },
-                    title = { Text("Effacer tous les téléchargements ?") },
+                    title = { Text(stringResource(Res.string.downloads_clear_dialog_title)) },
                     text = {
                         Text(
-                            "Cette action supprimera ${state.totalDownloadCount} fichiers (${formatBytes(state.totalDownloadBytes)}). Cette action est irréversible."
+                            stringResource(Res.string.downloads_clear_dialog_message, state.totalDownloadCount, formatBytes(state.totalDownloadBytes))
                         )
                     },
                     confirmButton = {
@@ -89,12 +106,12 @@ class DownloadsScreen : Screen {
                             onClick = { screenModel.deleteAllDownloads() },
                             colors = ButtonDefaults.textButtonColors(contentColor = colors.destructive)
                         ) {
-                            Text("Effacer")
+                            Text(stringResource(Res.string.common_clear))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { screenModel.hideDeleteAllConfirmation() }) {
-                            Text("Annuler")
+                            Text(stringResource(Res.string.common_cancel))
                         }
                     }
                 )
@@ -113,7 +130,7 @@ class DownloadsScreen : Screen {
                     if (state.activeDownloads.isNotEmpty()) {
                         item {
                             Text(
-                                "EN COURS (${state.activeDownloads.size})",
+                                stringResource(Res.string.downloads_in_progress, state.activeDownloads.size),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = colors.mutedForeground
                             )
@@ -132,7 +149,7 @@ class DownloadsScreen : Screen {
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                "TÉLÉCHARGÉS (${state.completedDownloads.size})",
+                                stringResource(Res.string.downloads_completed, state.completedDownloads.size),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = colors.mutedForeground
                             )
@@ -176,7 +193,7 @@ class DownloadsScreen : Screen {
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Text(
-                                        "Aucun téléchargement",
+                                        stringResource(Res.string.downloads_empty),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = colors.mutedForeground
                                     )
@@ -249,7 +266,7 @@ private fun ActiveDownloadItem(
                         trackColor = colors.primary.copy(alpha = 0.2f)
                     )
                     Text(
-                        "En attente...",
+                        stringResource(Res.string.downloads_queued),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.mutedForeground
                     )
@@ -281,7 +298,7 @@ private fun ActiveDownloadItem(
                     )
                 }
                 IconButton(onClick = onCancel) {
-                    Icon(Icons.Default.Close, contentDescription = "Cancel")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.downloads_cancel_content_description))
                 }
             }
         }
@@ -340,10 +357,10 @@ private fun CompletedDownloadItem(
             }
 
             IconButton(onClick = onPlay) {
-                Icon(Icons.Default.PlayArrow, contentDescription = "Play")
+                Icon(Icons.Default.PlayArrow, contentDescription = stringResource(Res.string.downloads_play_content_description))
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = colors.destructive)
+                Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.downloads_delete_content_description), tint = colors.destructive)
             }
         }
     }

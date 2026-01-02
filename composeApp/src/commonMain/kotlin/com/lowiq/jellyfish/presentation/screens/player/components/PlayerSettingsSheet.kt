@@ -28,6 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lowiq.jellyfish.domain.player.QualityOption
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.player_playback_speed
+import jellyfish.composeapp.generated.resources.player_quality
+import jellyfish.composeapp.generated.resources.player_speed_normal
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +62,7 @@ fun PlayerSettingsSheet(
             // Quality section
             if (qualityOptions.isNotEmpty()) {
                 Text(
-                    text = "Quality",
+                    text = stringResource(Res.string.player_quality),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.foreground
@@ -80,17 +85,18 @@ fun PlayerSettingsSheet(
 
             // Playback speed section
             Text(
-                text = "Playback Speed",
+                text = stringResource(Res.string.player_playback_speed),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.foreground
             )
             Spacer(modifier = Modifier.height(12.dp))
 
+            val normalSpeedLabel = stringResource(Res.string.player_speed_normal)
             speedOptions.forEach { speed ->
                 SettingsRow(
                     label = when (speed) {
-                        1f -> "Normal"
+                        1f -> normalSpeedLabel
                         else -> "${speed}x"
                     },
                     subtitle = null,

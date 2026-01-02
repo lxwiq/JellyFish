@@ -47,6 +47,16 @@ import androidx.compose.ui.unit.sp
 import com.lowiq.jellyfish.domain.player.PlaybackState
 import com.lowiq.jellyfish.domain.player.VideoScaleMode
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.common_back
+import jellyfish.composeapp.generated.resources.player_audio_subtitles
+import jellyfish.composeapp.generated.resources.player_forward
+import jellyfish.composeapp.generated.resources.player_pause
+import jellyfish.composeapp.generated.resources.player_play
+import jellyfish.composeapp.generated.resources.player_rewind
+import jellyfish.composeapp.generated.resources.player_scale_mode
+import jellyfish.composeapp.generated.resources.player_settings
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun PlayerControls(
@@ -107,7 +117,7 @@ fun PlayerControls(
                             IconButton(onClick = onBackClick) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
+                                    contentDescription = stringResource(Res.string.common_back),
                                     tint = Color.White
                                 )
                             }
@@ -132,7 +142,7 @@ fun PlayerControls(
                         IconButton(onClick = onSettingsClick) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings",
+                                contentDescription = stringResource(Res.string.player_settings),
                                 tint = Color.White
                             )
                         }
@@ -151,7 +161,7 @@ fun PlayerControls(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Replay10,
-                            contentDescription = "Rewind 10 seconds",
+                            contentDescription = stringResource(Res.string.player_rewind),
                             tint = Color.White,
                             modifier = Modifier.size(36.dp)
                         )
@@ -175,7 +185,7 @@ fun PlayerControls(
                             is PlaybackState.Playing -> {
                                 Icon(
                                     imageVector = Icons.Default.Pause,
-                                    contentDescription = "Pause",
+                                    contentDescription = stringResource(Res.string.player_pause),
                                     tint = colors.primaryForeground,
                                     modifier = Modifier.size(40.dp)
                                 )
@@ -183,7 +193,7 @@ fun PlayerControls(
                             else -> {
                                 Icon(
                                     imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Play",
+                                    contentDescription = stringResource(Res.string.player_play),
                                     tint = colors.primaryForeground,
                                     modifier = Modifier.size(40.dp)
                                 )
@@ -197,7 +207,7 @@ fun PlayerControls(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Forward10,
-                            contentDescription = "Forward 10 seconds",
+                            contentDescription = stringResource(Res.string.player_forward),
                             tint = Color.White,
                             modifier = Modifier.size(36.dp)
                         )
@@ -241,7 +251,7 @@ fun PlayerControls(
                             onClick = onAudioSubtitlesClick,
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Audio & Subtitles", color = Color.White)
+                            Text(stringResource(Res.string.player_audio_subtitles), color = Color.White)
                         }
 
                         // Scale mode button
@@ -252,7 +262,7 @@ fun PlayerControls(
                                     VideoScaleMode.FILL -> Icons.Outlined.Crop
                                     VideoScaleMode.STRETCH -> Icons.Outlined.AspectRatio
                                 },
-                                contentDescription = "Scale: ${scaleMode.displayName}",
+                                contentDescription = stringResource(Res.string.player_scale_mode, scaleMode.displayName),
                                 tint = Color.White
                             )
                         }

@@ -29,6 +29,11 @@ import androidx.compose.ui.unit.sp
 import com.lowiq.jellyfish.domain.player.AudioTrack
 import com.lowiq.jellyfish.domain.player.SubtitleTrack
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.player_audio
+import jellyfish.composeapp.generated.resources.player_subtitles
+import jellyfish.composeapp.generated.resources.player_subtitles_off
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +62,7 @@ fun TrackSelectorSheet(
             // Audio section
             if (audioTracks.isNotEmpty()) {
                 Text(
-                    text = "Audio",
+                    text = stringResource(Res.string.player_audio),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.foreground
@@ -92,7 +97,7 @@ fun TrackSelectorSheet(
 
             // Subtitles section
             Text(
-                text = "Subtitles",
+                text = stringResource(Res.string.player_subtitles),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.foreground
@@ -102,7 +107,7 @@ fun TrackSelectorSheet(
             // Off option
             val noSubtitleSelected = subtitleTracks.none { it.isSelected }
             TrackRow(
-                label = "Off",
+                label = stringResource(Res.string.player_subtitles_off),
                 subtitle = null,
                 isSelected = noSubtitleSelected,
                 onClick = onDisableSubtitles

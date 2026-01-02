@@ -22,6 +22,12 @@ import com.lowiq.jellyfish.presentation.screens.player.components.PlayerControls
 import com.lowiq.jellyfish.presentation.screens.player.components.PlayerSettingsSheet
 import com.lowiq.jellyfish.presentation.screens.player.components.TrackSelectorSheet
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.player_from_beginning
+import jellyfish.composeapp.generated.resources.player_resume_button
+import jellyfish.composeapp.generated.resources.player_resume_message
+import jellyfish.composeapp.generated.resources.player_resume_title
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.parameter.parametersOf
 
 data class VideoPlayerScreen(
@@ -160,16 +166,16 @@ private fun ResumeDialog(
 
     AlertDialog(
         onDismissRequest = onStartOver,
-        title = { Text("Resume Playback?") },
-        text = { Text("Resume at $formattedTime?") },
+        title = { Text(stringResource(Res.string.player_resume_title)) },
+        text = { Text(stringResource(Res.string.player_resume_message, formattedTime)) },
         confirmButton = {
             TextButton(onClick = onResume) {
-                Text("Resume", color = colors.primary)
+                Text(stringResource(Res.string.player_resume_button), color = colors.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onStartOver) {
-                Text("From Beginning")
+                Text(stringResource(Res.string.player_from_beginning))
             }
         },
         containerColor = colors.card
