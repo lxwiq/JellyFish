@@ -8,6 +8,7 @@ import com.lowiq.jellyfish.domain.repository.AdminRepository
 import com.lowiq.jellyfish.domain.repository.AuthRepository
 import com.lowiq.jellyfish.domain.repository.DownloadRepository
 import com.lowiq.jellyfish.domain.repository.ServerRepository
+import com.lowiq.jellyfish.presentation.locale.customAppLocale
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -77,6 +78,8 @@ class SettingsScreenModel(
         screenModelScope.launch {
             userPreferencesStorage.getLanguage().collect { language ->
                 _state.update { it.copy(userLanguage = language) }
+                // Sync global locale state with stored preference
+                customAppLocale = if (language == "system") null else language
             }
         }
     }
@@ -119,6 +122,8 @@ class SettingsScreenModel(
     fun setUserLanguage(code: String) {
         screenModelScope.launch {
             userPreferencesStorage.setLanguage(code)
+            // Update global locale state - null means "system", otherwise specific language code
+            customAppLocale = if (code == "system") null else code
         }
     }
 
