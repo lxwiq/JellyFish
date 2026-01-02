@@ -25,6 +25,7 @@ import com.lowiq.jellyfish.domain.model.AdminUser
 import com.lowiq.jellyfish.domain.model.LogEntry
 import com.lowiq.jellyfish.domain.model.ScheduledTask
 import com.lowiq.jellyfish.domain.model.TaskState
+import com.lowiq.jellyfish.presentation.locale.AppLanguage
 import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 import kotlinx.coroutines.launch
@@ -116,7 +117,9 @@ class SettingsScreen : Screen {
                         audioLanguage = state.preferredAudioLanguage,
                         onAudioLanguageChange = screenModel::setPreferredAudioLanguage,
                         subtitleLanguage = state.preferredSubtitleLanguage,
-                        onSubtitleLanguageChange = screenModel::setPreferredSubtitleLanguage
+                        onSubtitleLanguageChange = screenModel::setPreferredSubtitleLanguage,
+                        userLanguage = state.userLanguage,
+                        onUserLanguageChange = screenModel::setUserLanguage
                     )
                 }
 
@@ -304,7 +307,9 @@ private fun PlaybackSection(
     audioLanguage: String,
     onAudioLanguageChange: (String) -> Unit,
     subtitleLanguage: String,
-    onSubtitleLanguageChange: (String) -> Unit
+    onSubtitleLanguageChange: (String) -> Unit,
+    userLanguage: String,
+    onUserLanguageChange: (String) -> Unit
 ) {
     val colors = LocalJellyFishColors.current
     val qualityOptions = listOf("Auto", "1080p", "720p", "480p")
@@ -366,6 +371,12 @@ private fun PlaybackSection(
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // App language
+            LanguageSelector(
+                currentLanguage = userLanguage,
+                onLanguageSelected = onUserLanguageChange
+            )
         }
     }
 }
@@ -424,6 +435,68 @@ private fun QualityDropdown(
                         },
                         onClick = {
                             onQualitySelected(quality)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LanguageSelector(
+    currentLanguage: String,
+    onLanguageSelected: (String) -> Unit
+) {
+    val colors = LocalJellyFishColors.current
+    var expanded by remember { mutableStateOf(false) }
+    val selectedLanguage = AppLanguage.fromCode(currentLanguage)
+
+    Column {
+        Text(
+            text = "Langue de l'application",
+            fontSize = 14.sp,
+            color = colors.mutedForeground
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.secondary, RoundedCornerShape(8.dp))
+                    .clickable { expanded = true }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = selectedLanguage.nativeName,
+                    fontSize = 16.sp,
+                    color = colors.foreground
+                )
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = colors.mutedForeground
+                )
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(colors.card)
+            ) {
+                AppLanguage.entries.forEach { language ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = language.nativeName,
+                                color = if (language == selectedLanguage) colors.primary else colors.foreground
+                            )
+                        },
+                        onClick = {
+                            onLanguageSelected(language.code)
                             expanded = false
                         }
                     )
