@@ -74,6 +74,11 @@ class SettingsScreenModel(
                 _state.update { it.copy(storageLimitMb = limit) }
             }
         }
+        screenModelScope.launch {
+            userPreferencesStorage.getLanguage().collect { language ->
+                _state.update { it.copy(userLanguage = language) }
+            }
+        }
     }
 
     // Account actions
@@ -108,6 +113,12 @@ class SettingsScreenModel(
     fun setPreferredSubtitleLanguage(language: String) {
         screenModelScope.launch {
             userPreferencesStorage.setPreferredSubtitleLanguage(language)
+        }
+    }
+
+    fun setUserLanguage(code: String) {
+        screenModelScope.launch {
+            userPreferencesStorage.setLanguage(code)
         }
     }
 

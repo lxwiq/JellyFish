@@ -15,6 +15,7 @@ class UserPreferencesStorage(private val dataStore: DataStore<Preferences>) {
         val KEY_STREAMING_QUALITY = stringPreferencesKey("streaming_quality")
         val KEY_PREFERRED_AUDIO_LANG = stringPreferencesKey("preferred_audio_language")
         val KEY_PREFERRED_SUBTITLE_LANG = stringPreferencesKey("preferred_subtitle_language")
+        val KEY_USER_LANGUAGE = stringPreferencesKey("user_language")
     }
 
     // Existing: Display mode
@@ -54,5 +55,14 @@ class UserPreferencesStorage(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setPreferredSubtitleLanguage(language: String) {
         dataStore.edit { it[KEY_PREFERRED_SUBTITLE_LANG] = language }
+    }
+
+    // User language preference (for app UI)
+    fun getLanguage(): Flow<String> = dataStore.data.map { prefs ->
+        prefs[KEY_USER_LANGUAGE] ?: "system"
+    }
+
+    suspend fun setLanguage(code: String) {
+        dataStore.edit { it[KEY_USER_LANGUAGE] = code }
     }
 }

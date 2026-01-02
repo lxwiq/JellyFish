@@ -18,6 +18,9 @@ data class SettingsState(
     val preferredAudioLanguage: String = "",
     val preferredSubtitleLanguage: String = "",
 
+    // App preferences
+    val userLanguage: String = "system",
+
     // Storage
     val usedStorageBytes: Long = 0,
     val storageLimitMb: Int = 10240,
