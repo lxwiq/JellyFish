@@ -40,20 +40,29 @@ import androidx.compose.ui.unit.dp
 import com.lowiq.jellyfish.domain.model.Library
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.nav_downloads
+import jellyfish.composeapp.generated.resources.nav_favorites
+import jellyfish.composeapp.generated.resources.nav_home
+import jellyfish.composeapp.generated.resources.nav_libraries
+import jellyfish.composeapp.generated.resources.nav_search
+import jellyfish.composeapp.generated.resources.nav_settings
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 data class NavigationItem(
     val icon: ImageVector,
-    val contentDescription: String
+    val labelRes: StringResource
 )
 
 private const val DOWNLOADS_INDEX = 3
 
 private val navigationItems = listOf(
-    NavigationItem(Icons.Default.Home, "Home"),
-    NavigationItem(Icons.Default.Search, "Search"),
-    NavigationItem(Icons.Default.Star, "Favorites"),
-    NavigationItem(Icons.Default.Download, "Downloads"),
-    NavigationItem(Icons.Default.Settings, "Settings")
+    NavigationItem(Icons.Default.Home, Res.string.nav_home),
+    NavigationItem(Icons.Default.Search, Res.string.nav_search),
+    NavigationItem(Icons.Default.Star, Res.string.nav_favorites),
+    NavigationItem(Icons.Default.Download, Res.string.nav_downloads),
+    NavigationItem(Icons.Default.Settings, Res.string.nav_settings)
 )
 
 @Composable
@@ -85,27 +94,28 @@ fun NavigationRail(
             horizontalAlignment = if (expanded) Alignment.Start else Alignment.CenterHorizontally
         ) {
             navigationItems.forEachIndexed { index, item ->
+                val label = stringResource(item.labelRes)
                 if (index == DOWNLOADS_INDEX && activeDownloadCount > 0) {
                     DownloadNavigationItem(
                         icon = item.icon,
-                        contentDescription = item.contentDescription,
+                        contentDescription = label,
                         isSelected = index == selectedIndex,
                         onClick = { onItemSelected(index) },
                         shapes = shapes,
                         activeCount = activeDownloadCount,
                         progress = downloadProgress,
                         expanded = expanded,
-                        label = item.contentDescription
+                        label = label
                     )
                 } else {
                     NavigationRailItem(
                         icon = item.icon,
-                        contentDescription = item.contentDescription,
+                        contentDescription = label,
                         isSelected = index == selectedIndex,
                         onClick = { onItemSelected(index) },
                         shapes = shapes,
                         expanded = expanded,
-                        label = item.contentDescription
+                        label = label
                     )
                 }
             }
@@ -115,7 +125,7 @@ fun NavigationRail(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Libraries",
+                    text = stringResource(Res.string.nav_libraries),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.mutedForeground,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)

@@ -36,6 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.header_close_menu
+import jellyfish.composeapp.generated.resources.header_logout
+import jellyfish.composeapp.generated.resources.header_open_menu
+import jellyfish.composeapp.generated.resources.header_switch_server
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AppHeader(
@@ -73,7 +79,7 @@ fun AppHeader(
                 IconButton(onClick = onMenuClick) {
                     Icon(
                         imageVector = if (isSidebarOpen) Icons.Default.Close else Icons.Default.Menu,
-                        contentDescription = if (isSidebarOpen) "Close menu" else "Open menu",
+                        contentDescription = stringResource(if (isSidebarOpen) Res.string.header_close_menu else Res.string.header_open_menu),
                         tint = colors.foreground,
                         modifier = Modifier.rotate(iconRotation)
                     )
@@ -111,14 +117,14 @@ fun AppHeader(
                 onDismissRequest = { menuExpanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Switch Server") },
+                    text = { Text(stringResource(Res.string.header_switch_server)) },
                     onClick = {
                         menuExpanded = false
                         onSwitchServer()
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Logout") },
+                    text = { Text(stringResource(Res.string.header_logout)) },
                     onClick = {
                         menuExpanded = false
                         onLogout()

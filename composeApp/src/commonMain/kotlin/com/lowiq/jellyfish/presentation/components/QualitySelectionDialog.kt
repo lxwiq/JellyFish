@@ -12,6 +12,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.lowiq.jellyfish.domain.model.QualityOption
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.common_cancel
+import jellyfish.composeapp.generated.resources.quality_dialog_title
+import jellyfish.composeapp.generated.resources.quality_dont_ask
+import jellyfish.composeapp.generated.resources.quality_download
+import jellyfish.composeapp.generated.resources.quality_recommended
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun QualitySelectionDialog(
@@ -26,7 +33,7 @@ fun QualitySelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Choisir la qualité") },
+        title = { Text(stringResource(Res.string.quality_dialog_title)) },
         text = {
             Column {
                 qualities.forEach { quality ->
@@ -52,7 +59,7 @@ fun QualitySelectionDialog(
                                 if (quality.label == recommendedQuality) {
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        "(Recommandé)",
+                                        stringResource(Res.string.quality_recommended),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = colors.primary
                                     )
@@ -83,7 +90,7 @@ fun QualitySelectionDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Ne plus demander (utiliser ${selectedQuality?.label ?: "cette qualité"})",
+                        stringResource(Res.string.quality_dont_ask, selectedQuality?.label ?: ""),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -96,12 +103,12 @@ fun QualitySelectionDialog(
                 },
                 enabled = selectedQuality != null
             ) {
-                Text("Télécharger")
+                Text(stringResource(Res.string.quality_download))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler")
+                Text(stringResource(Res.string.common_cancel))
             }
         }
     )

@@ -24,6 +24,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.action_add_to_favorites
+import jellyfish.composeapp.generated.resources.action_download
+import jellyfish.composeapp.generated.resources.action_mark_unwatched
+import jellyfish.composeapp.generated.resources.action_mark_watched
+import jellyfish.composeapp.generated.resources.action_remove_from_favorites
+import jellyfish.composeapp.generated.resources.action_share
+import jellyfish.composeapp.generated.resources.common_play
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun ActionButtonsRow(
@@ -59,7 +68,7 @@ fun ActionButtonsRow(
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text("Play")
+            Text(stringResource(Res.string.common_play))
         }
 
         // Favorite button - Outline style
@@ -74,7 +83,7 @@ fun ActionButtonsRow(
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                contentDescription = stringResource(if (isFavorite) Res.string.action_remove_from_favorites else Res.string.action_add_to_favorites),
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -91,7 +100,7 @@ fun ActionButtonsRow(
         ) {
             Icon(
                 imageVector = Icons.Default.Check,
-                contentDescription = if (isWatched) "Mark as unwatched" else "Mark as watched",
+                contentDescription = stringResource(if (isWatched) Res.string.action_mark_unwatched else Res.string.action_mark_watched),
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -108,7 +117,7 @@ fun ActionButtonsRow(
         ) {
             Icon(
                 imageVector = Icons.Default.Download,
-                contentDescription = "Download",
+                contentDescription = stringResource(Res.string.action_download),
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -125,7 +134,7 @@ fun ActionButtonsRow(
         ) {
             Icon(
                 imageVector = Icons.Default.Share,
-                contentDescription = "Share",
+                contentDescription = stringResource(Res.string.action_share),
                 modifier = Modifier.size(20.dp)
             )
         }
