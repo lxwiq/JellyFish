@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Common actions -->
+    <string name="common_cancel">Annuler</string>
+    <string name="common_delete">Supprimer</string>
+    <string name="common_play">Lecture</string>
+    <string name="common_confirm">Confirmer</string>
+    <string name="common_create">Créer</string>
+    <string name="common_continue">Continuer</string>
+    <string name="common_retry">Réessayer</string>
+    <string name="common_clear">Effacer</string>
+    <string name="common_back">Retour</string>
+    <string name="common_more_options">Plus d\'options</string>
+    <string name="common_error">Une erreur est survenue</string>
+    <string name="common_or">ou</string>
+
+    <!-- Login screen -->
+    <string name="login_title">Connexion</string>
+    <string name="login_subtitle">Connecte-toi à ton compte</string>
+    <string name="login_username_label">Nom d\'utilisateur</string>
+    <string name="login_password_label">Mot de passe</string>
+    <string name="login_sign_in_button">Se connecter</string>
+    <string name="login_quick_connect_button">Connexion rapide</string>
+    <string name="login_password_show">Afficher le mot de passe</string>
+    <string name="login_password_hide">Masquer le mot de passe</string>
+
+    <!-- Quick Connect screen -->
+    <string name="quickconnect_title">Connexion rapide</string>
+    <string name="quickconnect_initializing">Initialisation...</string>
+    <string name="quickconnect_error_default">Une erreur est survenue</string>
+    <string name="quickconnect_instruction">Entre ce code sur ton serveur Jellyfin</string>
+    <string name="quickconnect_waiting">En attente d\'autorisation...</string>
+
+    <!-- Server list screen -->
+    <string name="server_list_title">Mes serveurs</string>
+    <string name="server_list_empty_title">Aucun serveur</string>
+    <string name="server_list_empty_subtitle">Ajoute ton premier serveur Jellyfin</string>
+    <string name="server_list_add_button">Ajouter un serveur</string>
+    <string name="server_list_delete_content_description">Supprimer</string>
+
+    <!-- Delete server dialog -->
+    <string name="server_delete_dialog_title">Supprimer le serveur</string>
+    <string name="server_delete_dialog_message">Es-tu sûr de vouloir supprimer « %1$s » ?</string>
+
+    <!-- Add server screen -->
+    <string name="add_server_title">Ajouter un serveur</string>
+    <string name="add_server_subtitle">Entre l\'adresse de ton serveur Jellyfin</string>
+    <string name="add_server_url_label">Adresse du serveur</string>
+    <string name="add_server_url_placeholder">https://jellyfin.example.com</string>
+
+    <!-- Home screen -->
+    <string name="home_continue_watching">Reprendre la lecture</string>
+    <string name="home_latest_movies">Derniers films</string>
+    <string name="home_latest_series">Dernières séries</string>
+    <string name="home_latest_music">Dernière musique</string>
+    <string name="home_favorites">Favoris</string>
+    <string name="home_next_up">À suivre</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Accueil</string>
+    <string name="nav_search">Recherche</string>
+    <string name="nav_favorites">Favoris</string>
+    <string name="nav_downloads">Téléchargements</string>
+    <string name="nav_settings">Paramètres</string>
+    <string name="nav_libraries">Bibliothèques</string>
+
+    <!-- App header -->
+    <string name="header_open_menu">Ouvrir le menu</string>
+    <string name="header_close_menu">Fermer le menu</string>
+    <string name="header_switch_server">Changer de serveur</string>
+    <string name="header_logout">Déconnexion</string>
+
+    <!-- Search screen -->
+    <string name="search_placeholder">Rechercher...</string>
+    <string name="search_hint">Rechercher des films, séries...</string>
+    <string name="search_no_results">Aucun résultat</string>
+    <string name="search_recent">Recherches récentes</string>
+    <string name="search_clear_history">Effacer</string>
+    <string name="search_clear_content_description">Effacer</string>
+    <string name="search_remove_content_description">Supprimer</string>
+
+    <!-- Downloads screen -->
+    <string name="downloads_title">Téléchargements</string>
+    <string name="downloads_clear_all">Tout effacer</string>
+    <string name="downloads_storage_label">Espace : %1$s</string>
+    <string name="downloads_in_progress">EN COURS (%1$d)</string>
+    <string name="downloads_completed">TÉLÉCHARGÉS (%1$d)</string>
+    <string name="downloads_empty">Aucun téléchargement</string>
+    <string name="downloads_queued">En attente...</string>
+    <string name="downloads_cancel_content_description">Annuler</string>
+    <string name="downloads_play_content_description">Lecture</string>
+    <string name="downloads_delete_content_description">Supprimer</string>
+
+    <!-- Downloads clear dialog -->
+    <string name="downloads_clear_dialog_title">Effacer tous les téléchargements ?</string>
+    <string name="downloads_clear_dialog_message">Cela supprimera %1$d fichiers (%2$s). Cette action est irréversible.</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_section_account">Compte</string>
+    <string name="settings_section_playback">Lecture</string>
+    <string name="settings_section_storage">Stockage</string>
+    <string name="settings_section_about">À propos</string>
+    <string name="settings_section_admin">Administration</string>
+
+    <!-- Settings - Account -->
+    <string name="settings_logout_button">Se déconnecter</string>
+    <string name="settings_logout_dialog_title">Déconnexion</string>
+    <string name="settings_logout_dialog_message">Es-tu sûr de vouloir te déconnecter ?</string>
+
+    <!-- Settings - Playback -->
+    <string name="settings_streaming_quality">Qualité du streaming</string>
+    <string name="settings_download_quality">Qualité de téléchargement</string>
+    <string name="settings_audio_language">Langue audio</string>
+    <string name="settings_subtitle_language">Langue des sous-titres</string>
+
+    <!-- Settings - Storage -->
+    <string name="settings_storage_used">Espace utilisé</string>
+    <string name="settings_storage_limit">Limite de stockage</string>
+    <string name="settings_clear_cache">Vider le cache</string>
+    <string name="settings_clear_downloads">Effacer tous les téléchargements</string>
+    <string name="settings_clear_downloads_dialog_title">Effacer tous les téléchargements ?</string>
+    <string name="settings_clear_downloads_dialog_message">Cela supprimera tous les fichiers téléchargés. Cette action est irréversible.</string>
+
+    <!-- Settings - About -->
+    <string name="settings_version">Version</string>
+    <string name="settings_licenses">Licences</string>
+
+    <!-- Settings - Admin -->
+    <string name="settings_admin_users">Utilisateurs</string>
+    <string name="settings_admin_libraries">Bibliothèques</string>
+    <string name="settings_admin_logs">Journaux</string>
+    <string name="settings_admin_tasks">Tâches</string>
+    <string name="settings_admin_add_user">Ajouter un utilisateur</string>
+    <string name="settings_admin_refresh_libraries">Actualiser les bibliothèques</string>
+    <string name="settings_admin_administrator">Administrateur</string>
+    <string name="settings_admin_last_result">Dernier résultat : %1$s</string>
+    <string name="settings_admin_run_content_description">Exécuter</string>
+
+    <!-- Admin - Create user dialog -->
+    <string name="admin_create_user_title">Créer un utilisateur</string>
+    <string name="admin_create_user_username">Nom d\'utilisateur</string>
+    <string name="admin_create_user_password">Mot de passe</string>
+
+    <!-- Admin - Delete user dialog -->
+    <string name="admin_delete_user_title">Supprimer l\'utilisateur</string>
+    <string name="admin_delete_user_message">Es-tu sûr de vouloir supprimer %1$s ?</string>
+
+    <!-- Library screen -->
+    <string name="library_display_mode">Mode d\'affichage</string>
+    <string name="library_view_posters">Affiches</string>
+    <string name="library_view_grid">Grille</string>
+    <string name="library_view_list">Liste</string>
+
+    <!-- Library filters -->
+    <string name="filter_all_genres">Tous les genres</string>
+    <string name="filter_all_years">Toutes les années</string>
+    <string name="filter_all">Tous</string>
+    <string name="filter_watched">Vus</string>
+    <string name="filter_unwatched">Non vus</string>
+    <string name="filter_favorites">Favoris</string>
+
+    <!-- Detail screens -->
+    <string name="detail_cast">Distribution</string>
+    <string name="detail_guest_stars">Guest stars</string>
+    <string name="detail_similar_movies">Films similaires</string>
+    <string name="detail_similar_series">Séries similaires</string>
+    <string name="detail_seasons">Saisons</string>
+    <string name="detail_more_from_season">Suite de la saison %1$d</string>
+    <string name="detail_season_count">%1$d saison</string>
+    <string name="detail_season_count_plural">%1$d saisons</string>
+
+    <!-- Action buttons -->
+    <string name="action_add_to_favorites">Ajouter aux favoris</string>
+    <string name="action_remove_from_favorites">Retirer des favoris</string>
+    <string name="action_mark_watched">Marquer comme vu</string>
+    <string name="action_mark_unwatched">Marquer comme non vu</string>
+    <string name="action_download">Télécharger</string>
+    <string name="action_share">Partager</string>
+
+    <!-- Episode navigation -->
+    <string name="episode_previous">Précédent</string>
+    <string name="episode_next">Suivant</string>
+
+    <!-- Player controls -->
+    <string name="player_pause">Pause</string>
+    <string name="player_play">Lecture</string>
+    <string name="player_settings">Paramètres</string>
+    <string name="player_rewind">Reculer de 10 secondes</string>
+    <string name="player_forward">Avancer de 10 secondes</string>
+    <string name="player_audio_subtitles">Audio et sous-titres</string>
+    <string name="player_scale_mode">Échelle : %1$s</string>
+
+    <!-- Player settings sheet -->
+    <string name="player_quality">Qualité</string>
+    <string name="player_playback_speed">Vitesse de lecture</string>
+    <string name="player_speed_normal">Normale</string>
+
+    <!-- Track selector sheet -->
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Sous-titres</string>
+    <string name="player_subtitles_off">Désactivés</string>
+
+    <!-- Quality selection dialog -->
+    <string name="quality_dialog_title">Choisir la qualité</string>
+    <string name="quality_recommended">(Recommandé)</string>
+    <string name="quality_dont_ask">Ne plus demander (utiliser %1$s)</string>
+    <string name="quality_download">Télécharger</string>
+
+    <!-- Error messages (generic) -->
+    <string name="error_network">Erreur réseau</string>
+    <string name="error_generic">Une erreur est survenue</string>
+</resources>
