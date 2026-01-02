@@ -73,6 +73,9 @@ import com.lowiq.jellyfish.presentation.navigation.navigateToDetail
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
 import org.koin.core.parameter.parametersOf
+import org.jetbrains.compose.resources.stringResource
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.*
 
 class LibraryScreen(private val library: Library) : Screen {
 
@@ -124,7 +127,7 @@ class LibraryScreen(private val library: Library) : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(Res.string.common_back),
                                 tint = colors.foreground
                             )
                         }
@@ -138,7 +141,7 @@ class LibraryScreen(private val library: Library) : Screen {
                                         DisplayMode.GRID -> Icons.Default.GridView
                                         DisplayMode.LIST -> Icons.AutoMirrored.Filled.ViewList
                                     },
-                                    contentDescription = "Display mode",
+                                    contentDescription = stringResource(Res.string.library_display_mode),
                                     tint = colors.foreground
                                 )
                             }
@@ -148,7 +151,7 @@ class LibraryScreen(private val library: Library) : Screen {
                                 containerColor = colors.secondary
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Posters", color = colors.foreground) },
+                                    text = { Text(stringResource(Res.string.library_view_posters), color = colors.foreground) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.ViewModule,
@@ -162,7 +165,7 @@ class LibraryScreen(private val library: Library) : Screen {
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Grille", color = colors.foreground) },
+                                    text = { Text(stringResource(Res.string.library_view_grid), color = colors.foreground) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.GridView,
@@ -176,7 +179,7 @@ class LibraryScreen(private val library: Library) : Screen {
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Liste", color = colors.foreground) },
+                                    text = { Text(stringResource(Res.string.library_view_list), color = colors.foreground) },
                                     leadingIcon = {
                                         Icon(
                                             Icons.AutoMirrored.Filled.ViewList,
@@ -236,7 +239,7 @@ class LibraryScreen(private val library: Library) : Screen {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = state.error ?: "An error occurred",
+                                text = state.error ?: stringResource(Res.string.common_error),
                                 color = colors.mutedForeground
                             )
                         }

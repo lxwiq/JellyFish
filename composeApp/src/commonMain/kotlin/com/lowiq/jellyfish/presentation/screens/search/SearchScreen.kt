@@ -34,6 +34,9 @@ import coil3.compose.AsyncImage
 import com.lowiq.jellyfish.domain.model.MediaItem
 import com.lowiq.jellyfish.presentation.navigation.navigateToDetail
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import org.jetbrains.compose.resources.stringResource
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.*
 
 class SearchScreen : Screen {
 
@@ -100,7 +103,7 @@ class SearchScreen : Screen {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Aucun résultat",
+                            text = stringResource(Res.string.search_no_results),
                             color = colors.mutedForeground
                         )
                     }
@@ -127,7 +130,7 @@ class SearchScreen : Screen {
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Rechercher des films, séries...",
+                                text = stringResource(Res.string.search_hint),
                                 color = colors.mutedForeground
                             )
                         }
@@ -178,7 +181,7 @@ private fun SearchBar(
                 Box {
                     if (query.isEmpty()) {
                         Text(
-                            "Rechercher...",
+                            stringResource(Res.string.search_placeholder),
                             color = colors.mutedForeground
                         )
                     }
@@ -191,7 +194,7 @@ private fun SearchBar(
             IconButton(onClick = onClear) {
                 Icon(
                     Icons.Default.Clear,
-                    contentDescription = "Clear",
+                    contentDescription = stringResource(Res.string.common_clear),
                     tint = colors.mutedForeground
                 )
             }
@@ -217,12 +220,12 @@ private fun SearchHistory(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Recherches récentes",
+                stringResource(Res.string.search_recent),
                 style = MaterialTheme.typography.titleSmall,
                 color = colors.mutedForeground
             )
             TextButton(onClick = onClearAll) {
-                Text("Effacer", color = colors.primary)
+                Text(stringResource(Res.string.search_clear_history), color = colors.primary)
             }
         }
 
@@ -249,7 +252,7 @@ private fun SearchHistory(
                     IconButton(onClick = { onRemoveItem(query) }) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Remove",
+                            contentDescription = stringResource(Res.string.search_remove_content_description),
                             tint = colors.mutedForeground
                         )
                     }

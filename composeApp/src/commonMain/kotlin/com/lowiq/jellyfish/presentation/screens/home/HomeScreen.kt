@@ -44,6 +44,9 @@ import com.lowiq.jellyfish.presentation.screens.serverlist.ServerListScreen
 import com.lowiq.jellyfish.presentation.screens.settings.SettingsScreen
 import com.lowiq.jellyfish.isDesktopPlatform
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import org.jetbrains.compose.resources.stringResource
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.*
 
 class HomeScreen : Screen {
 
@@ -165,7 +168,7 @@ class HomeScreen : Screen {
                                 if (state.continueWatching.isNotEmpty()) {
                                     item {
                                         MediaCarousel(
-                                            title = "Continue Watching",
+                                            title = stringResource(Res.string.home_continue_watching),
                                             items = state.continueWatching.map { it.toCarouselItem() },
                                             onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
@@ -176,7 +179,7 @@ class HomeScreen : Screen {
                                 if (state.latestMovies.isNotEmpty()) {
                                     item {
                                         MediaCarousel(
-                                            title = "Latest Movies",
+                                            title = stringResource(Res.string.home_latest_movies),
                                             items = state.latestMovies.map { it.toCarouselItem() },
                                             onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
@@ -187,7 +190,7 @@ class HomeScreen : Screen {
                                 if (state.latestSeries.isNotEmpty()) {
                                     item {
                                         MediaCarousel(
-                                            title = "Latest Series",
+                                            title = stringResource(Res.string.home_latest_series),
                                             items = state.latestSeries.map { it.toCarouselItem() },
                                             onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
@@ -198,7 +201,7 @@ class HomeScreen : Screen {
                                 if (state.latestMusic.isNotEmpty()) {
                                     item {
                                         MediaCarousel(
-                                            title = "Latest Music",
+                                            title = stringResource(Res.string.home_latest_music),
                                             items = state.latestMusic.map { it.toCarouselItem() },
                                             onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
@@ -221,7 +224,7 @@ class HomeScreen : Screen {
                                 if (state.favorites.isNotEmpty()) {
                                     item {
                                         MediaCarousel(
-                                            title = "Favorites",
+                                            title = stringResource(Res.string.home_favorites),
                                             items = state.favorites.map { it.toCarouselItem() },
                                             onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )
@@ -232,7 +235,7 @@ class HomeScreen : Screen {
                                 if (state.nextUp.isNotEmpty()) {
                                     item {
                                         MediaCarousel(
-                                            title = "Next Up",
+                                            title = stringResource(Res.string.home_next_up),
                                             items = state.nextUp.map { it.toCarouselItem() },
                                             onItemClick = { id, type -> navigateToDetail(navigator, id, type) }
                                         )

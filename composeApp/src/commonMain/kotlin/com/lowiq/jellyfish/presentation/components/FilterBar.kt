@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.sp
 import com.lowiq.jellyfish.domain.model.SortOption
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import org.jetbrains.compose.resources.stringResource
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.*
 
 @Composable
 fun FilterBar(
@@ -66,9 +69,10 @@ fun FilterBar(
 
         // Genre dropdown
         item {
+            val allGenresLabel = stringResource(Res.string.filter_all_genres)
             FilterDropdown(
-                label = selectedGenre ?: "All Genres",
-                options = listOf("All Genres") + availableGenres,
+                label = selectedGenre ?: allGenresLabel,
+                options = listOf(allGenresLabel) + availableGenres,
                 onOptionSelected = { index ->
                     onGenreChanged(if (index == 0) null else availableGenres[index - 1])
                 }
@@ -77,9 +81,10 @@ fun FilterBar(
 
         // Year dropdown
         item {
+            val allYearsLabel = stringResource(Res.string.filter_all_years)
             FilterDropdown(
-                label = selectedYear?.toString() ?: "All Years",
-                options = listOf("All Years") + availableYears.map { it.toString() },
+                label = selectedYear?.toString() ?: allYearsLabel,
+                options = listOf(allYearsLabel) + availableYears.map { it.toString() },
                 onOptionSelected = { index ->
                     onYearChanged(if (index == 0) null else availableYears[index - 1])
                 }
@@ -89,21 +94,21 @@ fun FilterBar(
         // Watched toggle chips
         item {
             FilterChip(
-                name = "All",
+                name = stringResource(Res.string.filter_all),
                 isSelected = showWatched == null,
                 onClick = { onWatchedChanged(null) }
             )
         }
         item {
             FilterChip(
-                name = "Watched",
+                name = stringResource(Res.string.filter_watched),
                 isSelected = showWatched == true,
                 onClick = { onWatchedChanged(true) }
             )
         }
         item {
             FilterChip(
-                name = "Unwatched",
+                name = stringResource(Res.string.filter_unwatched),
                 isSelected = showWatched == false,
                 onClick = { onWatchedChanged(false) }
             )
@@ -112,7 +117,7 @@ fun FilterBar(
         // Favorites toggle
         item {
             FilterChip(
-                name = "Favorites",
+                name = stringResource(Res.string.filter_favorites),
                 isSelected = showFavoritesOnly,
                 onClick = { onFavoritesChanged(!showFavoritesOnly) }
             )
