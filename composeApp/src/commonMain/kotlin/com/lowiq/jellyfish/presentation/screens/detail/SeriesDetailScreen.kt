@@ -53,6 +53,10 @@ import com.lowiq.jellyfish.presentation.components.MediaCarousel
 import com.lowiq.jellyfish.presentation.components.MediaCarouselItem
 import com.lowiq.jellyfish.presentation.components.SeasonDropdown
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.koin.core.parameter.parametersOf
 
 class SeriesDetailScreen(private val itemId: String) : Screen {
@@ -73,7 +77,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(Res.string.common_back),
                                 tint = colors.foreground
                             )
                         }
@@ -82,7 +86,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                         IconButton(onClick = { /* TODO: Show menu */ }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = stringResource(Res.string.common_more_options),
                                 tint = colors.foreground
                             )
                         }
@@ -182,7 +186,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                                 if (state.seasonCount > 0) {
                                     Text(text = "•", color = colors.mutedForeground)
                                     Text(
-                                        text = "${state.seasonCount} Season${if (state.seasonCount > 1) "s" else ""}",
+                                        text = pluralStringResource(Res.plurals.detail_season_count, state.seasonCount, state.seasonCount),
                                         fontSize = 14.sp,
                                         color = colors.mutedForeground
                                     )
@@ -242,7 +246,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                             if (state.seasons.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Text(
-                                    text = "Seasons",
+                                    text = stringResource(Res.string.detail_seasons),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = colors.foreground
@@ -289,7 +293,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                         if (state.cast.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
                             CastCarousel(
-                                title = "Cast",
+                                title = stringResource(Res.string.detail_cast),
                                 cast = state.cast,
                                 onPersonClick = { /* TODO */ }
                             )
@@ -299,7 +303,7 @@ class SeriesDetailScreen(private val itemId: String) : Screen {
                         if (state.similarItems.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
                             MediaCarousel(
-                                title = "Similar Series",
+                                title = stringResource(Res.string.detail_similar_series),
                                 items = state.similarItems.map { item ->
                                     MediaCarouselItem(
                                         id = item.id,

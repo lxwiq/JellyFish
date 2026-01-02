@@ -63,6 +63,9 @@ import com.lowiq.jellyfish.presentation.components.ActionButtonsRow
 import com.lowiq.jellyfish.presentation.components.CastCarousel
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.parameter.parametersOf
 
 class EpisodeDetailScreen(private val itemId: String) : Screen {
@@ -117,7 +120,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(Res.string.common_back),
                                 tint = colors.foreground
                             )
                         }
@@ -126,7 +129,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                         IconButton(onClick = { /* TODO: Show menu */ }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = stringResource(Res.string.common_more_options),
                                 tint = colors.foreground
                             )
                         }
@@ -205,7 +208,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Play",
+                                    contentDescription = stringResource(Res.string.common_play),
                                     tint = colors.primaryForeground,
                                     modifier = Modifier.size(36.dp)
                                 )
@@ -321,7 +324,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                                     shape = RoundedCornerShape(8.dp),
                                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                                 ) {
-                                    Text("◀ Previous")
+                                    Text("◀ ${stringResource(Res.string.episode_previous)}")
                                 }
 
                                 // Current episode indicator
@@ -343,7 +346,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                                     shape = RoundedCornerShape(8.dp),
                                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
                                 ) {
-                                    Text("Next ▶")
+                                    Text("${stringResource(Res.string.episode_next)} ▶")
                                 }
                             }
                         }
@@ -352,7 +355,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                         if (state.guestStars.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
                             CastCarousel(
-                                title = "Guest Stars",
+                                title = stringResource(Res.string.detail_guest_stars),
                                 cast = state.guestStars,
                                 onPersonClick = { /* TODO: Navigate to person */ }
                             )
@@ -363,7 +366,7 @@ class EpisodeDetailScreen(private val itemId: String) : Screen {
                             Spacer(modifier = Modifier.height(24.dp))
                             Column {
                                 Text(
-                                    text = "More from Season ${state.seasonNumber}",
+                                    text = stringResource(Res.string.detail_more_from_season, state.seasonNumber),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = colors.foreground,

@@ -58,6 +58,9 @@ import org.koin.compose.koinInject
 import com.lowiq.jellyfish.presentation.screens.downloads.DownloadsScreen
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreen
 import com.lowiq.jellyfish.presentation.theme.LocalJellyFishColors
+import jellyfish.composeapp.generated.resources.Res
+import jellyfish.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.parameter.parametersOf
 
 class MovieDetailScreen(private val itemId: String) : Screen {
@@ -101,7 +104,7 @@ class MovieDetailScreen(private val itemId: String) : Screen {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(Res.string.common_back),
                                 tint = colors.foreground
                             )
                         }
@@ -110,7 +113,7 @@ class MovieDetailScreen(private val itemId: String) : Screen {
                         IconButton(onClick = { /* TODO: Show menu */ }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More options",
+                                contentDescription = stringResource(Res.string.common_more_options),
                                 tint = colors.foreground
                             )
                         }
@@ -277,7 +280,7 @@ class MovieDetailScreen(private val itemId: String) : Screen {
                         if (state.cast.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
                             CastCarousel(
-                                title = "Cast",
+                                title = stringResource(Res.string.detail_cast),
                                 cast = state.cast,
                                 onPersonClick = { /* TODO: Navigate to person */ }
                             )
@@ -287,7 +290,7 @@ class MovieDetailScreen(private val itemId: String) : Screen {
                         if (state.similarItems.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(24.dp))
                             MediaCarousel(
-                                title = "Similar Movies",
+                                title = stringResource(Res.string.detail_similar_movies),
                                 items = state.similarItems.map { item ->
                                     MediaCarouselItem(
                                         id = item.id,

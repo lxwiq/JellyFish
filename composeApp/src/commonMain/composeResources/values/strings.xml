@@ -113,6 +113,7 @@
     <string name="settings_download_quality">Download quality</string>
     <string name="settings_audio_language">Audio language</string>
     <string name="settings_subtitle_language">Subtitle language</string>
+    <string name="settings_app_language">App language</string>
 
     <!-- Settings - Storage -->
     <string name="settings_storage_used">Storage used</string>
@@ -167,8 +168,10 @@
     <string name="detail_similar_series">Similar Series</string>
     <string name="detail_seasons">Seasons</string>
     <string name="detail_more_from_season">More from Season %1$d</string>
-    <string name="detail_season_count">%1$d Season</string>
-    <string name="detail_season_count_plural">%1$d Seasons</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d Season</item>
+        <item quantity="other">%1$d Seasons</item>
+    </plurals>
 
     <!-- Action buttons -->
     <string name="action_add_to_favorites">Add to favorites</string>
@@ -190,6 +193,12 @@
     <string name="player_forward">Forward 10 seconds</string>
     <string name="player_audio_subtitles">Audio &amp; Subtitles</string>
     <string name="player_scale_mode">Scale: %1$s</string>
+
+    <!-- Player resume dialog -->
+    <string name="player_resume_title">Resume Playback?</string>
+    <string name="player_resume_message">Resume at %1$s?</string>
+    <string name="player_resume_button">Resume</string>
+    <string name="player_from_beginning">From Beginning</string>
 
     <!-- Player settings sheet -->
     <string name="player_quality">Quality</string>
