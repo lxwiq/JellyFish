@@ -18,3 +18,9 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
 .worktrees/
+
+# Documentation
+docs/
+doc/
+site-docs/
+jellyseer-sdk/docs/
