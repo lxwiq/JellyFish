@@ -56,12 +56,11 @@ actual class VideoPlayer(
             "--http-reconnect",
             "--avcodec-skiploopfilter=0",
             // Subtitle rendering options
-            "--sub-source=freetype",
-            "--freetype-font=Sans",
-            "--freetype-fontsize=16",
+            "--subsdec-encoding=UTF-8",
+            "--freetype-rel-fontsize=18",
             "--freetype-color=16777215",
-            "--freetype-outline-thickness=4",
-            "--freetype-shadow-opacity=128"
+            "--freetype-background-opacity=0",
+            "--freetype-outline-thickness=2"
         )
 
         libVLC = LibVLC(context, options)
@@ -97,6 +96,12 @@ actual class VideoPlayer(
                             _playbackState.value = PlaybackState.Buffering
                         }
                     }
+                    MediaPlayer.Event.Vout -> {
+                        // Update video surfaces when vout is ready
+                        // This is needed for subtitle rendering to work properly
+                        Log.d("VLCSubs", "Vout event received, updating video surfaces")
+                        this.updateVideoSurfaces()
+                    }
                 }
             }
         }
@@ -126,8 +131,9 @@ actual class VideoPlayer(
                     else -> addOption(":http-header=$key: $value")
                 }
             }
-            // Enable hardware decoding
-            setHWDecoderEnabled(true, false)
+            // Disable hardware decoding - it can prevent subtitle rendering
+            // See: https://code.videolan.org/videolan/vlc-android/-/issues/1397
+            setHWDecoderEnabled(false, false)
         }
 
         player.media = media
@@ -215,14 +221,20 @@ actual class VideoPlayer(
                 val trackCountBefore = player.spuTracks?.size ?: 0
                 Log.d("VLCSubs", "Tracks before adding: $trackCountBefore")
 
-                // VLC Android expects just the absolute path, not a file:// URI
-                val localPath = localFile.absolutePath
-                Log.d("VLCSubs", "Adding subtitle with path: $localPath")
+                // Use file:// URI format as VLC expects a proper URI, not a raw path
+                val subtitleUri = Uri.fromFile(localFile)
+                Log.d("VLCSubs", "Adding subtitle with URI: $subtitleUri")
 
-                player.addSlave(org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle, localPath, true)
+                // Try both methods: addSlave on MediaPlayer
+                val addResult = player.addSlave(
+                    org.videolan.libvlc.interfaces.IMedia.Slave.Type.Subtitle,
+                    subtitleUri,
+                    true // select immediately
+                )
+                Log.d("VLCSubs", "addSlave result: $addResult")
 
-                // Wait for VLC to load the subtitle, then select it
-                delay(500)
+                // Wait longer for VLC to load and process the subtitle
+                delay(1000)
 
                 val tracks = player.spuTracks
                 Log.d("VLCSubs", "Tracks after adding: ${tracks?.size ?: 0}")
@@ -234,8 +246,15 @@ actual class VideoPlayer(
                     Log.d("VLCSubs", "Selecting new track: id=${newTrack.id}, name=${newTrack.name}")
                     player.spuTrack = newTrack.id
                     Log.d("VLCSubs", "Current spuTrack after selection: ${player.spuTrack}")
+                } else if (tracks != null && tracks.isNotEmpty()) {
+                    // Track wasn't added but we have tracks - try selecting by matching name or last
+                    Log.w("VLCSubs", "No new track added, trying to select existing track")
+                    val matchingTrack = tracks.lastOrNull { it.name?.contains("Track") == true || it.name?.contains(localFile.nameWithoutExtension) == true }
+                        ?: tracks.last()
+                    Log.d("VLCSubs", "Selecting track: id=${matchingTrack.id}, name=${matchingTrack.name}")
+                    player.spuTrack = matchingTrack.id
                 } else {
-                    Log.w("VLCSubs", "No new track was added by VLC")
+                    Log.w("VLCSubs", "No subtitle tracks available")
                 }
                 updateTracks()
             } catch (e: Exception) {
@@ -252,23 +271,36 @@ actual class VideoPlayer(
             val cacheDir = context.cacheDir
             val subtitleFile = File(cacheDir, fileName)
 
-            Log.d("VLCSubs", "Downloading subtitle: ext=$extension, file=$fileName")
+            Log.d("VLCSubs", "Downloading subtitle: ext=$extension, file=$fileName, url=$url")
 
-            // Download if not already cached
-            if (!subtitleFile.exists()) {
-                Log.d("VLCSubs", "File not in cache, downloading from URL...")
-                URL(url).openStream().use { input ->
-                    subtitleFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
+            // Always re-download to ensure fresh content (cache can cause issues)
+            if (subtitleFile.exists()) {
+                subtitleFile.delete()
+                Log.d("VLCSubs", "Deleted existing cached file")
+            }
+
+            Log.d("VLCSubs", "Downloading from URL...")
+            val connection = URL(url).openConnection()
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.getInputStream().use { input ->
+                subtitleFile.outputStream().use { output ->
+                    val bytes = input.readBytes()
+                    output.write(bytes)
+                    Log.d("VLCSubs", "Downloaded ${bytes.size} bytes")
                 }
-                Log.d("VLCSubs", "Download complete, file size: ${subtitleFile.length()}")
+            }
 
-                // Log first few lines of subtitle file for debugging
-                val preview = subtitleFile.readText().take(500)
-                Log.d("VLCSubs", "Subtitle preview:\n$preview")
-            } else {
-                Log.d("VLCSubs", "Using cached file, size: ${subtitleFile.length()}")
+            Log.d("VLCSubs", "Download complete, file size: ${subtitleFile.length()}")
+
+            // Log first few lines of subtitle file for debugging
+            val preview = subtitleFile.readText().take(500)
+            Log.d("VLCSubs", "Subtitle preview:\n$preview")
+
+            // Verify file is valid
+            if (subtitleFile.length() == 0L) {
+                Log.e("VLCSubs", "Downloaded file is empty!")
+                return@withContext null
             }
 
             subtitleFile

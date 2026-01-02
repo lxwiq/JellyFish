@@ -21,7 +21,8 @@ koin = "4.0.0"
 datastore = "1.1.1"
 androidx-security = "1.1.0-alpha06"
 coil = "3.0.4"
-libvlc = "3.3.5"
+libvlc = "3.6.0"
+vlcj = "4.8.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -63,6 +64,9 @@ coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.re
 
 # VLC (Android)
 libvlc-all = { module = "org.videolan.android:libvlc-all", version.ref = "libvlc" }
+
+# VLCJ (Desktop)
+vlcj = { module = "uk.co.caprica:vlcj", version.ref = "vlcj" }
 
 # Ktor Client
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
