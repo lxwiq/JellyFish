@@ -19,6 +19,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lowiq.jellyfish.presentation.screens.login.LoginScreen
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import jellyfish.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 class AddServerScreen : Screen {
 
@@ -59,7 +61,7 @@ class AddServerScreen : Screen {
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(Res.string.common_back),
                     tint = colors.foreground
                 )
             }
@@ -74,7 +76,7 @@ class AddServerScreen : Screen {
             ) {
                 // Title
                 Text(
-                    text = "Ajouter un serveur",
+                    text = stringResource(Res.string.add_server_title),
                     style = MaterialTheme.typography.headlineMedium,
                     color = colors.foreground
                 )
@@ -82,7 +84,7 @@ class AddServerScreen : Screen {
                 Spacer(modifier = Modifier.height(dimensions.spacing2))
 
                 Text(
-                    text = "Entrez l'adresse de votre serveur Jellyfin",
+                    text = stringResource(Res.string.add_server_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.mutedForeground
                 )
@@ -92,7 +94,7 @@ class AddServerScreen : Screen {
                 // URL field
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Adresse du serveur",
+                        text = stringResource(Res.string.add_server_url_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.foreground,
                         modifier = Modifier.padding(bottom = dimensions.spacing2)
@@ -134,7 +136,7 @@ class AddServerScreen : Screen {
                                     Box {
                                         if (state.url.isEmpty()) {
                                             Text(
-                                                text = "https://jellyfin.exemple.com",
+                                                text = stringResource(Res.string.add_server_url_placeholder),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = colors.mutedForeground
                                             )
@@ -181,7 +183,7 @@ class AddServerScreen : Screen {
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Continuer")
+                        Text(stringResource(Res.string.common_continue))
                     }
                 }
             }

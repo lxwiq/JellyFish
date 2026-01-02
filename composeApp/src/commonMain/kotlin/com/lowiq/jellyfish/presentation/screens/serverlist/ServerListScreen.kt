@@ -25,6 +25,8 @@ import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.presentation.screens.addserver.AddServerScreen
 import com.lowiq.jellyfish.presentation.screens.login.LoginScreen
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import jellyfish.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 class ServerListScreen : Screen {
 
@@ -52,7 +54,7 @@ class ServerListScreen : Screen {
                         .padding(dimensions.spacing6)
                 ) {
                     Text(
-                        text = "Mes serveurs",
+                        text = stringResource(Res.string.server_list_title),
                         style = MaterialTheme.typography.headlineMedium,
                         color = colors.foreground,
                         modifier = Modifier.align(Alignment.Center)
@@ -104,7 +106,7 @@ class ServerListScreen : Screen {
                     contentColor = colors.primaryForeground,
                     shape = shapes.md
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Ajouter un serveur")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.server_list_add_button))
                 }
             }
         }
@@ -145,7 +147,7 @@ private fun EmptyServerList(
         Spacer(modifier = Modifier.height(dimensions.spacing6))
 
         Text(
-            text = "Aucun serveur",
+            text = stringResource(Res.string.server_list_empty_title),
             style = MaterialTheme.typography.titleLarge,
             color = colors.foreground
         )
@@ -153,7 +155,7 @@ private fun EmptyServerList(
         Spacer(modifier = Modifier.height(dimensions.spacing2))
 
         Text(
-            text = "Ajoutez votre premier serveur Jellyfin",
+            text = stringResource(Res.string.server_list_empty_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.mutedForeground
         )
@@ -175,7 +177,7 @@ private fun EmptyServerList(
                 modifier = Modifier.size(dimensions.iconSize)
             )
             Spacer(modifier = Modifier.width(dimensions.spacing2))
-            Text("Ajouter un serveur")
+            Text(stringResource(Res.string.server_list_add_button))
         }
     }
 }
@@ -283,7 +285,7 @@ private fun ServerListItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Supprimer",
+                    contentDescription = stringResource(Res.string.server_list_delete_content_description),
                     tint = colors.destructive
                 )
             }
@@ -317,24 +319,24 @@ private fun DeleteServerDialog(
         shape = shapes.lg,
         title = {
             Text(
-                text = "Supprimer le serveur",
+                text = stringResource(Res.string.server_delete_dialog_title),
                 color = colors.foreground
             )
         },
         text = {
             Text(
-                text = "Voulez-vous vraiment supprimer \"$serverName\" ?",
+                text = stringResource(Res.string.server_delete_dialog_message, serverName),
                 color = colors.mutedForeground
             )
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Supprimer", color = colors.destructive)
+                Text(stringResource(Res.string.common_delete), color = colors.destructive)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Annuler", color = colors.foreground)
+                Text(stringResource(Res.string.common_cancel), color = colors.foreground)
             }
         }
     )

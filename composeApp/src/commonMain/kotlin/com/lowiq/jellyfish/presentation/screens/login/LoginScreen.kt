@@ -27,6 +27,8 @@ import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.presentation.screens.home.HomeScreen
 import com.lowiq.jellyfish.presentation.screens.quickconnect.QuickConnectScreen
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import jellyfish.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.parameter.parametersOf
 
 data class LoginScreen(val server: Server) : Screen {
@@ -68,7 +70,7 @@ data class LoginScreen(val server: Server) : Screen {
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(Res.string.common_back),
                     tint = colors.foreground
                 )
             }
@@ -111,7 +113,7 @@ data class LoginScreen(val server: Server) : Screen {
 
                 // Title
                 Text(
-                    text = "Connexion",
+                    text = stringResource(Res.string.login_title),
                     style = MaterialTheme.typography.headlineMedium,
                     color = colors.foreground
                 )
@@ -119,7 +121,7 @@ data class LoginScreen(val server: Server) : Screen {
                 Spacer(modifier = Modifier.height(dimensions.spacing2))
 
                 Text(
-                    text = "Connectez-vous à votre compte",
+                    text = stringResource(Res.string.login_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.mutedForeground
                 )
@@ -130,7 +132,7 @@ data class LoginScreen(val server: Server) : Screen {
                 StyledTextField(
                     value = state.username,
                     onValueChange = { screenModel.updateUsername(it) },
-                    label = "Nom d'utilisateur",
+                    label = stringResource(Res.string.login_username_label),
                     leadingIcon = Icons.Default.Person,
                     isError = state.usernameError != null,
                     errorMessage = state.usernameError,
@@ -143,7 +145,7 @@ data class LoginScreen(val server: Server) : Screen {
                 StyledTextField(
                     value = state.password,
                     onValueChange = { screenModel.updatePassword(it) },
-                    label = "Mot de passe",
+                    label = stringResource(Res.string.login_password_label),
                     leadingIcon = Icons.Default.Lock,
                     isPassword = true,
                     passwordVisible = state.passwordVisible,
@@ -175,7 +177,7 @@ data class LoginScreen(val server: Server) : Screen {
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Se connecter")
+                        Text(stringResource(Res.string.login_sign_in_button))
                     }
                 }
 
@@ -191,7 +193,7 @@ data class LoginScreen(val server: Server) : Screen {
                         color = colors.border
                     )
                     Text(
-                        text = "ou",
+                        text = stringResource(Res.string.common_or),
                         modifier = Modifier.padding(horizontal = dimensions.spacing4),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.mutedForeground
@@ -219,7 +221,7 @@ data class LoginScreen(val server: Server) : Screen {
                         contentColor = colors.foreground
                     )
                 ) {
-                    Text("Quick Connect")
+                    Text(stringResource(Res.string.login_quick_connect_button))
                 }
             }
 
@@ -301,6 +303,11 @@ private fun StyledTextField(
                 )
 
                 if (isPassword && onTogglePasswordVisibility != null) {
+                    val passwordContentDescription = if (passwordVisible) {
+                        stringResource(Res.string.login_password_hide)
+                    } else {
+                        stringResource(Res.string.login_password_show)
+                    }
                     IconButton(
                         onClick = onTogglePasswordVisibility,
                         modifier = Modifier.size(dimensions.iconSizeLg)
@@ -311,7 +318,7 @@ private fun StyledTextField(
                             } else {
                                 Icons.Default.Visibility
                             },
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            contentDescription = passwordContentDescription,
                             tint = colors.mutedForeground,
                             modifier = Modifier.size(dimensions.iconSize)
                         )

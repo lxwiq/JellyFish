@@ -19,6 +19,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.lowiq.jellyfish.domain.model.Server
 import com.lowiq.jellyfish.presentation.screens.home.HomeScreen
 import com.lowiq.jellyfish.presentation.theme.JellyFishTheme
+import jellyfish.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import org.koin.core.parameter.parametersOf
 
 data class QuickConnectScreen(val server: Server) : Screen {
@@ -64,7 +66,7 @@ data class QuickConnectScreen(val server: Server) : Screen {
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(Res.string.common_back),
                     tint = colors.foreground
                 )
             }
@@ -107,7 +109,7 @@ data class QuickConnectScreen(val server: Server) : Screen {
 
                 // Title
                 Text(
-                    text = "Quick Connect",
+                    text = stringResource(Res.string.quickconnect_title),
                     style = MaterialTheme.typography.headlineMedium,
                     color = colors.foreground
                 )
@@ -119,7 +121,7 @@ data class QuickConnectScreen(val server: Server) : Screen {
                         CircularProgressIndicator(color = colors.primary)
                         Spacer(modifier = Modifier.height(dimensions.spacing4))
                         Text(
-                            text = "Initialisation...",
+                            text = stringResource(Res.string.quickconnect_initializing),
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.mutedForeground
                         )
@@ -127,7 +129,7 @@ data class QuickConnectScreen(val server: Server) : Screen {
 
                     state.error != null -> {
                         Text(
-                            text = state.error ?: "Une erreur est survenue",
+                            text = state.error ?: stringResource(Res.string.quickconnect_error_default),
                             style = MaterialTheme.typography.bodyLarge,
                             color = colors.destructive,
                             textAlign = TextAlign.Center
@@ -141,7 +143,7 @@ data class QuickConnectScreen(val server: Server) : Screen {
                                 contentColor = colors.primaryForeground
                             )
                         ) {
-                            Text("Réessayer")
+                            Text(stringResource(Res.string.common_retry))
                         }
                     }
 
@@ -171,7 +173,7 @@ data class QuickConnectScreen(val server: Server) : Screen {
                         Spacer(modifier = Modifier.height(dimensions.spacing6))
 
                         Text(
-                            text = "Entrez ce code sur votre serveur Jellyfin",
+                            text = stringResource(Res.string.quickconnect_instruction),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = colors.mutedForeground
@@ -187,7 +189,7 @@ data class QuickConnectScreen(val server: Server) : Screen {
                             )
                             Spacer(modifier = Modifier.height(dimensions.spacing4))
                             Text(
-                                text = "En attente d'autorisation...",
+                                text = stringResource(Res.string.quickconnect_waiting),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.mutedForeground
                             )
