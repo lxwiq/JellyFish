@@ -1,48 +1,108 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+<div align="center">
+  <img src="app-icon.png" alt="JellyFish Logo" width="128" height="128">
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+  # JellyFish
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+  A modern, cross-platform Jellyfin client built with Kotlin Multiplatform and Compose Multiplatform.
 
-### Build and Run Android Application
+  [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-purple.svg)](https://kotlinlang.org)
+  [![Compose Multiplatform](https://img.shields.io/badge/Compose-1.7.3-blue.svg)](https://www.jetbrains.com/compose-multiplatform/)
+  [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+  **Android** · **iOS** · **Desktop**
+</div>
 
-### Build and Run Desktop (JVM) Application
+## Features
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+### Media Browsing
+- Browse your complete Jellyfin library (movies, TV shows, music)
+- Continue watching with resume support
+- Search with history
+- Filter and sort by genre, year, rating
 
-### Build and Run iOS Application
+### Video Playback
+- Native playback with LibVLC (Android) and platform-specific players
+- Quality selection (1080p, 720p, 480p, direct play)
+- Audio and subtitle track switching
+- Playback speed control
+- Progress sync with Jellyfin server
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+### Offline Support
+- Download movies and episodes for offline viewing
+- Quality selection for downloads
+- Storage management with configurable limits
+- Resume offline playback
 
----
+### Customization
+- Dark theme with Material 3 design
+- Multi-language support (English, French)
+- Streaming and download quality preferences
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+### Administration
+- User management (create, delete users)
+- Library refresh
+- Server logs access
+
+### Coming Soon
+- Jellyseerr integration for media requests
+- Music player with queue
+- Chromecast support
+
+## Installation
+
+### Android
+Download the latest APK from the [Releases](https://github.com/lxwiq/JellyFish/releases) page.
+
+### iOS
+Coming soon on TestFlight.
+
+### Desktop
+Download the appropriate installer for your platform from the [Releases](https://github.com/lxwiq/JellyFish/releases) page:
+- **Windows**: `.msi` installer
+- **macOS**: `.dmg` image
+- **Linux**: `.deb` package
+
+## Building from Source
+
+### Requirements
+- JDK 17+
+- Android SDK (for Android builds)
+- Xcode 15+ (for iOS builds, macOS only)
+
+### Android
+```bash
+./gradlew :composeApp:assembleDebug
+```
+
+### Desktop
+```bash
+./gradlew :composeApp:run
+```
+
+### iOS
+Open the `iosApp/` directory in Xcode and run from there.
+
+## Roadmap
+
+- [ ] Jellyseerr integration (request movies & TV shows)
+- [ ] Music player with queue and background playback
+- [ ] Chromecast / AirPlay support
+- [ ] Light theme
+- [ ] Material You dynamic colors (Android)
+- [ ] Full iOS player implementation
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+For translations, see [CONTRIBUTING_TRANSLATIONS.md](CONTRIBUTING_TRANSLATIONS.md).
+
+## License
+
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Jellyfin](https://jellyfin.org/) - The free software media system
+- [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html)
+- [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/)
