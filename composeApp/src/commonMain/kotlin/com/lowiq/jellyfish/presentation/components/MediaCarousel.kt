@@ -35,7 +35,8 @@ fun MediaCarousel(
     title: String,
     items: List<MediaCarouselItem>,
     onItemClick: (id: String, type: MediaType) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    keyPrefix: String = title
 ) {
     val colors = LocalJellyFishColors.current
     val listState = rememberLazyListState()
@@ -63,7 +64,7 @@ fun MediaCarousel(
         ) {
             items(
                 items = items,
-                key = { it.id }
+                key = { "${keyPrefix}_${it.id}" }
             ) { item ->
                 MediaCard(
                     title = item.title,

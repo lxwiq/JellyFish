@@ -53,16 +53,15 @@ fun CastButton(
         else -> 1f
     }
 
-    if (availableDevices.isNotEmpty() || castState is CastState.Connected) {
-        IconButton(
-            onClick = onShowDevicePicker,
-            modifier = modifier.alpha(buttonAlpha)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = "Cast",
-                tint = tint
-            )
-        }
+    // Always show the button - the picker will show "no devices" if none available
+    IconButton(
+        onClick = onShowDevicePicker,
+        modifier = modifier.alpha(buttonAlpha)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = "Cast",
+            tint = tint
+        )
     }
 }

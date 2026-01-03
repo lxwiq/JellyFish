@@ -2,6 +2,10 @@ package com.lowiq.jellyfish.domain.cast
 
 import android.content.Context
 import android.net.Uri
+import androidx.mediarouter.media.MediaControlIntent
+import androidx.mediarouter.media.MediaRouteSelector
+import androidx.mediarouter.media.MediaRouter
+import com.google.android.gms.cast.CastMediaControlIntent
 import com.google.android.gms.cast.MediaInfo
 import com.google.android.gms.cast.MediaLoadRequestData
 import com.google.android.gms.cast.MediaMetadata
@@ -35,6 +39,50 @@ actual class CastManager(
 
     private val sessionManager: SessionManager
         get() = castContext.sessionManager
+
+    // MediaRouter for device discovery
+    private val mediaRouter: MediaRouter by lazy {
+        MediaRouter.getInstance(context)
+    }
+
+    private val mediaRouteSelector: MediaRouteSelector by lazy {
+        MediaRouteSelector.Builder()
+            .addControlCategory(CastMediaControlIntent.categoryForCast(CastMediaControlIntent.DEFAULT_MEDIA_RECEIVER_APPLICATION_ID))
+            .addControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)
+            .build()
+    }
+
+    private val mediaRouterCallback = object : MediaRouter.Callback() {
+        override fun onRouteAdded(router: MediaRouter, route: MediaRouter.RouteInfo) {
+            updateAvailableDevices()
+        }
+
+        override fun onRouteRemoved(router: MediaRouter, route: MediaRouter.RouteInfo) {
+            updateAvailableDevices()
+        }
+
+        override fun onRouteChanged(router: MediaRouter, route: MediaRouter.RouteInfo) {
+            updateAvailableDevices()
+        }
+    }
+
+    private fun updateAvailableDevices() {
+        val routes = mediaRouter.routes
+            .filter { route ->
+                route.matchesSelector(mediaRouteSelector) &&
+                !route.isDefault &&
+                route.isEnabled
+            }
+            .map { route ->
+                CastDevice(
+                    id = route.id,
+                    name = route.name,
+                    type = CastDeviceType.CHROMECAST,
+                    isConnected = route.isSelected
+                )
+            }
+        _availableDevices.value = routes
+    }
 
     private val _availableDevices = MutableStateFlow<List<CastDevice>>(emptyList())
     actual val availableDevices: StateFlow<List<CastDevice>> = _availableDevices
@@ -143,14 +191,33 @@ actual class CastManager(
 
     actual fun startDiscovery() {
         sessionManager.addSessionManagerListener(sessionManagerListener, CastSession::class.java)
+        // Start active scanning for devices
+        mediaRouter.addCallback(
+            mediaRouteSelector,
+            mediaRouterCallback,
+            MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY
+        )
+        // Get initial devices
+        updateAvailableDevices()
     }
 
     actual fun stopDiscovery() {
         sessionManager.removeSessionManagerListener(sessionManagerListener, CastSession::class.java)
+        mediaRouter.removeCallback(mediaRouterCallback)
     }
 
     actual suspend fun connect(device: CastDevice): Result<Unit> {
-        return Result.success(Unit)
+        return try {
+            val route = mediaRouter.routes.find { it.id == device.id }
+            if (route != null) {
+                mediaRouter.selectRoute(route)
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Device not found"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     actual suspend fun disconnect() {
