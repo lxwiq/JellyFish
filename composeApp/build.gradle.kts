@@ -38,6 +38,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.libvlc.all)
             implementation(libs.androidx.lifecycle.process)
+            implementation("com.google.android.gms:play-services-cast-framework:21.4.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
