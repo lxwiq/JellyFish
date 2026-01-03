@@ -1,23 +1,36 @@
 package com.lowiq.jellyfish.presentation.screens.player
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.lowiq.jellyfish.domain.cast.CastState
+import com.lowiq.jellyfish.presentation.components.CastButton
+import com.lowiq.jellyfish.presentation.screens.cast.CastControlScreen
+import com.lowiq.jellyfish.presentation.screens.cast.components.CastDevicePicker
 import com.lowiq.jellyfish.presentation.screens.player.components.PlayerControls
 import com.lowiq.jellyfish.presentation.screens.player.components.PlayerSettingsSheet
 import com.lowiq.jellyfish.presentation.screens.player.components.TrackSelectorSheet
@@ -48,6 +61,16 @@ data class VideoPlayerScreen(
             parametersOf(itemId, title, subtitle, startPositionMs, offlineFilePath, downloadId)
         }
         val state by screenModel.state.collectAsState()
+        val castState by screenModel.castState.collectAsState()
+        val availableCastDevices by screenModel.availableCastDevices.collectAsState()
+        var showCastPicker by remember { mutableStateOf(false) }
+
+        DisposableEffect(Unit) {
+            screenModel.startCastDiscovery()
+            onDispose {
+                screenModel.stopCastDiscovery()
+            }
+        }
 
         LaunchedEffect(Unit) {
             screenModel.events.collect { event ->
@@ -63,7 +86,7 @@ data class VideoPlayerScreen(
                         )
                     }
                     is VideoPlayerEvent.NavigateToCastControl -> {
-                        // TODO: Navigate to cast control screen
+                        navigator.push(CastControlScreen())
                     }
                 }
             }
@@ -121,6 +144,20 @@ data class VideoPlayerScreen(
                     scaleMode = state.scaleMode,
                     onScaleModeClick = screenModel::onCycleScaleMode
                 )
+
+                // Cast button overlay
+                AnimatedVisibility(
+                    visible = state.controlsVisible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 16.dp, end = 56.dp)
+                ) {
+                    CastButton(
+                        castState = castState,
+                        availableDevices = availableCastDevices,
+                        onShowDevicePicker = { showCastPicker = true }
+                    )
+                }
             }
 
             // Resume dialog
@@ -152,6 +189,23 @@ data class VideoPlayerScreen(
                     onSelectQuality = screenModel::onSelectQuality,
                     onSelectSpeed = screenModel::onSetPlaybackSpeed,
                     onDismiss = screenModel::onHideSettings
+                )
+            }
+
+            // Cast device picker dialog
+            if (showCastPicker) {
+                CastDevicePicker(
+                    devices = availableCastDevices,
+                    connectedDevice = (castState as? CastState.Connected)?.device,
+                    onDeviceSelected = { device ->
+                        screenModel.onCastDeviceSelected(device)
+                        showCastPicker = false
+                    },
+                    onDisconnect = {
+                        screenModel.disconnectCast()
+                        showCastPicker = false
+                    },
+                    onDismiss = { showCastPicker = false }
                 )
             }
         }
