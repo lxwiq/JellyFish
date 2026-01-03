@@ -2,6 +2,7 @@ package com.lowiq.jellyfish.domain.cast
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.mediarouter.media.MediaControlIntent
 import androidx.mediarouter.media.MediaRouteSelector
 import androidx.mediarouter.media.MediaRouter
@@ -207,15 +208,38 @@ actual class CastManager(
     }
 
     actual suspend fun connect(device: CastDevice): Result<Unit> {
+        Log.d("CastManager", "Connecting to device: ${device.name} (${device.id})")
         return try {
             val route = mediaRouter.routes.find { it.id == device.id }
             if (route != null) {
+                Log.d("CastManager", "Found route, selecting...")
                 mediaRouter.selectRoute(route)
-                Result.success(Unit)
+                // Wait for session to be established (up to 30 seconds)
+                var attempts = 0
+                while (attempts < 60) {
+                    when (val state = _castState.value) {
+                        is CastState.Connected -> {
+                            Log.d("CastManager", "Connected successfully!")
+                            return Result.success(Unit)
+                        }
+                        is CastState.Error -> {
+                            Log.e("CastManager", "Connection error: ${state.message}")
+                            return Result.failure(Exception(state.message))
+                        }
+                        else -> {
+                            delay(500)
+                            attempts++
+                        }
+                    }
+                }
+                Log.e("CastManager", "Connection timeout after 30s")
+                Result.failure(Exception("Connection timeout"))
             } else {
+                Log.e("CastManager", "Device not found in routes")
                 Result.failure(Exception("Device not found"))
             }
         } catch (e: Exception) {
+            Log.e("CastManager", "Connection exception", e)
             Result.failure(e)
         }
     }
@@ -225,11 +249,23 @@ actual class CastManager(
     }
 
     actual suspend fun loadMedia(mediaInfo: CastMediaInfo, startPositionMs: Long): Result<Unit> {
+        Log.d("CastManager", "loadMedia called: ${mediaInfo.title}")
+        Log.d("CastManager", "Stream URL: ${mediaInfo.streamUrl}")
+        Log.d("CastManager", "Start position: $startPositionMs ms")
+
         val session = sessionManager.currentCastSession
-            ?: return Result.failure(Exception("No active cast session"))
+        if (session == null) {
+            Log.e("CastManager", "No active cast session!")
+            return Result.failure(Exception("No active cast session"))
+        }
 
         val client = session.remoteMediaClient
-            ?: return Result.failure(Exception("No remote media client"))
+        if (client == null) {
+            Log.e("CastManager", "No remote media client!")
+            return Result.failure(Exception("No remote media client"))
+        }
+
+        Log.d("CastManager", "Session and client OK, loading media...")
 
         return suspendCancellableCoroutine { continuation ->
             val metadata = MediaMetadata(
