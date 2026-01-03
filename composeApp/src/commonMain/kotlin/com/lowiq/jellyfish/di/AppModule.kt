@@ -36,6 +36,7 @@ import com.lowiq.jellyfish.presentation.screens.downloads.DownloadsScreenModel
 import com.lowiq.jellyfish.presentation.screens.home.HomeScreenModel
 import com.lowiq.jellyfish.presentation.screens.library.LibraryScreenModel
 import com.lowiq.jellyfish.presentation.screens.login.LoginScreenModel
+import com.lowiq.jellyfish.presentation.screens.cast.CastControlScreenModel
 import com.lowiq.jellyfish.presentation.screens.player.VideoPlayerScreenModel
 import com.lowiq.jellyfish.presentation.screens.quickconnect.QuickConnectScreenModel
 import com.lowiq.jellyfish.presentation.screens.search.SearchScreenModel
@@ -105,6 +106,7 @@ val presentationModule = module {
     }
     factory { DownloadsScreenModel(get(), get()) }
     factory { SearchScreenModel(get(), get(), get()) }
+    factory { CastControlScreenModel(castManager = get()) }
     factory {
         SettingsScreenModel(
             authRepository = get(),
