@@ -62,6 +62,9 @@ data class VideoPlayerScreen(
                             )
                         )
                     }
+                    is VideoPlayerEvent.NavigateToCastControl -> {
+                        // TODO: Navigate to cast control screen
+                    }
                 }
             }
         }

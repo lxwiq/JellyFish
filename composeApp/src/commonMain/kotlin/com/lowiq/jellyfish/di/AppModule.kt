@@ -99,7 +99,8 @@ val presentationModule = module {
             serverRepository = get(),
             mediaRepository = get(),
             downloadRepository = get(),
-            playbackSyncService = get()
+            playbackSyncService = get(),
+            castManager = get()
         )
     }
     factory { DownloadsScreenModel(get(), get()) }

@@ -4,6 +4,12 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.lowiq.jellyfish.data.remote.PlaybackProgressInfo
 import com.lowiq.jellyfish.data.remote.SubtitleStreamInfo
+import com.lowiq.jellyfish.domain.cast.CastDevice
+import com.lowiq.jellyfish.domain.cast.CastManager
+import com.lowiq.jellyfish.domain.cast.CastMediaInfo
+import com.lowiq.jellyfish.domain.cast.CastMediaType
+import com.lowiq.jellyfish.domain.cast.CastState
+import com.lowiq.jellyfish.domain.cast.CastSubtitleTrack
 import com.lowiq.jellyfish.domain.player.PlaybackState
 import com.lowiq.jellyfish.domain.player.SubtitleTrack
 import com.lowiq.jellyfish.domain.player.VideoPlayer
@@ -16,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -27,6 +34,7 @@ import kotlinx.coroutines.launch
 sealed class VideoPlayerEvent {
     data object NavigateBack : VideoPlayerEvent()
     data class PlayNextEpisode(val episodeId: String) : VideoPlayerEvent()
+    data object NavigateToCastControl : VideoPlayerEvent()
 }
 
 class VideoPlayerScreenModel(
@@ -40,7 +48,8 @@ class VideoPlayerScreenModel(
     private val serverRepository: ServerRepository,
     private val mediaRepository: MediaRepository,
     private val downloadRepository: DownloadRepository,
-    private val playbackSyncService: PlaybackSyncService
+    private val playbackSyncService: PlaybackSyncService,
+    private val castManager: CastManager,
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(VideoPlayerState(
@@ -52,6 +61,9 @@ class VideoPlayerScreenModel(
 
     private val _events = MutableSharedFlow<VideoPlayerEvent>()
     val events = _events.asSharedFlow()
+
+    val castState: StateFlow<CastState> = castManager.castState
+    val availableCastDevices: StateFlow<List<CastDevice>> = castManager.availableDevices
 
     private var currentServerId: String? = null
     private var mediaSourceId: String? = null
@@ -392,6 +404,62 @@ class VideoPlayerScreenModel(
 
     fun onDismissNextEpisodeCard() {
         _state.update { it.copy(showNextEpisodeCard = false) }
+    }
+
+    fun startCastDiscovery() {
+        castManager.startDiscovery()
+    }
+
+    fun stopCastDiscovery() {
+        castManager.stopDiscovery()
+    }
+
+    fun onCastDeviceSelected(device: CastDevice) {
+        screenModelScope.launch {
+            castManager.connect(device).onSuccess {
+                val currentState = state.value
+                val playbackState = videoPlayer.playbackState.value
+                val position = when (playbackState) {
+                    is PlaybackState.Playing -> playbackState.positionMs
+                    is PlaybackState.Paused -> playbackState.positionMs
+                    else -> 0L
+                }
+                val duration = when (playbackState) {
+                    is PlaybackState.Playing -> playbackState.durationMs
+                    is PlaybackState.Paused -> playbackState.durationMs
+                    else -> 0L
+                }
+
+                val castMediaInfo = CastMediaInfo(
+                    itemId = itemId,
+                    title = currentState.title,
+                    subtitle = currentState.subtitle,
+                    streamUrl = streamUrl ?: return@onSuccess,
+                    imageUrl = null,
+                    durationMs = duration,
+                    mediaType = CastMediaType.VIDEO,
+                    subtitleTracks = availableSubtitleStreams.mapIndexed { index, stream ->
+                        CastSubtitleTrack(
+                            index = index,
+                            name = stream.title ?: stream.language ?: "Track ${index + 1}",
+                            language = stream.language,
+                            url = stream.deliveryUrl ?: ""
+                        )
+                    },
+                    audioTracks = emptyList()
+                )
+
+                videoPlayer.pause()
+                castManager.loadMedia(castMediaInfo, position)
+                _events.emit(VideoPlayerEvent.NavigateToCastControl)
+            }
+        }
+    }
+
+    fun disconnectCast() {
+        screenModelScope.launch {
+            castManager.disconnect()
+        }
     }
 
     private fun resetControlsHideTimer() {
