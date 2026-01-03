@@ -292,9 +292,18 @@ actual class CastManager(
                 )
             }
 
+            // Determine content type based on stream URL
+            val contentType = when {
+                mediaInfo.streamUrl.contains(".m3u8") -> "application/x-mpegURL"
+                mediaInfo.streamUrl.contains(".mpd") -> "application/dash+xml"
+                else -> "video/mp4"
+            }
+
+            Log.d("CastManager", "Using content type: $contentType for URL: ${mediaInfo.streamUrl}")
+
             val castMediaInfo = MediaInfo.Builder(mediaInfo.streamUrl)
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                .setContentType("video/mp4")
+                .setContentType(contentType)
                 .setMetadata(metadata)
                 .setMediaTracks(tracks)
                 .build()
