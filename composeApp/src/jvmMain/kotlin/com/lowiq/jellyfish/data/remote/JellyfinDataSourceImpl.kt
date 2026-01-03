@@ -66,14 +66,20 @@ class JellyfinDataSourceImpl : JellyfinDataSource {
     }
 
     override suspend fun getServerInfo(serverUrl: String): Result<ServerInfo> = withContext(Dispatchers.IO) {
+        println("[JellyfinDataSource] getServerInfo: Connecting to $serverUrl")
         runCatching {
             val api = createApi(serverUrl)
+            println("[JellyfinDataSource] getServerInfo: API client created, fetching public system info...")
             val info by api.systemApi.getPublicSystemInfo()
+            println("[JellyfinDataSource] getServerInfo: Success! Server: ${info.serverName}, Version: ${info.version}")
             ServerInfo(
                 id = info.id ?: "",
                 name = info.serverName ?: "Jellyfin Server",
                 version = info.version ?: ""
             )
+        }.onFailure { e ->
+            println("[JellyfinDataSource] getServerInfo: FAILED - ${e::class.simpleName}: ${e.message}")
+            e.printStackTrace()
         }
     }
 
